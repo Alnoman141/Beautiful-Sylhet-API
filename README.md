@@ -9,7 +9,7 @@
 git clone from repository
 
 ```bash
-  cd sass
+  cd Cox-Bazar-API
   composer update
     cp .env.example .env
     php artisan key:generate
