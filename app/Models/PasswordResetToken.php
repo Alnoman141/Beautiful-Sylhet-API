@@ -8,4 +8,5 @@ class PasswordResetToken extends Model
 {
     protected $guarded = [];
     public $timestamps = false;
+    protected $primaryKey = 'email';
 }
