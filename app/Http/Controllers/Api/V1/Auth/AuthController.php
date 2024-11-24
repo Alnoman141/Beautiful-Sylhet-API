@@ -24,26 +24,34 @@ class AuthController extends Controller
                 'errors'=>$validator->errors(),
             ],422);
         }
-        $credentials = $request->only('email', 'password');
-        if (auth()->attempt($credentials)) {
-            $user = auth()->user();
-            $token = $user->createToken('authToken'
-                ,['*'],now()->addDays(5)
-            )->plainTextToken;
+        try {
+            $credentials = $request->only('email', 'password');
+            if (auth()->attempt($credentials)) {
+                $user = auth()->user();
+                $token = $user->createToken('authToken'
+                    ,['*'],now()->addDays(5)
+                )->plainTextToken;
+                return response()->json([
+                    'status_code'=>200,
+                    'message'=>'User logged in successfully',
+                    'data'=>[
+                        'token'=>$token,
+                        'user'=>collect($user)->only(['id','first_name','last_name','email','phone','avatar']),
+                        'permissions'=>collect($user->getPermissionsViaRoles())->pluck('name')
+                    ]
+                ],200);
+            } else {
+                return response()->json([
+                    'status_code'=>403,
+                    'message'=>'Email or password is incorrect',
+                ],403);
+            }
+        }catch (\Exception $e) {
             return response()->json([
-                'status_code'=>200,
-                'message'=>'User logged in successfully',
-                'data'=>[
-                    'token'=>$token,
-                    'user'=>collect($user)->only(['id','first_name','last_name','email','phone','avatar']),
-                    'permissions'=>collect($user->getPermissionsViaRoles())->pluck('name')
-                ]
-            ],200);
-        } else {
-            return response()->json([
-                'status_code'=>500,
-                'message'=>'Unauthorized',
-            ]);
+                'status_code'=>403,
+                'message'=>'Something went wrong',
+                'errors'=>$e->getMessage(),
+            ],403);
         }
     }
 }
