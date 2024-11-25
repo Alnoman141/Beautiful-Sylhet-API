@@ -30,6 +30,7 @@ Route::group(['prefix' => 'v1'],function (){
     });
     Route::group(['prefix' => 'news'],function (){
         Route::post('all',[App\Http\Controllers\Api\V1\News\NewsController::class,'newsList']);
+        Route::post('type',[App\Http\Controllers\Api\V1\News\NewsController::class,'type']);
     });
     Route::group(['prefix' => 'spot'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\Tourist\SpotController::class,'index']);
@@ -54,7 +55,6 @@ Route::group(['prefix' => 'v1'],function (){
         //TODO @fa 2024-11-25 news
         Route::group(['prefix' => 'news'],function (){
             Route::post('list',[App\Http\Controllers\Api\V1\News\NewsController::class,'list']);
-            Route::post('type',[App\Http\Controllers\Api\V1\News\NewsController::class,'type']);
             Route::post('store',[App\Http\Controllers\Api\V1\News\NewsController::class,'store']);
             Route::post('publish',[App\Http\Controllers\Api\V1\News\NewsController::class,'publish']);
             Route::post('delete',[App\Http\Controllers\Api\V1\News\NewsController::class,'delete']);
