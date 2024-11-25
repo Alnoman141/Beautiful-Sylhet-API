@@ -6,12 +6,31 @@ use App\Enum\PaginationEnum;
 use App\Http\Controllers\Controller;
 use App\Models\News;
 use App\Models\NewsParent;
+use App\Models\NewsType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class NewsController extends Controller
 {
+    public function type()
+    {
+        try {
+            $types = NewsType::query()
+                ->select('id', 'name')
+                ->get();
+            return response()->json([
+                'status_code' => 200,
+                'data' => $types
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Something went wrong',
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
     public function newsList(Request $request)
     {
         try {
