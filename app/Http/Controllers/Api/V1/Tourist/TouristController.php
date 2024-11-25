@@ -110,6 +110,24 @@ class TouristController extends Controller
             ], 403);
         }
     }
+    //TODO @fa 2024-11-25 editGuideLine
+    public function editGuideLine(Request $request)
+    {
+        try {
+            $guideLine = TouristGuideline::query()
+                ->get();
+            return response()->json([
+                'status_code' => 200,
+                'data' => $guideLine
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Something went wrong',
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
     //TODO @fa 11/24/24 updateGuideLine
     public function updateGuideLine(Request $request)
     {
@@ -172,19 +190,8 @@ class TouristController extends Controller
     //TODO @fa 11/24/24 touristAwarenessDetails
     public function awarenessDetails(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'id' => 'required|exists:tourist_guidelines,id',
-        ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'status_code' => 422,
-                'message' => 'Validation Error',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
         try {
             $awareness = TouristAwareness::query()
-                ->where('id', $request->id)
                 ->where('language_id', $this->lang)
                 ->select('id', 'name')
                 ->first();

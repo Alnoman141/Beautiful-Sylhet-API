@@ -58,11 +58,13 @@ Route::group(['prefix' => 'v1'],function (){
         //TODO @fa 11/24/24 guideline
         Route::group(['prefix' => 'guideline'],function (){
             Route::post('store',[App\Http\Controllers\Api\V1\Tourist\TouristController::class,'storeGuideLine']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\Tourist\TouristController::class,'editGuideLine']);
             Route::post('update',[App\Http\Controllers\Api\V1\Tourist\TouristController::class,'updateGuideLine']);
         });
         //TODO @fa 11/24/24 awareness
         Route::group(['prefix' => 'awareness'],function (){
             Route::post('store',[App\Http\Controllers\Api\V1\Tourist\TouristController::class,'awarenessStore']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\Tourist\TouristController::class,'editAwareness']);
             Route::post('update',[App\Http\Controllers\Api\V1\Tourist\TouristController::class,'awarenessUpdate']);
         });
         //TODO @fa 2024-11-25 news
