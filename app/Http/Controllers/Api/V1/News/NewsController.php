@@ -116,6 +116,54 @@ class NewsController extends Controller
             ], 403);
         }
     }
+    //TODO @fa 2024-11-25  update news
+    public function update(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'data' => 'required|array',
+            'data.*.name' => 'required|string',
+            'data.*.language_id' => 'required|exists:languages,id',
+            'data.*.id' => 'required|exists:news,id',
+            'news_type_id' => 'nullable|exists:news_types,id',
+        ]);
+        if ($validate->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation Error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+        DB::beginTransaction();
+        try {
+            foreach ($request->data as $key=>$data) {
+                $news = News::with(['parent'])->find($data['id']);
+                if ($news){
+                    $news->update([
+                        'name' => $data['name'],
+                        'language_id' => $data['language_id'],
+                    ]);
+                    //update news type in parent table
+                    if ($key==0 && $request->filled('news_type_id')) {
+                        $news->parent->update([
+                            'news_type_id' => $request->news_type_id,
+                        ]);
+                    }
+                }
+            }
+            DB::commit();
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'News Updated Successfully',
+            ], 200);
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'News Update Failed',
+                'errors' => $exception->getMessage(),
+            ], 403);
+        }
+    }
     //TODO @fa 11/24/24 publish news
     public function publish(Request $request)
     {
@@ -132,7 +180,14 @@ class NewsController extends Controller
         }
         DB::beginTransaction();
         try {
-            NewsParent::query()->whereIn('id', $request->ids)->update(['status' => 1]);
+            $news = News::with(['parent'])->whereIn('id', $request->ids)->get();
+            if ($news->isNotEmpty()) {
+                foreach ($news as $new) {
+                    $new->parent->update([
+                        'status' => 1,
+                    ]);
+                }
+            }
             DB::commit();
             return response()->json([
                 'status_code' => 200,
