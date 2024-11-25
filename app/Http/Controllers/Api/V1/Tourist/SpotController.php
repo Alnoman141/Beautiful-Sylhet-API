@@ -106,10 +106,12 @@ class SpotController extends Controller
                 $data['spot_parent_id'] = $spotParent->id;
                 Spot::create($data);
             }
-            foreach ($request->images as $image) {
-                $spotParent->images()->create([
-                    'name' => Fa::uploadImage($image, 'spots-images'),
-                ]);
+            if ($request->filled('images')){
+                foreach ($request->images as $image) {
+                    $spotParent->images()->create([
+                        'name' => Fa::uploadImage($image, 'spots-images'),
+                    ]);
+                }
             }
             DB::commit();
             return response()->json([
