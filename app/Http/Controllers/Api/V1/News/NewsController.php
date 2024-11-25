@@ -116,6 +116,34 @@ class NewsController extends Controller
             ], 403);
         }
     }
+    //TODO @fa 2024-11-25 edit
+    public function edit(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'id' => 'required|exists:news,id',
+        ]);
+        if ($validate->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation Error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+        try {
+            $news = News::with(['parent'])->findOrFail($request->id);
+            $data = NewsParent::with(['news'])->findOrFail($news->news_parent_id);
+            return response()->json([
+                'status_code' => 200,
+                'data' => $data,
+            ], 200);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'News Edit Failed',
+                'errors' => $exception->getMessage(),
+            ], 403);
+        }
+    }
     //TODO @fa 2024-11-25  update news
     public function update(Request $request)
     {
