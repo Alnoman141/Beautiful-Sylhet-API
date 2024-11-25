@@ -79,11 +79,22 @@ class TouristController extends Controller
         }
         DB::beginTransaction();
         try {
-            foreach ($request->data as $data) {
-                TouristGuideline::query()->create([
-                    'name' => $data['name'],
-                    'language_id' => $data['language_id'],
-                ]);
+            $check = TouristGuideline::query()->count();
+            if (!$check) {
+                foreach ($request->data as $data) {
+                    TouristGuideline::query()->create([
+                        'name' => $data['name'],
+                        'language_id' => $data['language_id'],
+                    ]);
+                }
+            }else{
+                foreach ($request->data as $data) {
+                    TouristGuideline::query()
+                        ->where('language_id', $data['language_id'])
+                        ->update([
+                            'name' => $data['name'],
+                        ]);
+                }
             }
             DB::commit();
             return response()->json([
@@ -142,7 +153,7 @@ class TouristController extends Controller
     public function awarenessList(Request $request)
     {
         try {
-            $awareness = TouristGuideline::query()
+            $awareness = TouristAwareness::query()
                 ->where('language_id', $this->lang)
                 ->select('id', 'name')
                 ->get();
@@ -206,11 +217,22 @@ class TouristController extends Controller
         }
         DB::beginTransaction();
         try {
-            foreach ($request->data as $data) {
-                TouristAwareness::query()->create([
-                    'name' => $data['name'],
-                    'language_id' => $data['language_id'],
-                ]);
+            $check = TouristAwareness::query()->count();
+            if (!$check) {
+                foreach ($request->data as $data) {
+                    TouristAwareness::query()->create([
+                        'name' => $data['name'],
+                        'language_id' => $data['language_id'],
+                    ]);
+                }
+            }else{
+                foreach ($request->data as $data) {
+                    TouristAwareness::query()
+                        ->where('language_id', $data['language_id'])
+                        ->update([
+                            'name' => $data['name'],
+                        ]);
+                }
             }
             DB::commit();
             return response()->json([
@@ -219,6 +241,24 @@ class TouristController extends Controller
             ], 200);
         }catch (\Exception $e) {
             DB::rollBack();
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Something went wrong',
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
+    //TODO @fa 2024-11-25 editAwareness
+    public function editAwareness(Request $request)
+    {
+        try {
+            $awareness = TouristAwareness::query()
+                ->get();
+            return response()->json([
+                'status_code' => 200,
+                'data' => $awareness
+            ], 200);
+        }catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',
