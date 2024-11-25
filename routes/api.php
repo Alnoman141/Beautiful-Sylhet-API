@@ -36,6 +36,19 @@ Route::group(['prefix' => 'v1'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\Tourist\SpotController::class,'index']);
         Route::post('details',[App\Http\Controllers\Api\V1\Tourist\SpotController::class,'details']);
     });
+    Route::group(['prefix' => 'locker'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\Locker\LockerController::class,'index']);
+    });
+    //TODO @fa 2024-11-25 hotel
+    Route::group(['prefix' => 'hotel'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelList']);
+        Route::post('details',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'details']);
+
+        //TODO @fa 2024-11-25 hotel type list
+        Route::post('type-list',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelTypeList']);
+        //TODO @fa 2024-11-25 hotel category list
+        Route::post('category-list',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelCategoryList']);
+    });
     Route::group(['middleware' => 'auth:sanctum'],function (){
         Route::post('logout',[App\Http\Controllers\Api\V1\Auth\AuthController::class,'logout']);
         Route::post('avatar-upload', [\App\Http\Controllers\Api\V1\User\UserController::class, 'avatarUpload']);
@@ -65,6 +78,40 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('edit',[App\Http\Controllers\Api\V1\Tourist\SpotController::class,'edit']);
             Route::post('update',[App\Http\Controllers\Api\V1\Tourist\SpotController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\Tourist\SpotController::class,'delete']);
+            Route::post('dropdown',[App\Http\Controllers\Api\V1\Tourist\SpotController::class,'dropdown']);
+        });
+        //TODO @fa 2024-11-25 locker
+        Route::group(['prefix' => 'locker'],function (){
+            Route::post('store',[App\Http\Controllers\Api\V1\Locker\LockerController::class,'store']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\Locker\LockerController::class,'edit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\Locker\LockerController::class,'update']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\Locker\LockerController::class,'delete']);
+            Route::post('dropdown',[App\Http\Controllers\Api\V1\Locker\LockerController::class,'dropdown']);
+
+            Route::post('introduction',[App\Http\Controllers\Api\V1\Locker\LockerController::class,'introduction']);
+            Route::post('introduction-store',[App\Http\Controllers\Api\V1\Locker\LockerController::class,'introductionStore']);
+        });
+        //TODO @fa 2024-11-25 hotel
+        Route::group(['prefix' => 'hotel'],function (){
+            Route::post('store',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelStore']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelEdit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelUpdate']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelDelete']);
+
+            Route::post('type-dropdown',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'typeDropdown']);
+            Route::post('category-dropdown',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'categoryDropdown']);
+
+            //TODO @fa 2024-11-25 hotel type
+            Route::post('type-store',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelTypeStore']);
+            Route::post('type-edit',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelTypeEdit']);
+            Route::post('type-update',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelTypeUpdate']);
+            Route::post('type-delete',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelTypeDelete']);
+
+            //TODO @fa 2024-11-25 category
+            Route::post('category-store',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelCategoryStore']);
+            Route::post('category-edit',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelCategoryEdit']);
+            Route::post('category-update',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelCategoryUpdate']);
+            Route::post('category-delete',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelCategoryDelete']);
         });
     });
 });

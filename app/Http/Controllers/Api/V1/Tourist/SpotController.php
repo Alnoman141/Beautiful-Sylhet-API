@@ -99,7 +99,7 @@ class SpotController extends Controller
         DB::beginTransaction();
         try {
             $spotParent = SpotParent::create([
-                'image' => Fa::uploadImage($request->file('image'), 'spots'),
+                'image' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'spots') : null,
                 'link' => $request->link,
             ]);
             foreach ($request->data as $data) {
@@ -231,6 +231,31 @@ class SpotController extends Controller
             return response()->json([
                 'status_code' => 200,
                 'message' => 'Spot deleted successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Something went wrong',
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
+    //TODO @fa 2024-11-25 tourist spot list dropdown
+    public function dropdown()
+    {
+        try {
+            $spots = SpotParent::query()
+                ->withWhereHas('spot',fn($q) => $q->where('language_id', $this->lang))
+                ->get()
+                ->map(function ($spot) {
+                    return [
+                        'id' => $spot->id,
+                        'name' => $spot?->spot?->name,
+                    ];
+                });
+            return response()->json([
+                'status_code' => 200,
+                'data' => $spots
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

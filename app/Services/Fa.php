@@ -39,7 +39,7 @@ class Fa
             $disk->put($name, $data);
             return 'storage/' . $path.$name;
         }catch (\Exception $exception){
-            return 'default.png';
+            return '';
         }
     }
 }
