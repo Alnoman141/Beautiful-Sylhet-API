@@ -93,7 +93,7 @@ class AuthController extends Controller
             PasswordSentJob::dispatch($data);
             return response()->json([
                 'status_code' => 200,
-                'message' => 'Password reset success',
+                'message' => 'Password reset link sent to your email',
             ], 200);
         }catch (\Exception $e){
             return response()->json([
