@@ -128,4 +128,42 @@ class NewsController extends Controller
             ], 403);
         }
     }
+    //TODO @fa 2024-11-25 delete news
+    public function delete(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'ids' => 'required|array',
+            'ids.*' => 'required|exists:news,id',
+        ]);
+        if ($validate->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation Error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+        DB::beginTransaction();
+        try {
+            $news = News::with(['parent'])->whereIn('id', $request->ids)->get();
+            if ($news->isNotEmpty()) {
+                foreach ($news as $new) {
+                    $new->parent->delete();
+                    $new->delete();
+                }
+            }
+
+            DB::commit();
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'News Deleted Successfully',
+            ], 200);
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'News Delete Failed',
+                'errors' => $exception->getMessage(),
+            ], 403);
+        }
+    }
 }

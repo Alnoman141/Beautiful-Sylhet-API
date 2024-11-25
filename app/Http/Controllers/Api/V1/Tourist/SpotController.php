@@ -64,7 +64,7 @@ class SpotController extends Controller
         }
     }
     //TODO @fa 11/24/24 create spot
-    public function create(Request $request)
+    public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
