@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Tourist;
 use App\Enum\PaginationEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Spot;
+use App\Models\SpotImage;
 use App\Models\SpotParent;
 use App\Services\Fa;
 use Illuminate\Http\Request;
@@ -106,7 +107,7 @@ class SpotController extends Controller
                 $data['spot_parent_id'] = $spotParent->id;
                 Spot::create($data);
             }
-            if ($request->filled('images')){
+            if ($request->images && count($request->images)>0){
                 foreach ($request->images as $image) {
                     $spotParent->images()->create([
                         'name' => Fa::uploadImage($image, 'spots-images'),
