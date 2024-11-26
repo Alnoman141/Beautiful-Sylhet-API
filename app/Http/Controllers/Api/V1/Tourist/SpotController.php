@@ -194,7 +194,7 @@ class SpotController extends Controller
         try {
             $spotParent = SpotParent::findOrFail($request->id);
             $spotParent->update([
-                'image' => Fa::uploadImage($request->file('image'), 'spots'),
+                'image' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'spots') : $spotParent->image,
                 'link' => $request->link,
             ]);
             //$spotParent->images()->delete();
