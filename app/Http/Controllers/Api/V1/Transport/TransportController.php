@@ -95,6 +95,7 @@ class TransportController extends Controller
             'map_link' => 'nullable|url|max:255',
             'data' => 'required|array',
             'data.*.name' => 'required|string|max:255',
+            'data.*.language_id' => 'required|exists:languages,id',
             'data.*.time' => 'nullable|string|max:255',
             'data.*.destination' => 'nullable|string|max:255',
             'data.*.phone' => 'nullable|string|max:255',
@@ -133,6 +134,15 @@ class TransportController extends Controller
     //TODO @fa 2024-11-26 edit transport
     public function edit(Request $request)
     {
+        $validation = Validator::make($request->all(),[
+            'id' => 'required|exists:transports,id',
+        ]);
+        if ($validation->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'errors' => $validation->errors(),
+            ],422);
+        }
         try {
             $transport = Transport::query()
                 ->findOrFail($request->id);
