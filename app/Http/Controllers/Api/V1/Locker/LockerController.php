@@ -130,6 +130,16 @@ class LockerController extends Controller
     //TODO @fa 2024-11-25 edit locker
     public function edit(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:lockers,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
         try {
             $locker = Locker::findOrFail($request->id);
             $data = LockerParent::with(['images','lockers'])->findOrFail($locker->locker_parent_id);

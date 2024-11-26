@@ -130,6 +130,16 @@ class SpotController extends Controller
     //TODO @fa 11/24/24 edit spot
     public function edit(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:spots,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
         try {
             $spot = Spot::findOrFail($request->id);
             $data = SpotParent::with(['images','spot'])->findOrFail($spot->spot_parent_id);
@@ -216,6 +226,16 @@ class SpotController extends Controller
     //TODO @fa 11/24/24 delete spot
     public function delete(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:spots,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
         try {
             $spot = Spot::findOrFail($request->id);
             $parent = SpotParent::with(['images','spot'])->findOrFail($spot->spot_parent_id);
