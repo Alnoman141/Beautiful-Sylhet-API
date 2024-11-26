@@ -126,5 +126,15 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('update',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'delete']);
         });
+
+        //TODO @fa 2024-11-26 event
+        Route::group(['prefix' => 'event'],function (){
+            Route::post('list',[App\Http\Controllers\Api\V1\Event\EventController::class,'index']);
+            Route::post('store',[App\Http\Controllers\Api\V1\Event\EventController::class,'store']);
+            Route::post('details',[App\Http\Controllers\Api\V1\Event\EventController::class,'show']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\Event\EventController::class,'edit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\Event\EventController::class,'update']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\Event\EventController::class,'destroy']);
+        });
     });
 });
