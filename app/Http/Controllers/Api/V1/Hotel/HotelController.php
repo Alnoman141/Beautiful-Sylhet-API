@@ -494,7 +494,7 @@ class HotelController extends Controller
         DB::beginTransaction();
         try {
             $hotel = Hotel::with('parent')->findOrFail($request->id);
-            $hotel->parent->each->delete();
+            $hotel->parent()->delete();
             $hotel->delete();
             DB::commit();
             return response()->json([

@@ -249,7 +249,7 @@ class NewsController extends Controller
             $news = News::with(['parent'])->whereIn('id', $request->ids)->get();
             if ($news->isNotEmpty()) {
                 foreach ($news as $new) {
-                    $new->parent->delete();
+                    $new->parent()->delete();
                     $new->delete();
                 }
             }
