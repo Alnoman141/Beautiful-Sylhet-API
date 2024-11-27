@@ -15,6 +15,7 @@ git clone from repository
     php artisan key:generate
     php artisan migrate
     php artisan db:seed
+    php artisan storage:link
     php artisan serve
     
 ```
@@ -23,4 +24,4 @@ git clone from repository
 
 This project is used by the following companies:
 
-- Inflack Limited
+- Inflack Limited  [https://inflack.com/](https://inflack.com/)
