@@ -199,7 +199,7 @@ class SpotController extends Controller
                 'link' => $request->link,
             ]);
             //$spotParent->images()->delete();
-            if ($request->filled('images')){
+            if ($request->images && count($request->images)>0){
                 foreach ($request->images as $image) {
                     $spotParent->images()->create([
                         'name' => Fa::uploadImage($image, 'spots-images'),
@@ -277,6 +277,38 @@ class SpotController extends Controller
             return response()->json([
                 'status_code' => 200,
                 'data' => $spots
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Something went wrong',
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
+    //TODO @fa 2024-11-27 delete spot images as array ids
+    public function deleteImages(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'ids' => 'required|array',
+            'ids.*' => 'required|exists:spot_images,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+        try {
+            foreach ($request->ids as $id) {
+                $image = SpotImage::findOrFail($id);
+                Storage::delete($image->name);
+                $image->delete();
+            }
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Images deleted successfully',
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

@@ -82,6 +82,7 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('update',[App\Http\Controllers\Api\V1\Tourist\SpotController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\Tourist\SpotController::class,'delete']);
             Route::post('dropdown',[App\Http\Controllers\Api\V1\Tourist\SpotController::class,'dropdown']);
+            Route::post('delete-images',[App\Http\Controllers\Api\V1\Tourist\SpotController::class,'deleteImages']);
         });
         //TODO @fa 2024-11-25 locker
         Route::group(['prefix' => 'locker'],function (){
