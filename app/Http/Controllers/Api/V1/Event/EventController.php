@@ -231,6 +231,7 @@ class EventController extends Controller
         try {
             $event = Event::with(['parent'])
                 ->findOrFail($request->id);
+            Fa::deleteImage($event?->parent?->image);
             $event->parent()->delete();
             $event->delete();
             DB::commit();
