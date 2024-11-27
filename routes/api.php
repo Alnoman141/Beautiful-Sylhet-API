@@ -49,6 +49,18 @@ Route::group(['prefix' => 'v1'],function (){
         //TODO @fa 2024-11-25 hotel category list
         Route::post('category-list',[App\Http\Controllers\Api\V1\Hotel\HotelController::class,'hotelCategoryList']);
     });
+    //TODO @fa 2024-11-27 event
+    Route::group(['prefix' => 'event'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\Event\EventController::class,'index']);
+        Route::post('details',[App\Http\Controllers\Api\V1\Event\EventController::class,'show']);
+    });
+    //TODO @fa 2024-11-27 campaign
+    Route::group(['prefix' => 'campaign'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'index']);
+        Route::post('details',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'show']);
+    });
+
+    //TODO @fa 2024-11-27 authentication
     Route::group(['middleware' => 'auth:sanctum'],function (){
         Route::post('logout',[App\Http\Controllers\Api\V1\Auth\AuthController::class,'logout']);
         Route::post('avatar-upload', [\App\Http\Controllers\Api\V1\User\UserController::class, 'avatarUpload']);
@@ -130,12 +142,18 @@ Route::group(['prefix' => 'v1'],function (){
 
         //TODO @fa 2024-11-26 event
         Route::group(['prefix' => 'event'],function (){
-            Route::post('list',[App\Http\Controllers\Api\V1\Event\EventController::class,'index']);
             Route::post('store',[App\Http\Controllers\Api\V1\Event\EventController::class,'store']);
-            Route::post('details',[App\Http\Controllers\Api\V1\Event\EventController::class,'show']);
             Route::post('edit',[App\Http\Controllers\Api\V1\Event\EventController::class,'edit']);
             Route::post('update',[App\Http\Controllers\Api\V1\Event\EventController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\Event\EventController::class,'destroy']);
+        });
+
+        //TODO @fa 2024-11-27 campaign
+        Route::group(['prefix' => 'campaign'],function (){
+            Route::post('store',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'store']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'edit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'update']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'destroy']);
         });
     });
 });
