@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Fa
 {
@@ -41,6 +42,16 @@ class Fa
             return 'storage/' . $path.$name;
         }catch (\Exception $exception){
             return '';
+        }
+    }
+
+    public static function deleteImage($image)
+    {
+        if ($image){
+            $filePath =  Str::afterLast($image, 'storage/');
+            if (Storage::disk('public')->exists($filePath)) {
+                Storage::disk('public')->delete($filePath);
+            }
         }
     }
 }

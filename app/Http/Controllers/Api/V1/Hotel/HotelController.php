@@ -450,9 +450,7 @@ class HotelController extends Controller
                 'image' => $request->hasFile('image') ? Fa::uploadImage($request->image, 'hotel') : $parent->image,
             ]);
             if ($request->hasFile('image')) {
-                if ($parent->image) {
-                    Storage::delete($parent->image);
-                }
+                Fa::deleteImage($parent?->image);
             }
             foreach ($request->data as $data) {
                 $hotel = Hotel::findOrFail($data['id']);
@@ -494,6 +492,7 @@ class HotelController extends Controller
         DB::beginTransaction();
         try {
             $hotel = Hotel::with('parent')->findOrFail($request->id);
+            Fa::deleteImage($hotel?->parent?->image);
             $hotel->parent()->delete();
             $hotel->delete();
             DB::commit();

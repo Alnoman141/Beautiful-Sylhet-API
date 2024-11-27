@@ -106,7 +106,7 @@ class LockerController extends Controller
                     'description' => $data['description'],
                 ]);
             }
-            if ($request->filled('images')){
+            if ($request->images && count($request->images) > 0) {
                 foreach ($request->images as $image) {
                     $locker->images()->create([
                         'image' => Fa::uploadImage($image, 'locker'),
@@ -187,7 +187,7 @@ class LockerController extends Controller
                     'description' => $data['description'],
                 ]);
             }
-            if ($request->filled('images')){
+            if ($request->images && count($request->images) > 0){
                 foreach ($request->images as $image) {
                     $locker->images()->create([
                         'image' => Fa::uploadImage($image, 'locker'),

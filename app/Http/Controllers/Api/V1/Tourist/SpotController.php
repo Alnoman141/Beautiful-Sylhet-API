@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class SpotController extends Controller
 {
@@ -242,12 +243,12 @@ class SpotController extends Controller
             $parent = SpotParent::with(['images','spot'])->findOrFail($spot->spot_parent_id);
             if ($parent->images->isNotEmpty()){
                 foreach ($parent->images as $image) {
-                    Storage::delete($image->name);
+                    Fa::deleteImage($image?->name);
                     $image->delete();
                 }
             }
             $parent->spot()->delete();
-            Storage::delete($parent->image);
+            Fa::deleteImage($parent?->image);
             $parent->delete();
             return response()->json([
                 'status_code' => 200,
@@ -303,7 +304,7 @@ class SpotController extends Controller
         try {
             foreach ($request->ids as $id) {
                 $image = SpotImage::findOrFail($id);
-                Storage::delete($image->name);
+                Fa::deleteImage($image?->name);
                 $image->delete();
             }
             return response()->json([
