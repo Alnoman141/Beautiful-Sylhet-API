@@ -24,7 +24,11 @@ class HotelController extends Controller
         try {
             $types = HotelType::query()
                 ->where('language_id', $this->lang)
-                ->get();
+                ->get()
+                ->map(function ($type){
+                    $type['parent_id']=$type->hotel_type_parent_id;
+                    return $type;
+                });
             return response()->json([
                 'status_code' => 200,
                 'data' => $types
@@ -76,8 +80,7 @@ class HotelController extends Controller
     public function hotelTypeEdit(Request $request)
     {
         try {
-            $type = HotelType::findOrFail($request->id);
-            $parent = HotelTypeParent::with(['types'])->findOrFail($type->hotel_type_parent_id);
+            $parent = HotelTypeParent::with(['types'])->findOrFail($request->id);
             return response()->json([
                 'status_code' => 200,
                 'data' => $parent
@@ -130,7 +133,7 @@ class HotelController extends Controller
     public function hotelTypeDelete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'required|integer|exists:hotel_types,id',
+            'id' => 'required|integer|exists:hotel_type_parents,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -141,8 +144,8 @@ class HotelController extends Controller
         }
         DB::beginTransaction();
         try {
-            $type = HotelType::with('parent')->findOrFail($request->id);
-            $type->parent->each->delete();
+            $type = HotelTypeParent::with('types')->findOrFail($request->id);
+            $type->types()->delete();
             $type->delete();
             DB::commit();
             return response()->json([
@@ -165,7 +168,11 @@ class HotelController extends Controller
         try {
             $types = HotelCategory::query()
                 ->where('language_id', $this->lang)
-                ->get();
+                ->get()
+                ->map(function ($type){
+                    $type['parent_id']=$type->hotel_category_parent_id;
+                    return $type;
+                });
             return response()->json([
                 'status_code' => 200,
                 'data' => $types
@@ -216,9 +223,18 @@ class HotelController extends Controller
     //TODO @fa 2024-11-25 edit hotel category
     public function hotelCategoryEdit(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:hotel_category_parents,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
         try {
-            $type = HotelCategory::findOrFail($request->id);
-            $parent = HotelCategoryParent::with(['categories'])->findOrFail($type->hotel_category_parent_id);
+            $parent = HotelCategoryParent::with(['categories'])->findOrFail($request->id);
             return response()->json([
                 'status_code' => 200,
                 'data' => $parent
@@ -271,7 +287,7 @@ class HotelController extends Controller
     public function hotelCategoryDelete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'required|integer|exists:hotel_categories,id',
+            'id' => 'required|integer|exists:hotel_category_parents,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -282,8 +298,8 @@ class HotelController extends Controller
         }
         DB::beginTransaction();
         try {
-            $type = HotelCategory::with('parent')->findOrFail($request->id);
-            $type->parent->each->delete();
+            $type = HotelCategoryParent::with('categories')->findOrFail($request->id);
+            $type->categories()->delete();
             $type->delete();
             DB::commit();
             return response()->json([
@@ -315,6 +331,7 @@ class HotelController extends Controller
                 ->through(function ($hotel){
                     return [
                         'id' => $hotel->id,
+                        'parent_id' => $hotel->hotel_parent_id,
                         'name' => $hotel->name,
                         'phone' => $hotel->phone ?? '',
                         'address' => $hotel->address ?? '',
@@ -400,9 +417,18 @@ class HotelController extends Controller
     //TODO @fa 2024-11-25 edit hotel
     public function hotelEdit(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:hotel_parents,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
         try {
-            $hotel = Hotel::findOrFail($request->id);
-            $parent = HotelParent::with(['hotels'])->findOrFail($hotel->hotel_parent_id);
+            $parent = HotelParent::with(['hotels'])->findOrFail($request->id);
             return response()->json([
                 'status_code' => 200,
                 'data' => $parent
@@ -419,7 +445,7 @@ class HotelController extends Controller
     public function hotelUpdate(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'required|integer|exists:hotels,id',
+            'id' => 'required|integer|exists:hotel_parents,id',
             'spot_parent_id' => 'nullable|integer|exists:spot_parents,id',
             'hotel_type_parent_id' => 'nullable|integer|exists:hotel_type_parents,id',
             'hotel_category_parent_id' => 'nullable|integer|exists:hotel_category_parents,id',
@@ -427,7 +453,7 @@ class HotelController extends Controller
             'map_link' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
             'data' => 'required|array',
-            'data.*.id' => 'required|integer|exists:hotel_parents,id',
+            'data.*.id' => 'required|integer|exists:hotels,id',
             'data.*.name' => 'required|string',
             'data.*.language_id' => 'required|integer|exists:languages,id',
         ]);
@@ -440,17 +466,19 @@ class HotelController extends Controller
         }
         DB::beginTransaction();
         try {
-            $parent = Hotel::findOrFail($request->id);
+            $parent = HotelParent::findOrFail($request->id);
             $parent->update([
                 'spot_parent_id' => $request->spot_parent_id,
                 'hotel_type_parent_id' => $request->hotel_type_parent_id,
                 'hotel_category_parent_id' => $request->hotel_category_parent_id,
                 'website_link' => $request->website_link,
                 'map_link' => $request->map_link,
-                'image' => $request->hasFile('image') ? Fa::uploadImage($request->image, 'hotel') : $parent->image,
             ]);
             if ($request->hasFile('image')) {
                 Fa::deleteImage($parent?->image);
+                $parent->update([
+                    'image' => Fa::uploadImage($request->image, 'hotel'),
+                ]);
             }
             foreach ($request->data as $data) {
                 $hotel = Hotel::findOrFail($data['id']);
@@ -480,7 +508,7 @@ class HotelController extends Controller
     public function hotelDelete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'required|integer|exists:hotels,id',
+            'id' => 'required|integer|exists:hotel_parents,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -491,9 +519,9 @@ class HotelController extends Controller
         }
         DB::beginTransaction();
         try {
-            $hotel = Hotel::with('parent')->findOrFail($request->id);
-            Fa::deleteImage($hotel?->parent?->image);
-            $hotel->parent()->delete();
+            $hotel = HotelParent::with('hotels')->findOrFail($request->id);
+            Fa::deleteImage($hotel?->image);
+            $hotel->hotels()->delete();
             $hotel->delete();
             DB::commit();
             return response()->json([
