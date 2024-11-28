@@ -6,6 +6,7 @@ use App\Enum\PaginationEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\CampaignParent;
+use App\Models\CoxBazaar;
 use App\Services\Fa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,7 @@ class CampaignController extends Controller
                 ->through(function ($campaign) {
                     return [
                         'id' => $campaign->id,
+                        'parent_id'=>$campaign->campaign_parent_id,
                         'name' => $campaign->name,
                         'description' => $campaign->description,
                         'image' => $campaign?->parent?->name
@@ -104,7 +106,7 @@ class CampaignController extends Controller
     public function edit(Request $request)
     {
         $validation = Validator::make($request->all(),[
-            'id'=>'required|integer|exists:campaigns,id',
+            'id'=>'required|integer|exists:campaign_parents,id',
         ]);
         if ($validation->fails()){
             return response()->json([
@@ -114,8 +116,7 @@ class CampaignController extends Controller
             ],422);
         }
         try {
-            $campaign = Campaign::findOrFail($request->id);
-            $parent = CampaignParent::with(['campaigns'])->findOrFail($campaign->campaign_parent_id);
+            $parent = CampaignParent::with(['campaigns'])->findOrFail($request->id);
             return response()->json([
                 'status_code'=>200,
                 'data'=>$parent
@@ -176,7 +177,7 @@ class CampaignController extends Controller
     public function destroy(Request $request)
     {
         $validation = Validator::make($request->all(),[
-            'id'=>'required|integer|exists:campaigns,id',
+            'id'=>'required|integer|exists:campaign_parents,id',
         ]);
         if ($validation->fails()){
             return response()->json([
@@ -187,10 +188,11 @@ class CampaignController extends Controller
         }
         DB::beginTransaction();
         try {
-            $campaign = Campaign::with(['parent'])->findOrFail($request->id);
-            Fa::deleteImage($campaign?->parent?->image);
-            $campaign->parent()->delete();
+            $campaign = CampaignParent::with('campaigns')->findOrFail($request->id);
+            Fa::deleteImage($campaign?->image);
+            $campaign->campaigns()->delete();
             $campaign->delete();
+
             DB::commit();
             return response()->json([
                 'status_code'=>200,
@@ -201,6 +203,76 @@ class CampaignController extends Controller
             return response()->json([
                 'status_code'=>403,
                 'message'=> 'Campaign cannot be deleted',
+                'errors'=>$exception->getMessage()
+            ],403);
+        }
+    }
+    //TODO @fa 2024-11-28 cox bazar list
+    public function coxBazaar(Request $request)
+    {
+        try {
+            $cox = CoxBazaar::query()
+                ->where('language_id', $this->lang)
+                ->latest()
+                ->first();
+            return response()->json([
+                'status_code' => 200,
+                'data' => $cox
+            ], 200);
+        }catch (\Exception $exception){
+            return response()->json([
+                'status_code'=>403,
+                'errors'=>$exception->getMessage()
+            ],403);
+        }
+    }
+    //TODO @fa 2024-11-28 cox bazar store or update
+    public function coxBazaarStore(Request $request)
+    {
+        $validation = Validator::make($request->all(),[
+            'data'=>'required|array',
+            'data.language_id'=>'required|integer|exists:languages,id',
+            'data.description'=>'required|string',
+        ]);
+        if ($validation->fails()){
+            return response()->json([
+                'status_code'=>422,
+                'message'=>'Validation error',
+                'errors'=>$validation->errors()
+            ],422);
+        }
+        DB::beginTransaction();
+        try {
+            CoxBazaar::updateOrCreate([
+                'language_id'=>$request->data['language_id']
+            ],[
+                'description'=>$request->data['description']
+            ]);
+            DB::commit();
+            return response()->json([
+                'status_code'=>200,
+                'message'=>'Data saved successfully'
+            ],200);
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return response()->json([
+                'status_code'=>403,
+                'errors'=>$exception->getMessage()
+            ],403);
+        }
+    }
+    //TODO @fa 2024-11-28 edit cox bazar
+    public function coxBazaarEdit(Request $request)
+    {
+        try {
+            $cox = CoxBazaar::query()->get();
+            return response()->json([
+                'status_code'=>200,
+                'data'=>$cox
+            ],200);
+        }catch (\Exception $exception){
+            return response()->json([
+                'status_code'=>403,
                 'errors'=>$exception->getMessage()
             ],403);
         }
