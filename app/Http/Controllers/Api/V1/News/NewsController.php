@@ -59,7 +59,11 @@ class NewsController extends Controller
                 ->when($request->filled('news_type_id'),fn($q) => $q->whereHas('parent',fn($q) => $q->where('news_type_id',$request->news_type_id)))
                 ->where('language_id', $this->lang)
                 ->orderByDesc('id')
-                ->paginate($request->integer('per_page',PaginationEnum::Default->value));
+                ->paginate($request->integer('per_page',PaginationEnum::Default->value))
+                ->through(function ($news) {
+                    $news['parent_id']=$news->news_parent_id;
+                    return $news;
+                });
             return response()->json([
                 'status_code' => 200,
                 'data' => $news
@@ -120,7 +124,7 @@ class NewsController extends Controller
     public function edit(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'id' => 'required|exists:news,id',
+            'id' => 'required|exists:news_parents,id',
         ]);
         if ($validate->fails()) {
             return response()->json([
@@ -130,8 +134,7 @@ class NewsController extends Controller
             ], 422);
         }
         try {
-            $news = News::with(['parent'])->findOrFail($request->id);
-            $data = NewsParent::with(['news'])->findOrFail($news->news_parent_id);
+            $data = NewsParent::with(['news'])->findOrFail($request->id);
             return response()->json([
                 'status_code' => 200,
                 'data' => $data,
@@ -197,7 +200,7 @@ class NewsController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'ids' => 'required|array',
-            'ids.*' => 'required|exists:news,id',
+            'ids.*' => 'required|exists:news_parents,id',
         ]);
         if ($validate->fails()) {
             return response()->json([
@@ -208,14 +211,7 @@ class NewsController extends Controller
         }
         DB::beginTransaction();
         try {
-            $news = News::with(['parent'])->whereIn('id', $request->ids)->get();
-            if ($news->isNotEmpty()) {
-                foreach ($news as $new) {
-                    $new->parent->update([
-                        'status' => 1,
-                    ]);
-                }
-            }
+            NewsParent::query()->whereIn('id', $request->ids)->update(['status' => 1]);
             DB::commit();
             return response()->json([
                 'status_code' => 200,
@@ -235,7 +231,7 @@ class NewsController extends Controller
     {
         $validate = Validator::make($request->all(), [
             'ids' => 'required|array',
-            'ids.*' => 'required|exists:news,id',
+            'ids.*' => 'required|exists:news_parents,id',
         ]);
         if ($validate->fails()) {
             return response()->json([
@@ -246,14 +242,13 @@ class NewsController extends Controller
         }
         DB::beginTransaction();
         try {
-            $news = News::with(['parent'])->whereIn('id', $request->ids)->get();
-            if ($news->isNotEmpty()) {
-                foreach ($news as $new) {
-                    $new->parent()->delete();
-                    $new->delete();
-                }
-            }
-
+            NewsParent::with('news')->whereIn('id', $request->ids)->get()
+                ->each(function ($news) {
+                    $news->news->each(function ($child) {
+                        $child->delete();
+                    });
+                    $news->delete();
+                });
             DB::commit();
             return response()->json([
                 'status_code' => 200,
