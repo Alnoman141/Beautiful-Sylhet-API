@@ -103,7 +103,6 @@ class NewsController extends Controller
                 $news->name = $data['name'];
                 $news->news_parent_id = $parent->id;
                 $news->language_id = $data['language_id'];
-                $news->status = 0;
                 $news->save();
             }
             DB::commit();
