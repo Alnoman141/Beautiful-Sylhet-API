@@ -212,7 +212,7 @@ class NewsController extends Controller
         }
         DB::beginTransaction();
         try {
-            NewsParent::query()->whereIn('id', $request->ids)->update(['status' => 1]);
+            NewsParent::query()->whereIn('id', $request->ids)->update(['status' => $request->status ?? 1]);
             DB::commit();
             return response()->json([
                 'status_code' => 200,
