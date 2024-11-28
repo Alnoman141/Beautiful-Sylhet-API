@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+
+class BankAtm extends Model
+{
+    protected $guarded = [];
+
+    public function parent() : BelongsTo
+    {
+        return $this->belongsTo(BankAtmParent::class,'bank_atm_parent_id');
+    }
+
+    public function spot(): HasOneThrough
+    {
+        return $this->hasOneThrough(SpotParent::class, BankAtmParent::class, 'id', 'id', 'bank_atm_parent_id', 'spot_parent_id');
+    }
+}
