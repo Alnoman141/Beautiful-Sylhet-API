@@ -55,13 +55,14 @@ class NewsController extends Controller
     public function list(Request $request)
     {
         try {
-            $news = News::with(['type'])
+            $news = News::with(['type','parent'])
                 ->when($request->filled('news_type_id'),fn($q) => $q->whereHas('parent',fn($q) => $q->where('news_type_id',$request->news_type_id)))
                 ->where('language_id', $this->lang)
                 ->orderByDesc('id')
                 ->paginate($request->integer('per_page',PaginationEnum::Default->value))
                 ->through(function ($news) {
                     $news['parent_id']=$news->news_parent_id;
+                    $news['status']=$news?->parent?->status;
                     return $news;
                 });
             return response()->json([
