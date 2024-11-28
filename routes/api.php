@@ -73,6 +73,11 @@ Route::group(['prefix' => 'v1'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\Bank\BankController::class,'atmList']);
         Route::post('details',[App\Http\Controllers\Api\V1\Bank\BankController::class,'atmDetails']);
     });
+    //TODO @fa 2024-11-28 red zone
+    Route::group(['prefix' => 'red-zone'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'index']);
+        Route::post('details',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'show']);
+    });
     //TODO @fa 2024-11-27 authentication
     Route::group(['middleware' => 'auth:sanctum'],function (){
         Route::post('logout',[App\Http\Controllers\Api\V1\Auth\AuthController::class,'logout']);
@@ -187,6 +192,14 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('edit',[App\Http\Controllers\Api\V1\Bank\BankController::class,'atmEdit']);
             Route::post('update',[App\Http\Controllers\Api\V1\Bank\BankController::class,'atmUpdate']);
             Route::post('delete',[App\Http\Controllers\Api\V1\Bank\BankController::class,'atmDelete']);
+        });
+
+        //TODO @fa 2024-11-28 red zone
+        Route::group(['prefix' => 'red-zone'],function (){
+            Route::post('store',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'store']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'edit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'update']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'destroy']);
         });
     });
 });
