@@ -23,6 +23,7 @@ class EventController extends Controller
                 ->through(function ($event) {
                     return [
                         'id' => $event->id,
+                        'parent_id' => $event->event_parent_id,
                         'name' => $event->name,
                         'date' => $event->date,
                         'time' => $event->time,
@@ -83,7 +84,7 @@ class EventController extends Controller
             'data.*.description' => 'nullable|string',
             'data.*.terms' => 'nullable|string',
             'spot_parent_id' => 'nullable|integer|exists:spot_parents,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg',
         ]);
 
         if ($validation->fails()) {
@@ -128,7 +129,7 @@ class EventController extends Controller
     public function edit(Request $request)
     {
         $validator = Validator::make($request->all(),[
-           'id'=>'required|integer|exists:events,id',
+           'id'=>'required|integer|exists:event_parents,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -138,10 +139,7 @@ class EventController extends Controller
             ], 422);
         }
         try {
-            $event = Event::query()
-                ->where('language_id', $this->lang)
-                ->findOrFail($request->id);
-            $data = EventParent::with(['events'])->findOrFail($event->event_parent_id);
+            $data = EventParent::with(['events'])->findOrFail($request->id);
             return response()->json([
                 'status_code' => 200,
                 'data' => $data,
@@ -218,7 +216,7 @@ class EventController extends Controller
     public function destroy(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'required|integer|exists:events,id',
+            'id' => 'required|integer|exists:event_parents,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -229,10 +227,9 @@ class EventController extends Controller
         }
         DB::beginTransaction();
         try {
-            $event = Event::with(['parent'])
-                ->findOrFail($request->id);
-            Fa::deleteImage($event?->parent?->image);
-            $event->parent()->delete();
+            $event = EventParent::with('events')->findOrFail($request->id);
+            Fa::deleteImage($event?->image);
+            $event->events()->delete();
             $event->delete();
             DB::commit();
             return response()->json([
