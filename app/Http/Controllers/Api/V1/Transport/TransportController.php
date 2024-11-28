@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Transport;
 use App\Models\TransportParent;
 use App\Models\TransportType;
+use App\Models\TransportTypeParent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -22,7 +23,8 @@ class TransportController extends Controller
                 ->get()
                 ->map(function ($type) {
                     return [
-                        'id' => $type->transport_type_parent_id,
+                        'id' => $type->id,
+                        'parent_id' => $type->transport_type_parent_id,
                         'name' => $type->name,
                     ];
                 });
@@ -43,12 +45,13 @@ class TransportController extends Controller
     {
         try {
             $transports = Transport::query()
-                ->when($request->transport_type_id,fn($query) => $query->where('transport_type_parent_id',$request->transport_type_id))
+                ->when($request->transport_parent_id,fn($query) => $query->where('transport_parent_id',$request->transport_parent_id))
                 ->where('language_id',$this->lang)
                 ->paginate($request->integer('per_page',PaginationEnum::Default->value))
                 ->through(function ($transport) {
                     return [
                         'id' => $transport->id,
+                        'parent_id' => $transport->transport_parent_id,
                         'name' => $transport->name,
                         'time' => $transport->time,
                         'destination' => $transport->destination,
@@ -135,7 +138,7 @@ class TransportController extends Controller
     public function edit(Request $request)
     {
         $validation = Validator::make($request->all(),[
-            'id' => 'required|exists:transports,id',
+            'id' => 'required|exists:transport_parents,id',
         ]);
         if ($validation->fails()) {
             return response()->json([
@@ -144,10 +147,8 @@ class TransportController extends Controller
             ],422);
         }
         try {
-            $transport = Transport::query()
-                ->findOrFail($request->id);
             $data = TransportParent::with('transports')
-                ->findOrFail($transport->transport_parent_id);
+                ->findOrFail($request->id);
             return response()->json([
                 'status_code' => 200,
                 'data' => $data,
@@ -187,6 +188,7 @@ class TransportController extends Controller
                 ->findOrFail($request->id);
             $parent->update([
                 'map_link' => $request->map_link,
+                'transport_type_parent_id' => $request->transport_type_parent_id ?? $parent->transport_type_parent_id,
             ]);
             foreach ($request->data as $data) {
                 if (isset($data['id'])) {
@@ -212,9 +214,9 @@ class TransportController extends Controller
     public function delete(Request $request)
     {
         try {
-            $transport = Transport::with('parent')
+            $transport = TransportParent::with('transports')
                 ->findOrFail($request->id);
-            $transport->parent()->delete();
+            $transport->transports->each->delete();
             $transport->delete();
             return response()->json([
                 'status_code' => 200,
