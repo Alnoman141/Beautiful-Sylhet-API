@@ -84,6 +84,12 @@ Route::group(['prefix' => 'v1'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'index']);
         Route::post('details',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'show']);
     });
+
+    //TODO @fa 2024-11-28 life guard
+    Route::group(['prefix' => 'life-guard'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'index']);
+        Route::post('details',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'show']);
+    });
     //TODO @fa 2024-11-27 authentication
     Route::group(['middleware' => 'auth:sanctum'],function (){
         Route::post('logout',[App\Http\Controllers\Api\V1\Auth\AuthController::class,'logout']);
@@ -215,6 +221,14 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('edit',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'edit']);
             Route::post('update',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'delete']);
+        });
+
+        //TODO @fa 2024-11-28 life guard
+        Route::group(['prefix' => 'life-guard'],function (){
+            Route::post('store',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'store']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'edit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'update']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'delete']);
         });
     });
 });
