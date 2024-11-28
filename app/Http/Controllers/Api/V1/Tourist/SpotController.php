@@ -28,6 +28,7 @@ class SpotController extends Controller
                 ->through(function ($spot) {
                     return [
                         'id' => $spot->id,
+                        'parent_id' => $spot->spot_parent_id,
                         'name' => $spot->name,
                         'image' => $spot?->parent?->image
                     ];
@@ -133,7 +134,7 @@ class SpotController extends Controller
     public function edit(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'required|exists:spots,id',
+            'id' => 'required|exists:spot_parents,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -143,8 +144,7 @@ class SpotController extends Controller
             ], 422);
         }
         try {
-            $spot = Spot::findOrFail($request->id);
-            $data = SpotParent::with(['images','spot'])->findOrFail($spot->spot_parent_id);
+            $data = SpotParent::with(['images','spot'])->findOrFail($request->id);
             return response()->json([
                 'status_code' => 200,
                 'data' => $data
@@ -234,7 +234,7 @@ class SpotController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'required|exists:spots,id',
+            'id' => 'required|exists:spot_parents,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -244,8 +244,7 @@ class SpotController extends Controller
             ], 422);
         }
         try {
-            $spot = Spot::findOrFail($request->id);
-            $parent = SpotParent::with(['images','spot'])->findOrFail($spot->spot_parent_id);
+            $parent = SpotParent::with(['images','spot'])->findOrFail($request->id);
             if ($parent->images->isNotEmpty()){
                 foreach ($parent->images as $image) {
                     Fa::deleteImage($image?->name);
@@ -272,12 +271,12 @@ class SpotController extends Controller
     {
         try {
             $spots = SpotParent::query()
-                ->withWhereHas('spot',fn($q) => $q->where('language_id', $this->lang))
+                ->withWhereHas('translate',fn($q) => $q->where('language_id', $this->lang))
                 ->get()
                 ->map(function ($spot) {
                     return [
                         'id' => $spot->id,
-                        'name' => $spot?->spot?->name,
+                        'name' => $spot?->translate?->name,
                     ];
                 });
             return response()->json([
