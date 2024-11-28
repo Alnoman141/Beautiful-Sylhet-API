@@ -84,11 +84,20 @@ Route::group(['prefix' => 'v1'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'index']);
         Route::post('details',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'show']);
     });
-
+    //TODO @fa 2024-11-28 doctor
+    Route::group(['prefix' => 'doctor'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\Doctor\DoctorController::class,'index']);
+        Route::post('details',[App\Http\Controllers\Api\V1\Doctor\DoctorController::class,'show']);
+    });
     //TODO @fa 2024-11-28 life guard
     Route::group(['prefix' => 'life-guard'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'index']);
         Route::post('details',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'show']);
+    });
+    //TODO @fa 2024-11-28 beach volunteer
+    Route::group(['prefix' => 'beach-volunteer'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\BeachVolunteer\BeachVolunteerController::class,'index']);
+        Route::post('details',[App\Http\Controllers\Api\V1\BeachVolunteer\BeachVolunteerController::class,'show']);
     });
     //TODO @fa 2024-11-27 authentication
     Route::group(['middleware' => 'auth:sanctum'],function (){
@@ -222,13 +231,26 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('update',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'delete']);
         });
-
+        //TODO @fa 2024-11-28 doctor
+        Route::group(['prefix' => 'doctor'],function (){
+            Route::post('store',[App\Http\Controllers\Api\V1\Doctor\DoctorController::class,'store']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\Doctor\DoctorController::class,'edit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\Doctor\DoctorController::class,'update']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\Doctor\DoctorController::class,'delete']);
+        });
         //TODO @fa 2024-11-28 life guard
         Route::group(['prefix' => 'life-guard'],function (){
             Route::post('store',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'store']);
             Route::post('edit',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'edit']);
             Route::post('update',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'delete']);
+        });
+        //TODO @fa 2024-11-28 beach volunteer
+        Route::group(['prefix' => 'beach-volunteer'],function (){
+            Route::post('store',[App\Http\Controllers\Api\V1\BeachVolunteer\BeachVolunteerController::class,'store']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\BeachVolunteer\BeachVolunteerController::class,'edit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\BeachVolunteer\BeachVolunteerController::class,'update']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\BeachVolunteer\BeachVolunteerController::class,'delete']);
         });
     });
 });
