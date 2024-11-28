@@ -63,6 +63,7 @@ class NewsController extends Controller
                 ->through(function ($news) {
                     $news['parent_id']=$news->news_parent_id;
                     $news['status']=$news?->parent?->status;
+                    unset($news->parent);
                     return $news;
                 });
             return response()->json([
