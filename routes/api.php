@@ -107,6 +107,7 @@ Route::group(['prefix' => 'v1'],function (){
         Route::group(['prefix' => 'news'],function (){
             Route::post('list',[App\Http\Controllers\Api\V1\News\NewsController::class,'list']);
             Route::post('store',[App\Http\Controllers\Api\V1\News\NewsController::class,'store']);
+            Route::post('update',[App\Http\Controllers\Api\V1\News\NewsController::class,'update']);
             Route::post('edit',[App\Http\Controllers\Api\V1\News\NewsController::class,'edit']);
             Route::post('publish',[App\Http\Controllers\Api\V1\News\NewsController::class,'publish']);
             Route::post('delete',[App\Http\Controllers\Api\V1\News\NewsController::class,'delete']);
