@@ -156,24 +156,13 @@ class PoliceController extends Controller
                 'spot_parent_id' => $request->spot_parent_id
             ]);
             foreach ($request->data as $data) {
-                $police = Police::where('police_parent_id',$parent->id)
-                    ->where('language_id',$data['language_id'])
-                    ->first();
-                if ($police){
-                    $police->update([
-                        'name'=> $data['name'],
-                        'phone'=> @$data['phone'],
-                        'instruction'=> @$data['instruction'],
-                    ]);
-                }else{
-                    Police::create([
-                        'police_parent_id'=> $parent->id,
-                        'language_id'=> $data['language_id'],
-                        'name'=> $data['name'],
-                        'phone'=> @$data['phone'],
-                        'instruction'=> @$data['instruction'],
-                    ]);
-                }
+                $police = Police::findOrFail($data['id']);
+                $police->update([
+                    'language_id'=> $data['language_id'],
+                    'name'=> $data['name'],
+                    'phone'=> @$data['phone'],
+                    'instruction'=> @$data['instruction'],
+                ]);
             }
             DB::commit();
             return response()->json([
