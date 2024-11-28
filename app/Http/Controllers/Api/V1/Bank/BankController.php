@@ -163,7 +163,7 @@ class BankController extends Controller
             DB::commit();
             return response()->json([
                 'status_code' => 200,
-                'data' => $bank
+                'message' => 'Bank updated successfully'
             ], 200);
         }catch (\Exception $exception){
             DB::rollBack();
