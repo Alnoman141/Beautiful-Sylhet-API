@@ -131,7 +131,7 @@ class LockerController extends Controller
     public function edit(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'required|integer|exists:lockers,id',
+            'id' => 'required|integer|exists:locker_parents,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -141,8 +141,7 @@ class LockerController extends Controller
             ], 422);
         }
         try {
-            $locker = Locker::findOrFail($request->id);
-            $data = LockerParent::with(['images','lockers'])->findOrFail($locker->locker_parent_id);
+            $data = LockerParent::with(['images','lockers'])->findOrFail($request->id);
             return response()->json([
                 'status_code' => 200,
                 'data' => $data
@@ -159,9 +158,10 @@ class LockerController extends Controller
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'nullable|integer|exists:lockers,id',
+            'id' => 'nullable|integer|exists:locker_parents,id',
             'spot_parent_id' => 'required|integer|exists:spot_parents,id',
             'data' => 'required|array',
+            'data.*.id' => 'required|integer|exists:lockers,id',
             'data.*.language_id' => 'required|integer|exists:languages,id',
             'link' => 'nullable|string',
         ]);
@@ -174,13 +174,13 @@ class LockerController extends Controller
         }
         DB::beginTransaction();
         try {
-            $locker = Locker::with('parent')->findOrFail($request->id);
-            $locker->parent->update([
+            $locker = LockerParent::findOrFail($request->id);
+            $locker->update([
                 'spot_parent_id' => $request->spot_parent_id,
                 'link' => $request->link,
             ]);
             foreach ($request->data as $data) {
-                $locker->update([
+                Locker::findOrFail($data['id'])->update([
                     'language_id' => $data['language_id'],
                     'phone' => $data['phone'],
                     'address' => $data['address'],
@@ -216,7 +216,11 @@ class LockerController extends Controller
             $lockers = Locker::query()
                 ->where('language_id', $this->lang)
                 //->latest()
-                ->get();
+                ->get()
+                ->map(function ($locker){
+                    $locker['parent_id'] = $locker->locaker_parent_id;
+                    return $locker;
+                });
             return response()->json([
                 'status_code' => 200,
                 'data' => $lockers,
