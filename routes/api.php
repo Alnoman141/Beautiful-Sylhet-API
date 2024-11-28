@@ -59,7 +59,20 @@ Route::group(['prefix' => 'v1'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'index']);
         Route::post('details',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'show']);
     });
+    Route::group(['prefix' => 'cox-bazaar'],function (){
+        Route::post('details',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'coxBazaar']);
+    });
 
+    //TODO @fa 2024-11-28 bank
+    Route::group(['prefix' => 'bank'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\Bank\BankController::class,'bankList']);
+        Route::post('details',[App\Http\Controllers\Api\V1\Bank\BankController::class,'bankDetails']);
+    });
+    //TODO @fa 2024-11-28 atm
+    Route::group(['prefix' => 'atm'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\Bank\BankController::class,'atmList']);
+        Route::post('details',[App\Http\Controllers\Api\V1\Bank\BankController::class,'atmDetails']);
+    });
     //TODO @fa 2024-11-27 authentication
     Route::group(['middleware' => 'auth:sanctum'],function (){
         Route::post('logout',[App\Http\Controllers\Api\V1\Auth\AuthController::class,'logout']);
@@ -154,6 +167,26 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('edit',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'edit']);
             Route::post('update',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'destroy']);
+        });
+        //TODO @fa 2024-11-28 cox bazaar
+        Route::group(['prefix' => 'cox-bazaar'],function (){
+            Route::post('store',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'coxBazaarStore']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\Campaign\CampaignController::class,'coxBazaarEdit']);
+        });
+
+        //TODO @fa 2024-11-28 bank
+        Route::group(['prefix' => 'bank'],function (){
+            Route::post('store',[App\Http\Controllers\Api\V1\Bank\BankController::class,'bankStore']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\Bank\BankController::class,'bankEdit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\Bank\BankController::class,'bankUpdate']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\Bank\BankController::class,'bankDelete']);
+        });
+        //TODO @fa 2024-11-28 atm
+        Route::group(['prefix' => 'atm'],function (){
+            Route::post('store',[App\Http\Controllers\Api\V1\Bank\BankController::class,'atmStore']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\Bank\BankController::class,'atmEdit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\Bank\BankController::class,'atmUpdate']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\Bank\BankController::class,'atmDelete']);
         });
     });
 });
