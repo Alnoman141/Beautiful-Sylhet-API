@@ -4,6 +4,7 @@
  *Designation: Sr. Software Engineer
  *Date: 11/24/24 1:15 PM
  */
+
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'v1'],function (){
@@ -77,6 +78,11 @@ Route::group(['prefix' => 'v1'],function (){
     Route::group(['prefix' => 'red-zone'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'index']);
         Route::post('details',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'show']);
+    });
+    //TODO @fa 2024-11-28 police
+    Route::group(['prefix' => 'police'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'index']);
+        Route::post('details',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'show']);
     });
     //TODO @fa 2024-11-27 authentication
     Route::group(['middleware' => 'auth:sanctum'],function (){
@@ -200,6 +206,14 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('edit',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'edit']);
             Route::post('update',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'destroy']);
+        });
+
+        //TODO @fa 2024-11-28 police
+        Route::group(['prefix' => 'police'],function (){
+            Route::post('store',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'store']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'edit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'update']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\Tourist\PoliceController::class,'delete']);
         });
     });
 });
