@@ -103,7 +103,7 @@ class RedZoneController extends Controller
             DB::commit();
             return response()->json([
                 'status_code'=>200,
-                'data' => 'Red zone created successfully'
+                'message' => 'Red zone created successfully'
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -156,7 +156,7 @@ class RedZoneController extends Controller
             DB::commit();
             return response()->json([
                 'status_code'=>200,
-                'data' => 'Red zone updated successfully'
+                'message' => 'Red zone updated successfully'
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -212,7 +212,7 @@ class RedZoneController extends Controller
             DB::commit();
             return response()->json([
                 'status_code'=>200,
-                'data' => 'Red zone deleted successfully'
+                'message' => 'Red zone deleted successfully'
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
