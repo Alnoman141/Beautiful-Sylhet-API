@@ -16,7 +16,7 @@ trait DiskImageTrait
     {
         return $name
             ? (config('filesystems.default') === 's3'
-            ? Storage::disk('s3')->url($name)
+            ? (Storage::disk('s3')->exists($name) ? Storage::disk('s3')->url($name) : '')
             : (file_exists($name) ? asset($name) : '')
         ) : '';
     }
