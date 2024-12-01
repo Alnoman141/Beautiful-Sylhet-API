@@ -27,19 +27,25 @@ class Fa
         return $response->json();
     }
 
-    public static function uploadImage(array|\Illuminate\Http\UploadedFile|null $file, string $string)
+    public static function uploadImage(array|\Illuminate\Http\UploadedFile|null $file, string $string,$disk='local')
     {
         try {
             $extension = $file->extension();
             $name = $file->hashName();
-            $path = 'uploads/'.$string.'/' . $extension . '/';
+            $path = 'coxbazaar/'.$string.'/' . $extension . '/';
             $data = File::get($file);
-            $disk = Storage::build([
-                'driver' => 'local',
-                'root' => public_path('storage/'.$path),
-            ]);
-            $disk->put($name, $data);
-            return 'storage/' . $path.$name;
+            if ($disk == 's3') {
+                Storage::disk('s3')->put($path . $name, $data, 'public');
+              //return  $temporaryUrl = Storage::disk('s3')->temporaryUrl($path . $name, now()->addMinutes(1));
+                return $path.$name;
+            } else {
+                $disk = Storage::build([
+                    'driver' => 'local',
+                    'root' => public_path('storage/'.$path),
+                ]);
+                $disk->put($name, $data);
+                return 'storage/' . $path.$name;
+            }
         }catch (\Exception $exception){
             return '';
         }
@@ -48,9 +54,15 @@ class Fa
     public static function deleteImage($image)
     {
         if ($image){
-            $filePath =  Str::afterLast($image, 'storage/');
-            if (Storage::disk('public')->exists($filePath)) {
-                Storage::disk('public')->delete($filePath);
+            if (config('filesystems.default')=='s3') {
+                $image = Str::after($image, config('filesystems.disks.s3.url').'/');
+                Storage::disk('s3')->delete($image);
+            }
+            else{
+                $filePath =  Str::afterLast($image, 'storage/');
+                if (Storage::disk('public')->exists($filePath)) {
+                    Storage::disk('public')->delete($filePath);
+                }
             }
         }
     }

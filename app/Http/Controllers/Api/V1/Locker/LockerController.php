@@ -80,10 +80,12 @@ class LockerController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'spot_parent_id' => 'required|integer|exists:spot_parents,id',
-            'data' => 'required|array',
-            'parent_spot_id' => 'required|integer|exists:spot_parents,id',
             'link' => 'nullable|string',
+            'data' => 'required|array',
             'data.*.language_id' => 'required|integer|exists:languages,id',
+            'data.*.phone' => 'nullable|max:20',
+            'data.*.address' => 'nullable|string|max:255',
+            'data.*.description' => 'nullable|string',
         ]);
         if ($validator->fails()) {
             return response()->json([

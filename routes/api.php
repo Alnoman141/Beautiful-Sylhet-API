@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::group(['prefix' => 'v1'],function (){
     //TODO @fa 11/24/24 Language list
     Route::post('language-list',[App\Http\Controllers\Api\V1\LanguageController::class,'index']);
+    Route::post('disk',[App\Http\Controllers\DevController::class,'index']);
     Route::get('/', function (){
         return response()->json([
             'status' => true,
