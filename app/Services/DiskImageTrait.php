@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 
 trait DiskImageTrait
 {
-    protected function disk(string $name): string
+    protected function disk($name): string
     {
         return $name
             ? (config('filesystems.default') === 's3'
