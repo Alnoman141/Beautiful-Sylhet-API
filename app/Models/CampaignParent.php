@@ -10,6 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class CampaignParent extends Model
 {
     protected $guarded = [];
+    protected function image(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => $this->disk($value),
+        );
+    }
     public function campaigns(): HasMany
     {
         return $this->hasMany(Campaign::class, 'campaign_parent_id');
@@ -18,12 +24,5 @@ class CampaignParent extends Model
     public function translate(): HasOne
     {
         return $this->hasOne(Campaign::class, 'campaign_parent_id');
-    }
-
-    protected function image(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => file_exists($value) ? asset($value) : '',
-        );
     }
 }

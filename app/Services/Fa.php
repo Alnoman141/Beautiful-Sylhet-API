@@ -27,14 +27,14 @@ class Fa
         return $response->json();
     }
 
-    public static function uploadImage(array|\Illuminate\Http\UploadedFile|null $file, string $string,$disk='local')
+    public static function uploadImage(array|\Illuminate\Http\UploadedFile|null $file, string $string)
     {
         try {
             $extension = $file->extension();
             $name = $file->hashName();
             $path = 'coxbazaar/'.$string.'/' . $extension . '/';
             $data = File::get($file);
-            if ($disk == 's3') {
+            if (config('filesystems.default') == 's3') {
                 Storage::disk('s3')->put($path . $name, $data, 'public');
               //return  $temporaryUrl = Storage::disk('s3')->temporaryUrl($path . $name, now()->addMinutes(1));
                 return $path.$name;
