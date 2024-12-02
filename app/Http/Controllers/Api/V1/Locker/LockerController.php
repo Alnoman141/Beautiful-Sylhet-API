@@ -237,4 +237,42 @@ class LockerController extends Controller
             ], 403);
         }
     }
+    //TODO @fa 02-Dec-24 delete
+    public function delete(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:locker_parents,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+        DB::beginTransaction();
+        try {
+            $parent = LockerParent::with(['images'])->findOrFail($request->id);
+            //TODO @fa 02-Dec-24 delete images
+            if ($parent->images && count($parent->images) > 0) {
+                foreach ($parent->images as $image) {
+                    Fa::deleteImage($image->image);
+                    $image->delete();
+                }
+            }
+            $parent->delete();
+            DB::commit();
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Locker deleted successfully',
+            ], 200);
+        }catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Something went wrong',
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
 }
