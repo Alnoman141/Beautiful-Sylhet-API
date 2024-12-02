@@ -183,8 +183,13 @@ class EventController extends Controller
                 ->findOrFail($request->id);
             $parent->update([
                 'spot_parent_id' => $request->spot_parent_id ?? $parent->spot_parent_id,
-                'image' => $request->hasFile('image') ? Fa::uploadImage($request->image, 'event') : $parent->image,
             ]);
+            if ($request->hasFile('image')) {
+                Fa::deleteImage($parent?->image);
+                $parent->update([
+                    'image' =>Fa::uploadImage($request->image, 'event'),
+                ]);
+            }
             foreach ($request->data as $data) {
                 $parent->events()->updateOrCreate(
                     ['id' => $data['id']],
