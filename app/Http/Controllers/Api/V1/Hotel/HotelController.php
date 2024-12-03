@@ -339,6 +339,7 @@ class HotelController extends Controller
                         'website_link' => $hotel?->parent?->website_link ?? '',
                         'map_link' => $hotel?->parent?->map_link ?? '',
                         'image' => $hotel?->parent?->image ?? '',
+                        'spot_id' => $hotel?->parent?->spot_parent_id ?? '',
                         'spot_name'=>$hotel?->spotParent?->translate?->name ?? '',
                         'category_name'=>$hotel?->categoryParent?->translate?->name ?? '',
                         'type_name'=>$hotel?->typeParent?->translate?->name ?? '',

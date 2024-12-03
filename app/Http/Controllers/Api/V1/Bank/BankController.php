@@ -211,6 +211,8 @@ class BankController extends Controller
         try {
             $banks = BankAtm::with(['spot'])
                 ->when($request->filled('name'),fn($query) => $query->where('name','like','%'.$request->name.'%'))
+                ->when($request->filled('spot_parent_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('spot_parent_id',$request->spot_parent_id)))
+                ->when($request->filled('bank_parent_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('bank_parent_id',$request->bank_parent_id)))
                 ->where('language_id', $this->lang)
                 ->paginate($request->integer('per_page',PaginationEnum::Default->value))
                 ->through(function ($bank) {
