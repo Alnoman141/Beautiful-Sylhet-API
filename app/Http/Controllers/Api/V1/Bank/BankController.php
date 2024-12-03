@@ -266,6 +266,7 @@ class BankController extends Controller
     public function atmStore(Request $request){
         $validator = Validator::make($request->all(),[
             'spot_parent_id'=>'nullable|integer|exists:spot_parents,id',
+            'bank_parent_id'=>'nullable|integer|exists:bank_parents,id',
             'map_link'=>'nullable|string',
             'image'=>'nullable|image|mimes:jpeg,png,jpg',
             'data'=>'required|array',
@@ -283,6 +284,7 @@ class BankController extends Controller
         DB::beginTransaction();
         try {
             $parent = BankAtmParent::create([
+                'bank_parent_id'=>$request->bank_parent_id,
                 'spot_parent_id'=>$request->spot_parent_id,
                 'map_link'=>$request->map_link,
                 'image'=>$request->hasFile('image') ? Fa::uploadImage($request->file('image'),'bank-atm') : null,
@@ -340,6 +342,7 @@ class BankController extends Controller
             'map_link'=>'nullable|string',
             'image'=>'nullable|image|mimes:jpeg,png,jpg',
             'spot_parent_id'=>'nullable|not_in:0|integer|exists:spot_parents,id',
+            'bank_parent_id'=>'nullable|not_in:0|integer|exists:bank_parents,id',
             'data'=>'required|array',
             'data.*.id'=>'required|integer|exists:bank_atms,id',
             'data.*.name'=>'required|string',
@@ -409,6 +412,30 @@ class BankController extends Controller
             ],200);
         }catch (\Exception $exception){
             DB::rollBack();
+            return response()->json([
+                'status_code'=>403,
+                'errors'=>$exception->getMessage()
+            ],403);
+        }
+    }
+    //TODO @fa 2024-12-03 bank dropdown
+    public function bankDropdown(Request $request){
+        try {
+            $banks = Bank::query()
+                ->where('language_id', $this->lang)
+                ->get()
+                ->map(function ($bank) {
+                    return [
+                        'id' => $bank->bank_parent_id,
+                        'name' => $bank?->name,
+                    ];
+                })
+            ;
+            return response()->json([
+                'status_code' => 200,
+                'data' => $banks
+            ], 200);
+        }catch (\Exception $exception){
             return response()->json([
                 'status_code'=>403,
                 'errors'=>$exception->getMessage()

@@ -69,6 +69,7 @@ Route::group(['prefix' => 'v1'],function (){
     Route::group(['prefix' => 'bank'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\Bank\BankController::class,'bankList']);
         Route::post('details',[App\Http\Controllers\Api\V1\Bank\BankController::class,'bankDetails']);
+        Route::post('dropdown',[App\Http\Controllers\Api\V1\Bank\BankController::class,'bankDropdown']);
     });
     //TODO @fa 2024-11-28 atm
     Route::group(['prefix' => 'atm'],function (){
