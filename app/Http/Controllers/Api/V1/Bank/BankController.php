@@ -114,7 +114,7 @@ class BankController extends Controller
     public function bankEdit(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'required|integer|exists::bank_parents,id'
+            'id' => 'required|integer|exists:bank_parents,id'
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -125,7 +125,8 @@ class BankController extends Controller
         }
         try {
             $bank = Bank::query()
-                ->where('bank_parent_id', $request->id)->get();
+                ->where('bank_parent_id', $request->id)
+                ->get();
             return response()->json([
                 'status_code' => 200,
                 'data' => $bank
@@ -133,7 +134,7 @@ class BankController extends Controller
         }catch (\Exception $exception){
             return response()->json([
                 'status_code'=>403,
-                'errors'=>$exception->getMessage()
+                'errors'=>$exception->getMessage(),
             ],403);
         }
     }
