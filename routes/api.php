@@ -95,6 +95,11 @@ Route::group(['prefix' => 'v1'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'index']);
         Route::post('details',[App\Http\Controllers\Api\V1\LifeGuard\LifeGuardController::class,'show']);
     });
+    //TODO @fa 2024-12-03 transport
+    Route::group(['prefix' => 'transport'],function (){
+        Route::post('list',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'index']);
+        Route::post('type',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'transportType']);
+    });
     //TODO @fa 2024-11-28 beach volunteer
     Route::group(['prefix' => 'beach-volunteer'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\BeachVolunteer\BeachVolunteerController::class,'index']);
@@ -178,8 +183,6 @@ Route::group(['prefix' => 'v1'],function (){
 
         //TODO @fa 2024-11-26 transport
         Route::group(['prefix' => 'transport'],function (){
-            Route::post('type',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'transportType']);
-            Route::post('list',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'index']);
             Route::post('store',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'store']);
             Route::post('edit',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'edit']);
             Route::post('update',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'update']);

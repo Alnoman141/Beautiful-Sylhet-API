@@ -9,6 +9,7 @@ use App\Models\TransportParent;
 use App\Models\TransportType;
 use App\Models\TransportTypeParent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -18,7 +19,7 @@ class TransportController extends Controller
     public function transportType()
     {
         try {
-            $types = TransportType::query()
+            $types = Cache::rememberForever('transport_types',fn()=> TransportType::query()
                 ->where('language_id',$this->lang)
                 ->get()
                 ->map(function ($type) {
@@ -27,7 +28,7 @@ class TransportController extends Controller
                         'parent_id' => $type->transport_type_parent_id,
                         'name' => $type->name,
                     ];
-                });
+                }));
             return response()->json([
                 'status_code' => 200,
                 'data' => $types,
