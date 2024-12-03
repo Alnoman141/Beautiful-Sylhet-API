@@ -231,8 +231,8 @@ class CampaignController extends Controller
     {
         $validation = Validator::make($request->all(),[
             'data'=>'required|array',
-            'data.language_id'=>'required|integer|exists:languages,id',
-            'data.description'=>'required|string',
+            'data.*.language_id'=>'required|integer|exists:languages,id',
+            'data.*.description'=>'required|string',
         ]);
         if ($validation->fails()){
             return response()->json([
