@@ -17,6 +17,7 @@ class LifeGuardController extends Controller
     {
         try {
             $lifeGuards = LifeGuard::query()
+                ->with(['spot.translate'])
                 ->where('language_id', $this->lang)
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                 ->through(function ($lifeGuard) {
@@ -25,6 +26,8 @@ class LifeGuardController extends Controller
                         'parent_id' => $lifeGuard->life_guard_parent_id,
                         'name' => $lifeGuard->name,
                         'phone' => $lifeGuard->phone,
+                        'spot_id' => $lifeGuard?->spot?->id,
+                        'spot_name' => $lifeGuard?->spot?->translate?->name,
                     ];
                 });
             return response()->json([

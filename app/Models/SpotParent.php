@@ -14,6 +14,12 @@ class SpotParent extends Model
     use DiskImageTrait;
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'link' => 'object',
+        ];
+    }
     protected function image(): Attribute
     {
         return Attribute::make(

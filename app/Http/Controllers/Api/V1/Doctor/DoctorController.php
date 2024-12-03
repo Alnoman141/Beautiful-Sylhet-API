@@ -17,6 +17,7 @@ class DoctorController extends Controller
     {
         try {
             $doctors = Doctor::query()
+                ->with(['spot.translate'])
                 ->where('language_id',$this->lang)
                 ->paginate($request->integer('per_page',PaginationEnum::Default->value))
                 ->through(function ($police){
@@ -25,6 +26,8 @@ class DoctorController extends Controller
                         'parent_id'=> $police->doctor_parent_id,
                         'name' => $police->name,
                         'phone' => $police->phone,
+                        'spot_id' => $police?->spot?->id,
+                        'spot_name' => $police?->spot?->translate?->name,
                     ];
                 });
             return response()->json([
