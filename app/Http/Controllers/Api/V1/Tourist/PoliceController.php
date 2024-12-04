@@ -24,7 +24,6 @@ class PoliceController extends Controller
                 ])
                 ->when($request->filled('spot_parent_id'),fn($q) => $q->whereHas('parent',fn($q) => $q->where('spot_parent_id',$request->spot_parent_id)))
                 ->where('language_id',$this->lang)
-                ->get()
                 ->paginate($request->integer('per_page',PaginationEnum::Default->value))
                 ->through(function ($police){
                     return [
