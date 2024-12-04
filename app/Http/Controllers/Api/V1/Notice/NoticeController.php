@@ -69,7 +69,7 @@ class NoticeController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-           'image'=>'nullable|image|mimes:jpeg,png,jpg',
+            'image'=>'nullable|image|mimes:jpeg,png,jpg',
             'data' => 'required|array',
             'data.*.name' => 'required|string',
             'data.*.language_id' => 'required|exists:languages,id',
@@ -83,7 +83,7 @@ class NoticeController extends Controller
         DB::beginTransaction();
         try {
             $parent = NoticeParent::create([
-                'image'=>$request->filled('image') ? Fa::uploadImage($request->file('image'),'notice') : null
+                'image'=>$request->hasFile('image') ? Fa::uploadImage($request->file('image'),'notice') : null
             ]);
             foreach ($request->data as $data) {
                 Notice::create([
