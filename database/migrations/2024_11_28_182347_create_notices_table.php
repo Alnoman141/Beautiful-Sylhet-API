@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('notices', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('notice_parent_id')->constrained('notice_parents')->cascadeOnDelete();
             $table->longText('name');
             $table->timestamps();
         });
