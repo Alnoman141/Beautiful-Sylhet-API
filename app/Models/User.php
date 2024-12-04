@@ -61,6 +61,33 @@ class User extends Authenticatable
         );
     }
 
+    protected function firstName(): Attribute
+    {
+        return Attribute::make(
+            set: fn($value) => Str::trim($value),
+        );
+    }
+
+    protected function lastName(): Attribute
+    {
+        return Attribute::make(
+            set: fn($value) => Str::trim($value),
+        );
+    }
+    //TODO @fa 2024-12-04 email
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn($value) => Str::trim(Str::lower($value)),
+        );
+    }
+    //TODO @fa 2024-12-04 phone
+    protected function phone(): Attribute
+    {
+        return Attribute::make(
+            set: fn($value) => Str::trim($value),
+        );
+    }
     protected function avatar(): Attribute
     {
         return Attribute::make(

@@ -117,7 +117,14 @@ Route::group(['prefix' => 'v1'],function (){
         Route::post('avatar-upload', [\App\Http\Controllers\Api\V1\User\UserController::class, 'avatarUpload']);
         //TODO @fa 2022-11-30 password update
         Route::post('password-update', [\App\Http\Controllers\Api\V1\User\UserController::class, 'passwordUpdate']);
-
+        //TODO @fa 2024-12-04 user
+        Route::group(['prefix' => 'user'],function (){
+            Route::post('list',[App\Http\Controllers\Api\V1\User\UserController::class,'index']);
+            Route::post('store',[App\Http\Controllers\Api\V1\User\UserController::class,'store']);
+            Route::post('edit',[App\Http\Controllers\Api\V1\User\UserController::class,'edit']);
+            Route::post('update',[App\Http\Controllers\Api\V1\User\UserController::class,'update']);
+            Route::post('delete',[App\Http\Controllers\Api\V1\User\UserController::class,'delete']);
+        });
         //TODO @fa 11/24/24 guideline
         Route::group(['prefix' => 'guideline'],function (){
             Route::post('store',[App\Http\Controllers\Api\V1\Tourist\TouristController::class,'storeGuideLine']);
