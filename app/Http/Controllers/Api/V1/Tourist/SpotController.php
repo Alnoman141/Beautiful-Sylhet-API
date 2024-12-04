@@ -72,7 +72,7 @@ class SpotController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
-            'link' => 'nullable|url',
+            'link' => 'nullable',
             'data'=> 'required|array',
             'data.*.name' => 'required',
             /*'data.*.description' => 'nullable',
@@ -164,7 +164,7 @@ class SpotController extends Controller
         $validator = Validator::make($request->all(), [
             'id' => 'required|exists:spot_parents,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
-            'link' => 'nullable|url',
+            'link' => 'nullable',
             'data' => 'required|array',
             'data.*.id' => 'required|exists:spots,id',
             'data.*.name' => 'required',
