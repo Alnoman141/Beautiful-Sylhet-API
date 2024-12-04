@@ -146,7 +146,7 @@ class PoliceController extends Controller
             'id'=> 'required|exists:police_parents,id',
             'spot_parent_id' => 'nullable|exists:spot_parents,id',
             'data'=> 'required|array',
-            'data.*.id' => 'required|exists:polices,id',
+            'data.*.id' => 'required|exists:police,id',
             'data.*.name' => 'required|string|max:255',
             'data.*.language_id' => 'required|integer|not_in:0|exists:languages,id',
             'data.*.phone' => 'nullable|max:20',
@@ -159,6 +159,7 @@ class PoliceController extends Controller
                 'errors' => $validator->errors()
             ], 403);
         }
+        DB::beginTransaction();
         try {
             $parent = PoliceParent::findOrFail($request->id);
             $parent->update([
@@ -182,7 +183,7 @@ class PoliceController extends Controller
             DB::rollBack();
             return response()->json([
                 'status_code'=> 403,
-                'errors' => $e->getMessage()
+                'errors' => $e->getMessage(),
             ], 403);
         }
     }
