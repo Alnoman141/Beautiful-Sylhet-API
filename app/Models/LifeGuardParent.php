@@ -12,12 +12,12 @@ class LifeGuardParent extends Model
     protected $guarded = [];
     public function guards() : HasMany
     {
-        return $this->hasMany(LifeGuard::class, 'lifeguard_parent_id');
+        return $this->hasMany(LifeGuard::class, 'life_guard_parent_id');
     }
 
     public function translate() : HasOne
     {
-        return $this->hasOne(LifeGuard::class, 'lifeguard_parent_id');
+        return $this->hasOne(LifeGuard::class, 'life_guard_parent_id');
     }
     public function spot() : BelongsTo
     {
