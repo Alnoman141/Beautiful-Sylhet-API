@@ -18,7 +18,7 @@ class PoliceController extends Controller
     {
         try {
             $polices = Police::query()
-                ->with(['spot.translate'])
+                ->with(['spot'])
                 ->when($request->filled('spot_parent_id'),fn($q) => $q->whereHas('parent',fn($q) => $q->where('spot_parent_id',$request->spot_parent_id)))
                 ->where('language_id',$this->lang)
                 ->paginate($request->integer('per_page',PaginationEnum::Default->value))
@@ -29,9 +29,11 @@ class PoliceController extends Controller
                         'name' => $police->name,
                         'phone' => $police->phone,
                         'spot_id' => $police?->spot?->id,
-                        'spot_name' => $police?->spot?->translate?->name,
+                        'spot_parent_id' => $police?->spot?->spot_parent_id,
+                        'spot_name' => $police?->spot?->name,
                     ];
-                });
+                })
+            ;
             return response()->json([
                 'status_code'=> 200,
                 'data' => $polices
