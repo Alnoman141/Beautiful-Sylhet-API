@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class LifeGuardParent extends Model
 {
     protected $guarded = [];
-    public function guard() : HasMany
+    public function guards() : HasMany
     {
         return $this->hasMany(LifeGuard::class, 'lifeguard_parent_id');
     }

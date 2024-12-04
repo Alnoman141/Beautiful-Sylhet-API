@@ -85,6 +85,7 @@ class LifeGuardController extends Controller
                 'errors' => $validator->errors()
             ], 403);
         }
+        DB::beginTransaction();
         try {
             $parent = LifeGuardParent::create([
                 'spot_parent_id' => $request->spot_parent_id
@@ -160,6 +161,7 @@ class LifeGuardController extends Controller
                 'errors' => $validator->errors()
             ], 403);
         }
+        DB::beginTransaction();
         try {
             $parent = LifeGuardParent::findOrFail($request->id);
             $parent->update([

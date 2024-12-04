@@ -78,6 +78,7 @@ class BeachVolunteerController extends Controller
                 'errors' => $validator->errors()
             ], 403);
         }
+        DB::beginTransaction();
         try {
             $parent = BeachVolunteerParent::create([
                 'spot_parent_id' => $request->spot_parent_id
@@ -153,6 +154,7 @@ class BeachVolunteerController extends Controller
                 'errors' => $validator->errors()
             ], 403);
         }
+        DB::beginTransaction();
         try {
             $parent = BeachVolunteerParent::findOrFail($request->id);
             $parent->update([
