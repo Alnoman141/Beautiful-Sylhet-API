@@ -243,11 +243,12 @@ class CampaignController extends Controller
         }
         DB::beginTransaction();
         try {
-            CoxBazaar::updateOrCreate([
-                'language_id'=>$request->data['language_id']
-            ],[
-                'description'=>$request->data['description']
-            ]);
+            foreach ($request->data as $data){
+                CoxBazaar::updateOrCreate(
+                    ['language_id'=>$data['language_id']],
+                    ['description'=>$data['description']]
+                );
+            }
             DB::commit();
             return response()->json([
                 'status_code'=>200,
