@@ -127,7 +127,7 @@ class LifeGuardController extends Controller
             ], 403);
         }
         try {
-            $lifeGuard = LifeGuardParent::with('guard')
+            $lifeGuard = LifeGuardParent::with('guards')
                 ->findOrFail($request->id);
             return response()->json([
                 'status_code' => 200,
@@ -206,7 +206,7 @@ class LifeGuardController extends Controller
         DB::beginTransaction();
         try {
             $lifeGuard = LifeGuardParent::findOrFail($request->id);
-            $lifeGuard->guard()->delete();
+            $lifeGuard->guards()->delete();
             $lifeGuard->delete();
             DB::commit();
             return response()->json([
