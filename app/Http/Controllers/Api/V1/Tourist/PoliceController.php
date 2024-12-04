@@ -18,9 +18,13 @@ class PoliceController extends Controller
     {
         try {
             $polices = Police::query()
-                ->with(['spot'])
+                ->with(['spot'=>fn($a)=>$a
+                    ->where('language_id',$this->lang)
+                    ->select('spots.id as id','name','spots.spot_parent_id as spot_parent_id')
+                ])
                 ->when($request->filled('spot_parent_id'),fn($q) => $q->whereHas('parent',fn($q) => $q->where('spot_parent_id',$request->spot_parent_id)))
                 ->where('language_id',$this->lang)
+                ->get()
                 ->paginate($request->integer('per_page',PaginationEnum::Default->value))
                 ->through(function ($police){
                     return [

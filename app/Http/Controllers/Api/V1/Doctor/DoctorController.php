@@ -17,7 +17,10 @@ class DoctorController extends Controller
     {
         try {
             $doctors = Doctor::query()
-                ->with(['spot.translate'])
+                ->with(['spot'=>fn($a)=>$a
+                    ->where('language_id',$this->lang)
+                    ->select('spots.id as id','name','spots.spot_parent_id as spot_parent_id')
+                ])
                 ->where('language_id',$this->lang)
                 ->paginate($request->integer('per_page',PaginationEnum::Default->value))
                 ->through(function ($police){
@@ -27,7 +30,8 @@ class DoctorController extends Controller
                         'name' => $police->name,
                         'phone' => $police->phone,
                         'spot_id' => $police?->spot?->id,
-                        'spot_name' => $police?->spot?->translate?->name,
+                        'spot_parent_id' => $police?->spot?->spot_parent_id,
+                        'spot_name' => $police?->spot?->name,
                     ];
                 });
             return response()->json([
