@@ -159,7 +159,7 @@ class DoctorController extends Controller
         try {
             $parent = DoctorParent::findOrFail($request->id);
             $parent->update([
-                'spot_parent_id' => $request->spot_parent_id
+                'spot_parent_id' => $request->spot_parent_id ?? $parent->spot_parent_id
             ]);
             foreach ($request->data as $data) {
                 $doctor = Doctor::findOrFail($data['id']);
@@ -173,7 +173,7 @@ class DoctorController extends Controller
             DB::commit();
             return response()->json([
                 'status_code'=> 200,
-                'message' => 'Tourist police updated successfully'
+                'message' => 'Doctor updated successfully'
             ], 200);
         }catch (\Exception $e){
             DB::rollBack();
