@@ -162,7 +162,7 @@ class EventController extends Controller
     public function update(Request $request)
     {
         $validation = Validator::make($request->all(), [
-            'id' => 'required|integer|exists:events,id',
+            'id' => 'required|integer|exists:event_parents,id',
             'spot_parent_id' => 'nullable|integer|exists:spot_parents,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
             'data' => 'required|array',
