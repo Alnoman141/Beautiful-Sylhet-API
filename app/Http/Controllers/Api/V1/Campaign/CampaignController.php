@@ -27,7 +27,7 @@ class CampaignController extends Controller
                         'parent_id'=>$campaign->campaign_parent_id,
                         'name' => $campaign->name,
                         'description' => $campaign->description,
-                        'image' => $campaign?->parent?->name
+                        //'image' => $campaign?->parent?->name
                     ];
                 })
             ;
@@ -54,7 +54,7 @@ class CampaignController extends Controller
                     'id' => $campaign->id,
                     'name' => $campaign->name,
                     'description' => $campaign->description,
-                    'image' => $campaign?->parent?->name
+                    'image' => $campaign?->parent?->image
                 ]
             ], 200);
         }catch (\Exception $exception){
