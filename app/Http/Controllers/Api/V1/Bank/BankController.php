@@ -316,7 +316,7 @@ class BankController extends Controller
     //TODO @fa 2024-11-28 edit atm
     public function atmEdit(Request $request){
         $validator = Validator::make($request->all(),[
-            'id'=>'required|integer|exists:bank_atms,id'
+            'id'=>'required|integer|exists:bank_atm_parents,id'
         ]);
         if ($validator->fails()){
             return response()->json([
