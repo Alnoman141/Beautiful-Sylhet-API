@@ -19,14 +19,35 @@ class NoticeController extends Controller
         try {
             $notices = Notice::query()
                 ->where('language_id', $this->lang)
-                ->paginate($request->integer('per_page', PaginationEnum::Default->value))
-                ->through(function ($notice) {
+                ->selectRaw('DATE(created_at) as date, id, name, notice_parent_id as parent_id, language_id')
+                ->orderByDesc('created_at')
+
+                /*->get()->groupBy('date')
+               ->map(function ($group, $date) {
+                return [
+                    'date' => $date,
+                    'items' => $group->map(function ($notice) {
+                        return [
+                            'id' => $notice->id,
+                            'name' => $notice->name,
+                            'parent_id' => $notice->parent_id,
+                            'language_id' => $notice->language_id,
+                        ];
+                    })->toArray(),
+                ];
+            })->values();*/
+            ->paginate($request->integer('per_page', PaginationEnum::Default->value));
+            $groupedNotices = $notices->getCollection()->groupBy('date')->map(function ($item) {
+                return $item->map(function ($notice) {
                     return [
                         'id' => $notice->id,
-                        'parent_id' => $notice->notice_parent_id,
+                        'language_id' => $notice->language_id,
+                        'parent_id' => $notice->parent_id,
                         'name' => $notice->name,
                     ];
                 });
+            });
+            $notices->setCollection($groupedNotices);
             return response()->json([
                 'status_code' => 200,
                 'data' => $notices
