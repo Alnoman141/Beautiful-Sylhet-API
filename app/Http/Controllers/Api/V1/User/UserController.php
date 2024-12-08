@@ -343,4 +343,37 @@ class UserController extends Controller
             ], 403);
         }
     }
+    //TODO @fa 2024-12-08 activity log
+    public function activity(Request $request)
+    {
+        try {
+            $logs = \App\Models\Log::with('user')
+                ->when($request->filled('name'), fn($q) => $q
+                    ->where(fn($q) => $q
+                        ->whereRaw('CONCAT(first_name," ",last_name) like ?', ['%' . $request->name . '%'])
+                        ->orWhere('phone', 'like', '%' . $request->name . '%')
+                        ->orWhere('email', 'like', '%' . $request->name . '%')
+                    )
+                )
+                ->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                ->through(function ($log) {
+                    return [
+                        'id' => $log->id,
+                        'name' => $log?->user?->name,
+                        'content' => $log->content,
+                        'created_at' => $log->created_at,
+                    ];
+                });
+            return response()->json([
+                'status_code' => 200,
+                'data' => $logs,
+            ], 200);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Activity Log Failed',
+                'errors' => $exception->getMessage(),
+            ], 403);
+        }
+    }
 }

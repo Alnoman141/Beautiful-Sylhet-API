@@ -124,6 +124,7 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('edit',[App\Http\Controllers\Api\V1\User\UserController::class,'edit']);
             Route::post('update',[App\Http\Controllers\Api\V1\User\UserController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\User\UserController::class,'delete']);
+            Route::post('activity',[App\Http\Controllers\Api\V1\User\UserController::class,'activity']);
         });
         //TODO @fa 11/24/24 guideline
         Route::group(['prefix' => 'guideline'],function (){
