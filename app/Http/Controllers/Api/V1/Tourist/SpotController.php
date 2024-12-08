@@ -73,6 +73,7 @@ class SpotController extends Controller
         $validator = Validator::make($request->all(), [
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'link' => 'nullable',
+            'map_link' => 'nullable',
             'data'=> 'required|array',
             'data.*.name' => 'required',
             /*'data.*.description' => 'nullable',
@@ -105,6 +106,7 @@ class SpotController extends Controller
             $spotParent = SpotParent::create([
                 'image' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'spots') : null,
                 'link' => $request->link,
+                'map_link' => $request->map_link,
             ]);
             foreach ($request->data as $data) {
                 $data['spot_parent_id'] = $spotParent->id;
@@ -165,6 +167,7 @@ class SpotController extends Controller
             'id' => 'required|exists:spot_parents,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'link' => 'nullable',
+            'map_link' => 'nullable',
             'data' => 'required|array',
             'data.*.id' => 'required|exists:spots,id',
             'data.*.name' => 'required',
@@ -198,6 +201,7 @@ class SpotController extends Controller
             $spotParent = SpotParent::findOrFail($request->id);
             $spotParent->update([
                 'link' => $request->link,
+                'map_link' => $request->map_link,
             ]);
             if ($request->hasFile('image')){
                 Fa::deleteImage($spotParent?->image);

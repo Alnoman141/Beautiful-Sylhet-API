@@ -35,10 +35,24 @@ class NewsController extends Controller
     {
         try {
             $news = News::query()
+                ->withWhereHas('parent',fn($q) => $q
+                    ->with('type')
+                    ->where(fn($q) => $q
+                        ->where('status',$request->status ?? 1)
+                        ->where('news_type_id',$request->news_type_id ?? 1)))
                 ->where('language_id', $this->lang)
-                ->whereHas('parent',fn($q) => $q->where([['status'=>1],['news_type_id',$request->news_type_id ?? 1]]))
                 ->orderByDesc('id')
-                ->paginate($request->integer('per_page',PaginationEnum::Default->value));
+                ->paginate($request->integer('per_page',PaginationEnum::Default->value))
+                ->through(function ($news) {
+                    return [
+                        'id' => $news->id,
+                        'parent_id' => $news->news_parent_id,
+                        'name' => $news->name,
+                        'status' => $news?->parent?->status,
+                        'news_type_id'=>$news?->parent?->type?->id,
+                        'news_type_name'=>$news?->parent?->type?->name,
+                    ];
+                });
             return response()->json([
                 'status_code' => 200,
                 'data' => $news

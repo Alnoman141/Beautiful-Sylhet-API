@@ -22,6 +22,7 @@ class RedZoneController extends Controller
     {
         try {
             $reds = RedZone::query()
+                ->with('parent')
                 ->where('language_id', $this->lang)
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                 ->through(function ($red) {
@@ -29,6 +30,7 @@ class RedZoneController extends Controller
                         'id' => $red->id,
                         'parent_id' => $red->red_zone_parent_id,
                         'name' => $red->name,
+                        'map_link' => $red?->parent?->map_link,
                     ];
                 })
             ;
@@ -78,6 +80,8 @@ class RedZoneController extends Controller
         $validator = Validator::make($request->all(), [
             'spot_parent_id' => 'nullable|integer|exists:spot_parents,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg',
+            'map_link' => 'nullable|string',
+            'short_description' => 'nullable|string',
             'data' => 'required|array',
             'data.*.name' => 'required|string',
             'data.*.language_id' => 'required|integer|exists:languages,id',
@@ -94,7 +98,9 @@ class RedZoneController extends Controller
         try {
             $parent = RedZoneParent::create([
                 'spot_parent_id' => $request->spot_parent_id,
-                'image'=>$request->hasFile('image') ? Fa::uploadImage($request->image, 'red-zones') : null
+                'image'=>$request->hasFile('image') ? Fa::uploadImage($request->image, 'red-zones') : null,
+                'map_link' => $request->map_link,
+                'short_description' => $request->short_description,
             ]);
             foreach ($request->data as $data) {
                 RedZone::create([
@@ -142,6 +148,8 @@ class RedZoneController extends Controller
             $parent = RedZoneParent::findOrFail($request->id);
             $parent->update([
                 'spot_parent_id' => $request->spot_parent_id ?? $parent->spot_parent_id,
+                'map_link' => $request->map_link ?? $parent->map_link,
+                'short_description' => $request->short_description ?? $parent->short_description,
             ]);
             if ($request->hasFile('image')) {
                 Fa::deleteImage($parent?->image);

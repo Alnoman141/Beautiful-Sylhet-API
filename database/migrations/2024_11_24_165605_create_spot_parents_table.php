@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('spot_parents', function (Blueprint $table) {
             $table->id();
             $table->string('image')->nullable();
-            $table->string('link')->nullable();
+            $table->text('map_link')->nullable();
+            $table->longText('link')->nullable();
             $table->timestamps();
         });
     }
