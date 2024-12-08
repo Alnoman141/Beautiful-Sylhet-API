@@ -49,12 +49,11 @@ class SpotController extends Controller
     //TODO @fa 11/24/24 spot details
     public function details(Request $request)
     {
-        //return $request->all();
         try {
-            $spot = Spot::with(['parent.images'])
-                ->where('language_id', $this->lang)
-                //->findOrFail($request->id);
-                ->findOrFail($request->id);
+            $spot = Spot::with(['parent'=>['images','hotels'=>fn($q) => $q
+                ->where('language_id',$this->lang)
+                ->select(['hotels.id as id','hotel_parents.id as parent_id','name','phone'])
+            ]])->where('language_id', $this->lang)->findOrFail($request->id);
             return response()->json([
                 'status_code' => 200,
                 'data' => $spot

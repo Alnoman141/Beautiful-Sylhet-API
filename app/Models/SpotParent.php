@@ -6,7 +6,9 @@ use App\Services\DiskImageTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\Storage;
 
 class SpotParent extends Model
@@ -39,5 +41,15 @@ class SpotParent extends Model
     public function translate(): HasOne
     {
         return $this->hasOne(Spot::class,'spot_parent_id');
+    }
+
+    public function hotels(): HasManyThrough
+    {
+        return $this->hasManyThrough(Hotel::class, HotelParent::class, 'spot_parent_id', 'hotel_parent_id');
+    }
+    //has one through hotel
+    public function hotel(): HasOneThrough
+    {
+        return $this->hasOneThrough(Hotel::class, HotelParent::class, 'spot_parent_id', 'hotel_parent_id');
     }
 }
