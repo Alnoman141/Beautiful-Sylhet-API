@@ -51,14 +51,9 @@ class LockerController extends Controller
         DB::beginTransaction();
         try {
             foreach ($request->data as $data) {
-                if (array_key_exists('id', $data)) {
-                    $introduction = LockerService::findOrFail($data['id']);
-                }
-                else {
-                    $introduction = new LockerService();
-                }
-                $introduction->update([
+                LockerService::updateOrCreate([
                     'language_id' => $data['language_id'],
+                ],[
                     'description' => $data['description'],
                 ]);
             }
