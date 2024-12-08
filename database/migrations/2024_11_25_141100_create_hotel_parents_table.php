@@ -22,8 +22,8 @@ return new class extends Migration
             $table->foreignId('hotel_category_parent_id')
                 ->nullable()
                 ->constrained('hotel_category_parents')->cascadeOnDelete();
-            $table->string('website_link')->nullable();
-            $table->string('map_link')->nullable();
+            $table->longText('website_link')->nullable();
+            $table->longText('map_link')->nullable();
             $table->string('image')->nullable();
             $table->timestamps();
         });
