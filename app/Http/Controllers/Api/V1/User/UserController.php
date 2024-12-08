@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -136,8 +137,19 @@ class UserController extends Controller
         $validate = Validator::make($request->all(), [
             'first_name' => 'required|string',
             'last_name' => 'nullable|string',
-            'phone' => 'nullable|string|max:20|unique:users,phone|starts_with:01',
-            'email' => 'required|unique:users,email|max:255|email:rfc,dns',
+            'phone' => [
+                'nullable',
+                'string',
+                'max:20',
+                Rule::unique('users', 'phone')->whereNull('deleted_at'),
+                'starts_with:01',
+            ],
+            'email' =>[
+                'required',
+                'max:255',
+                'email:rfc,dns',
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
+            ],
             'password' => 'required|confirmed|min:8',
         ]);
         if ($validate->fails()) {
@@ -162,6 +174,15 @@ class UserController extends Controller
                     'avatar' => Fa::uploadImage($request->avatar, 'avatar')
                 ]);
             }
+            //TODO @fa 2024-12-08
+            $content = [
+                'data' => [
+                    'values' => '',
+                    'action' => 'create',
+                    'title'=>$user->name .' user register',
+                ],
+            ];
+            Fa::activity($content);
             DB::commit();
             return response()->json([
                 'status_code' => 200,
@@ -183,8 +204,19 @@ class UserController extends Controller
             'id' => 'required|exists:users,id',
             'first_name' => 'required|string',
             'last_name' => 'nullable|string',
-            'phone' => 'nullable|string|max:20|unique:users,phone,' . $request->id,
-            'email' => 'required|max:255|email:rfc,dns|unique:users,email,' . $request->id,
+            'phone' => [
+                'nullable',
+                'string',
+                'max:20',
+                Rule::unique('users', 'phone')->whereNull('deleted_at')->ignore($request->id),
+                'starts_with:01',
+            ],
+            'email' => [
+                'required',
+                'max:255',
+                'email:rfc,dns',
+                Rule::unique('users', 'email')->whereNull('deleted_at')->ignore($request->id),
+            ],
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
         if ($validate->fails()) {
@@ -212,6 +244,24 @@ class UserController extends Controller
                     'avatar' => Fa::uploadImage($request->avatar, 'avatar')
                 ]);
             }
+            //which data update then log
+            //TODO @fa 2024-12-08 log
+            //which column value change get data
+            $data = collect($user->getChanges())->map(function ($value, $key) use ($user) {
+                return [
+                    'column' => $key,
+                    'old' => $user->getOriginal($key),
+                    'new' => $value,
+                ];
+            });
+            $content = [
+                'data' => [
+                    'values' => $data,
+                    'action' => 'update',
+                    'title'=>$user->name .' information update',
+                ],
+            ];
+            Fa::activity($content);
             DB::commit();
             return response()->json([
                 'status_code' => 200,
@@ -244,6 +294,14 @@ class UserController extends Controller
             $user = User::findOrFail($request->id);
             Fa::deleteImage($user?->avatar);
             $user->delete();
+            $content = [
+                'data' => [
+                    'values' => '',
+                    'action' => 'delete',
+                    'title'=>$user->name .' user delete',
+                ],
+            ];
+            Fa::activity($content);
             DB::commit();
             return response()->json([
                 'status_code' => 200,

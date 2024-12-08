@@ -66,4 +66,11 @@ class Fa
             }
         }
     }
+    public static function activity($data)
+    {
+        \App\Models\Log::create([
+            'user_id' => auth()->id(),
+            'content' => $data
+        ]);
+    }
 }
