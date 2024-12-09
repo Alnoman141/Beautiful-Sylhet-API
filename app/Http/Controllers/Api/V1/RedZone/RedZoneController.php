@@ -22,7 +22,10 @@ class RedZoneController extends Controller
     {
         try {
             $reds = RedZone::query()
-                ->with('parent')
+                ->with(['parent','spot'=>fn($q) => $q
+                    ->where('language_id',$this->lang)
+                    ->select(['name','spots.spot_parent_id'])
+                ])
                 ->where('language_id', $this->lang)
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                 ->through(function ($red) {
@@ -31,6 +34,8 @@ class RedZoneController extends Controller
                         'parent_id' => $red->red_zone_parent_id,
                         'name' => $red->name,
                         'map_link' => $red?->parent?->map_link,
+                        'spot_id' => $red?->spot?->spot_parent_id,
+                        'spot_name' => $red?->spot?->name,
                     ];
                 })
             ;
