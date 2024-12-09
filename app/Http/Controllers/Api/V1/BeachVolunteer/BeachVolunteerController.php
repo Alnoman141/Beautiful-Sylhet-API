@@ -17,6 +17,10 @@ class BeachVolunteerController extends Controller
     {
         try {
             $volunteers = BeachVolunteer::query()
+                ->with(['spot' => fn($a) => $a
+                    ->where('language_id', $this->lang)
+                    ->select('spots.spot_parent_id', 'name')
+                ])
                 ->where('language_id', $this->lang)
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                 ->through(function ($volunteer) {
@@ -25,6 +29,8 @@ class BeachVolunteerController extends Controller
                         'parent_id' => $volunteer->beach_volunteer_parent_id,
                         'name' => $volunteer->name,
                         'phone' => $volunteer->phone,
+                        'spot_id' => $volunteer?->spot?->spot_parent_id,
+                        'spot_name' => $volunteer?->spot?->name,
                     ];
                 });
             return response()->json([
