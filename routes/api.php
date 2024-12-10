@@ -100,6 +100,7 @@ Route::group(['prefix' => 'v1'],function (){
     Route::group(['prefix' => 'transport'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'index']);
         Route::post('type',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'transportType']);
+        Route::post('details',[App\Http\Controllers\Api\V1\Transport\TransportController::class,'show']);
     });
     //TODO @fa 2024-11-28 beach volunteer
     Route::group(['prefix' => 'beach-volunteer'],function (){

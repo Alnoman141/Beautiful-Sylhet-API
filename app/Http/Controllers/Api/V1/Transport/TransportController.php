@@ -19,7 +19,7 @@ class TransportController extends Controller
     public function transportType()
     {
         try {
-            $types = Cache::rememberForever('transport_types',fn()=> TransportType::query()
+            $types = Cache::rememberForever('transport_types_'.$this->lang,fn()=> TransportType::query()
                 ->where('language_id',$this->lang)
                 ->get()
                 ->map(function ($type) {
@@ -29,6 +29,12 @@ class TransportController extends Controller
                         'name' => $type->name,
                     ];
                 }));
+            $bus = [
+                'id' => 0,
+                'parent_id' => 0,
+                'name' => $this->lang == 1 ? 'বাস' : 'Bus',
+            ];
+            $types->prepend($bus);
             return response()->json([
                 'status_code' => 200,
                 'data' => $types,
@@ -46,6 +52,7 @@ class TransportController extends Controller
     {
         try {
             $transports = Transport::query()
+                ->when($request->transport_type_parent_id,fn($query) => $query->whereHas('parent',fn($q) => $q->where('transport_type_parent_id',$request->transport_type_parent_id)))
                 ->when($request->transport_parent_id,fn($query) => $query->where('transport_parent_id',$request->transport_parent_id))
                 ->where('language_id',$this->lang)
                 ->paginate($request->integer('per_page',PaginationEnum::Default->value))
