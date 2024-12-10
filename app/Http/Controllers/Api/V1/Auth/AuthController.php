@@ -149,8 +149,8 @@ class AuthController extends Controller
     public function logout()
     {
         try {
-            auth()->user()->tokens()->where('tokenable_id', auth()->user()->id)->delete();
-            //Auth::user()->currentAccessToken()->delete();
+            //auth()->user()->tokens()->where('tokenable_id', auth()->user()->id)->delete();
+            auth()->user()->currentAccessToken()->delete();
             return response()->json([
                 'status_code' => 200,
                 'message' => 'Logout Success',
