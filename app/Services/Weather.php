@@ -19,6 +19,7 @@ class Weather
         $weather = Cache::rememberForever('weather-api', function () {
             $response = Http::get('https://tides.today/en/dynamic/tide-forecast/2801');
             if ($response->successful()) {
+                Cache::forget('weather');
                 return $response->json();
             }
             return null;
@@ -101,9 +102,9 @@ class Weather
                 'weather_data' => $weatherDetails,
             ];
         }
-        Cache::rememberForever('weather', function () use ($data) {
+       $weather = Cache::rememberForever('weather', function () use ($data) {
             return $data;
         });
-        return response()->json($data);
+        return response()->json($weather);
     }
 }
