@@ -34,6 +34,7 @@ class RedZoneController extends Controller
                         'parent_id' => $red->red_zone_parent_id,
                         'name' => $red->name,
                         'map_link' => $red?->parent?->map_link,
+                        'image' => $red?->parent?->image,
                         'spot_id' => $red?->spot?->spot_parent_id,
                         'spot_name' => $red?->spot?->name,
                     ];
