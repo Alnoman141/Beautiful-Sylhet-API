@@ -54,6 +54,13 @@ class SpotController extends Controller
                 ->where('language_id',$this->lang)
                 ->select(['hotels.id as id','hotel_parents.id as parent_id','name','phone'])
             ]])->where('language_id', $this->lang)->findOrFail($request->id);
+            $spot->setRelations([
+                'parent'=> $spot->parent->setRelation('images',collect($spot?->parent?->images)->map(function ($image) {
+                    return [
+                        'link' => $image->name,
+                    ];
+                }))
+            ]);
             return response()->json([
                 'status_code' => 200,
                 'data' => $spot
