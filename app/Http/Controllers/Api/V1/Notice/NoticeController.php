@@ -17,6 +17,25 @@ class NoticeController extends Controller
     public function index(Request $request)
     {
         try {
+            if ($request->filled('type') && $request->type == 'all') {
+                $notices = Notice::query()
+                    ->where('language_id', $this->lang)
+                    ->orderByDesc('created_at')
+                    ->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                    ->through(function ($notice) {
+                        return [
+                            'id' => $notice->id,
+                            'name' => $notice->name,
+                            'parent_id' => $notice->notice_parent_id,
+                            'language_id' => $notice->language_id,
+                            'date' => $notice->created_at,
+                        ];
+                    });
+                return response()->json([
+                    'status_code' => 200,
+                    'data' => $notices
+                ], 200);
+            }
             $notices = Notice::query()
                 ->where('language_id', $this->lang)
                 ->selectRaw('DATE(created_at) as date, id, name, notice_parent_id as parent_id, language_id')
