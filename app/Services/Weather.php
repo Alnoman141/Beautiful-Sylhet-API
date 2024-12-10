@@ -9,23 +9,22 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class Weather
 {
     //TODO @fa 2024-12-10 get weather
     public static function getWeather()
     {
-        $weather = Cache::rememberForever('weather', function () {
-            $response = Http::get('https://tides.today/en/dynamic/tide-forecast/7623');
+        $weather = Cache::rememberForever('weather-api', function () {
+            $response = Http::get('https://tides.today/en/dynamic/tide-forecast/2801');
             if ($response->successful()) {
                 return $response->json();
             }
-            else{
-                Cache::forget('weather');
-                return '';
-            }
+            return null;
         });
         if (!$weather) {
+            Cache::forget('weather-api');
             return 403;
         }
         $content = $weather['content'];
@@ -96,12 +95,15 @@ class Weather
                 }
             }
             $data[] = [
-                'tab_id' => $panelId,
+                'date' => Str::replace('tabpanel-', '', $panelId),
                 'caption' => $caption,
                 'tide_details' => $tideDetails,
                 'weather_data' => $weatherDetails,
             ];
         }
+        Cache::rememberForever('weather', function () use ($data) {
+            return $data;
+        });
         return response()->json($data);
     }
 }
