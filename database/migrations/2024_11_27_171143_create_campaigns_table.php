@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('campaign_parent_id')->constrained('campaign_parents')->cascadeOnDelete();
             $table->foreignId('language_id')->constrained('languages')->cascadeOnDelete();
             $table->string('name');
+            $table->string('date')->nullable();
             $table->longText('description')->nullable();
             $table->timestamps();
         });

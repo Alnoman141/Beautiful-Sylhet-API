@@ -72,6 +72,7 @@ class CampaignController extends Controller
             'data'=>'required|array',
             'data.*.name'=>'required|string',
             'data.*.language_id'=>'required|integer|exists:languages,id',
+            'data.*.date'=>'nullable|string',
             'data.*.description'=>'nullable|string',
         ]);
         if ($validation->fails()){
@@ -138,6 +139,7 @@ class CampaignController extends Controller
             'data.*.id'=>'required|integer|exists:campaigns,id',
             'data.*.name'=>'required|string',
             'data.*.language_id'=>'required|integer|exists:languages,id',
+            'data.*.date'=>'nullable|string',
             'data.*.description'=>'nullable|string',
         ]);
         if ($validation->fails()){
@@ -157,7 +159,7 @@ class CampaignController extends Controller
                 ]);
             }
             foreach ($request->data as $data){
-                Campaign::where('id',$data['id'])->update(collect($data)->only(['name','description','language_id'])
+                Campaign::where('id',$data['id'])->update(collect($data)->only(['name','date','description','language_id'])
                     ->toArray());
             }
             DB::commit();
