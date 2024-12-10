@@ -27,6 +27,7 @@ class CampaignController extends Controller
                         'parent_id'=>$campaign->campaign_parent_id,
                         'name' => $campaign->name,
                         'description' => $campaign->description,
+                        'date' => $campaign->date,
                         //'image' => $campaign?->parent?->name
                     ];
                 })

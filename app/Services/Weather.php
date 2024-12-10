@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Http;
 class Weather
 {
     //TODO @fa 2024-12-10 get weather
-    public static function getWeather($city)
+    public static function getWeather()
     {
         $weather = Cache::rememberForever('weather', function () {
             $response = Http::get('https://tides.today/en/dynamic/tide-forecast/7623');
