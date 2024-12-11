@@ -210,7 +210,7 @@ class BankController extends Controller
     public function atmList(Request $request)
     {
         try {
-            $banks = BankAtm::with(['spot.translate','parent'])
+            $banks = BankAtm::with(['spot','parent'])
                 ->when($request->filled('name'),fn($query) => $query->where('name','like','%'.$request->name.'%'))
                 ->when($request->filled('spot_parent_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('spot_parent_id',$request->spot_parent_id)))
                 ->when($request->filled('bank_parent_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('bank_parent_id',$request->bank_parent_id)))
@@ -223,8 +223,9 @@ class BankController extends Controller
                         'link' => $bank->parent?->map_link,
                         'image' => $bank->parent?->image,
                         'name' => $bank->name,
-                        'spot_id' => $bank?->spot?->id,
-                        'spot_name' => $bank?->spot?->translate?->name ?? '',
+                        'address' => $bank->address,
+                        'spot_id' => $bank?->spot?->spot_parent_id ?? '',
+                        'spot_name' => $bank?->spot?->name ?? '',
                     ];
                 });
             return response()->json([

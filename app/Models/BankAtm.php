@@ -18,6 +18,6 @@ class BankAtm extends Model
 
     public function spot(): HasOneThrough
     {
-        return $this->hasOneThrough(SpotParent::class, BankAtmParent::class, 'id', 'id', 'bank_atm_parent_id', 'spot_parent_id');
+        return $this->hasOneThrough(Spot::class, BankAtmParent::class, 'id', 'spot_parent_id','bank_atm_parent_id','spot_parent_id');
     }
 }
