@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('bank_parent_id')->constrained('bank_parents')->cascadeOnDelete();
             $table->foreignId('spot_parent_id')->nullable()->constrained('spot_parents')->cascadeOnDelete();
-            $table->string('map_link')->nullable();
+            $table->longText('map_link')->nullable();
             $table->string('image')->nullable();
             $table->timestamps();
         });

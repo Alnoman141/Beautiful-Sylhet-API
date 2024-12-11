@@ -37,6 +37,7 @@ class NoticeController extends Controller
                 ], 200);
             }
             $notices = Notice::query()
+                ->with('parent')
                 ->where('language_id', $this->lang)
                 ->selectRaw('DATE(created_at) as date, id, name, notice_parent_id as parent_id, language_id')
                 ->orderByDesc('created_at')
@@ -63,6 +64,7 @@ class NoticeController extends Controller
                         'language_id' => $notice->language_id,
                         'parent_id' => $notice->parent_id,
                         'name' => $notice->name,
+                        'image' => $notice?->parent?->image,
                     ];
                 });
             });
