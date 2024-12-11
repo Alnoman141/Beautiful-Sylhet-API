@@ -17,10 +17,13 @@ class Weather
     public static function getWeather()
     {
         $weather = Cache::rememberForever('weather-api', function () {
-            $response = Http::get('https://tides.today/en/dynamic/tide-forecast/2801');
+            $response = Http::get('https://tides.today/en/dynamic/tide-forecast/7623');
             if ($response->successful()) {
                 Cache::forget('weather');
-                return $response->json();
+                $content = $response->json()['content'];
+                $content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', "", $content);
+                $content = preg_replace('/<p\b[^>]*>(.*?)<\/p>/is', "", $content);
+                return $content;
             }
             return null;
         });
@@ -28,9 +31,7 @@ class Weather
             Cache::forget('weather-api');
             return 403;
         }
-        $content = $weather['content'];
-        $content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', "", $content);
-        $content = preg_replace('/<p\b[^>]*>(.*?)<\/p>/is', "", $content);
+        $content = $weather;
         return self::weatherData($content);
     }
 
