@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HotelParent;
 use App\Models\LockerParent;
 use App\Models\SpotParent;
+use App\Models\TransportTypeParent;
 use App\Models\Visitor;
 use Illuminate\Http\Request;
 
@@ -53,12 +54,23 @@ class VisitorController extends Controller
                 ->where('date', now()->format('Y-m-d'))
                 ->count();
             $visitorAll = Visitor::query()->count('id');
+            $transports =TransportTypeParent::query()
+                ->with(['translate'=>fn($a)=>$a->where('language_id',$this->lang)])
+                ->withCount('transport')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'name' => $item?->translate?->name,
+                        'count' => $item->transport_count
+                    ];
+                });
             return response()->json([
                 'status_code' => 200,
                 'data' => [
                     'spot' => $spot,
                     'hotel' => $hotel,
                     'locker' => $locker,
+                    'transports' => $transports,
                     'visitor_today' => $visitorToday,
                     'visitor_all' => $visitorAll,
                 ],

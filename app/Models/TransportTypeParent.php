@@ -19,4 +19,9 @@ class TransportTypeParent extends Model
     {
         return $this->hasOne(TransportType::class, 'transport_type_parent_id');
     }
+    //TODO @fa 2024-12-12 transports
+    public function transport(): HasMany
+    {
+        return $this->hasMany(TransportParent::class,'transport_type_parent_id');
+    }
 }
