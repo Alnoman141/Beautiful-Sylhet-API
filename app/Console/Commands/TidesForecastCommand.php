@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Jobs\WeatherForecastJob;
-use App\Services\Weather;
 use Illuminate\Console\Command;
 
 class TidesForecastCommand extends Command
