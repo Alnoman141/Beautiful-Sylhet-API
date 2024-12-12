@@ -36,7 +36,7 @@ class VisitorController extends Controller
                 'status_code' => 200,
                 'data' => Visitor::query()
                     ->where('date', now()->format('Y-m-d'))
-                    ->sum('count'),
+                    ->count(),
             ], 200);
         }catch (\Exception $e) {
             return response()->json([
