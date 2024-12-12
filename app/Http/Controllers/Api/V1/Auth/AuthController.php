@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -36,13 +37,17 @@ class AuthController extends Controller
                 $token = $user->createToken('authToken'
                     ,['*'],now()->addDays(5)
                 )->plainTextToken;
+                $permissions =  collect($user?->getPermissionsViaRoles())->map(fn($a)=>[
+                    'action'=>Str::after($a->name,'-'),
+                    'subject'=>Str::before($a->name,'-'),
+                ]);
                 return response()->json([
                     'status_code'=>200,
                     'message'=>'User logged in successfully',
                     'data'=>[
                         'token'=>$token,
                         'user'=>collect($user)->only(['id','first_name','last_name','email','phone','avatar']),
-                        'permissions'=>collect($user->getPermissionsViaRoles())->pluck('name')
+                        'permissions'=> count($permissions) > 0 ? $permissions : []
                     ]
                 ],200);
             } else {
