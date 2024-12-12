@@ -7,6 +7,7 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -107,5 +108,150 @@ class Weather
             return $data;
         });
         return response()->json($weather);
+    }
+
+    //TODO @fa 2024-12-12
+    public static function glass()
+    {
+        $start = now()->format('Y-m-d');
+        $end = now()->addDays(14)->format('Y-m-d');
+        $data = Cache::rememberForever('tides', function () use ($start, $end) {
+            $other = Http::withHeaders([
+                'Authorization'=>config('fa.weather.glass')
+            ])->get("https://api.stormglass.io/v2/tide/extremes/point",[
+                'lat'=>21.4417,
+                'lng'=>91.9896,
+                'start'=>$start,
+                'end'=>$end
+            ]);
+            $results =  $other->json();
+           return collect( $results['data'])->map(function ($item) {
+                return [
+                    'date' => Carbon::parse($item['time'])->format('Y-m-d'),
+                    'height' => round($item['height'],2),
+                    'type' => $item['type'],
+                    'time' => Carbon::parse($item['time'])->format('h:i A')
+                ];
+            });
+        });
+        return $data;
+    }
+    //TODO @fa 2024-12-12 visual
+    public static function visual()
+    {
+        $key = config('fa.weather.visual');
+        $data = Cache::rememberForever('forecast', function ()use ($key) {
+            $response = Http::get("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/coxsbazar?unitGroup=us&include=days&key=$key&contentType=json");
+            $results =  $response->json();
+            return collect($results['days'])->map(function ($a) {
+                return [
+                    'date' => Carbon::parse($a['datetime'])->format('Y-m-d'),
+                    'weather_data'=>[
+                        'sunrise' => Carbon::parse($a['sunrise'])->format('h:i A'),
+                        'sunset' => Carbon::parse($a['sunset'])->format('h:i A'),
+                        'high_temperature' => self::fToc($a['tempmax']),
+                        'low_temperature' => self::fToc($a['tempmin']),
+                        'icon' => $a['icon'],
+                        'conditions' => $a['conditions'],
+                        'cloud_cover' => $a['cloudcover'],
+                        'humidity' => $a['humidity'],
+                    ]
+                ];
+            });
+        });
+        return $data;
+    }
+
+    public static function fToc($value)
+    {
+        return round(($value - 32) * 5 / 9, 2);
+    }
+    //TODO @fa 2024-12-12 weather tides and forecast
+    public static function tideAndForecast()
+    {
+        $forecast = self::visual();
+        $tides = self::glass();
+        return Cache::rememberForever('tide-forecast', function () use ($forecast, $tides) {
+            return collect($forecast)->map(function ($a) use ($tides) {
+                $tide = collect($tides)->where('date', Carbon::parse($a['date'])->format('Y-m-d'))
+                    ->map(fn($a) => [
+                        'type' => Str::ucfirst($a['type']),
+                        'time' => $a['time'],
+                        'height' => $a['height']
+                    ])->values();
+                return [
+                    'date' => $a['date'],
+                    'tide_details' => [
+                        'type' => $tide->pluck('type'),
+                        'time' => $tide->pluck('time'),
+                        'height' => $tide->pluck('height'),
+                    ],
+                    'tides'=>$tide,
+                    'weather_data' => $a['weather_data'],
+                ];
+            });
+        });
+    }
+
+    //TODO @fa 2024-12-12 get tides
+    public static function getTides()
+    {
+        try {
+            $start = now()->format('Y-m-d');
+            $end = now()->addDays(14)->format('Y-m-d');
+            $other = Http::withHeaders([
+                'Authorization'=>config('fa.weather.glass')
+            ])->get("https://api.stormglass.io/v2/tide/extremes/point",[
+                'lat'=>21.4417,
+                'lng'=>91.9896,
+                'start'=>$start,
+                'end'=>$end
+            ]);
+            if ($other->successful()) {
+                Cache::forget('tides');
+                $results =  $other->json();
+                $data = collect( $results['data'])->map(function ($item) {
+                    return [
+                        'date' => Carbon::parse($item['time'])->format('Y-m-d'),
+                        'height' => round($item['height'],2),
+                        'type' => $item['type'],
+                        'time' => Carbon::parse($item['time'])->format('h:i A')
+                    ];
+                });
+                Cache::rememberForever('tides', function () use ($data) {
+                    return $data;
+                });
+            }
+        }catch (\Exception $e) {}
+    }
+    //TODO @fa 2024-12-12 get forecast
+    public static function getForecast()
+    {
+        try {
+            $key = config('fa.weather.visual');
+            $response = Http::get("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/coxsbazar?unitGroup=us&include=days&key=$key&contentType=json");
+            if ($response->successful()) {
+                Cache::forget('forecast');
+                $results =  $response->json();
+                $data = collect($results['days'])->map(function ($a) {
+                    return [
+                        'date' => Carbon::parse($a['datetime'])->format('Y-m-d'),
+                        'weather_data'=>[
+                            'sunrise' => Carbon::parse($a['sunrise'])->format('h:i A'),
+                            'sunset' => Carbon::parse($a['sunset'])->format('h:i A'),
+                            'high_temperature' => self::fToc($a['tempmax']),
+                            'low_temperature' => self::fToc($a['tempmin']),
+                            'icon' => $a['icon'],
+                            'conditions' => $a['conditions'],
+                            'cloud_cover' => $a['cloudcover'],
+                            'humidity' => $a['humidity'],
+                        ]
+                    ];
+                });
+                Cache::rememberForever('forecast', function () use ($data) {
+                    return $data;
+                });
+            }
+        }catch (\Exception $e) {}
     }
 }
