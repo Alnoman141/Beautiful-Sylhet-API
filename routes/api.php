@@ -21,6 +21,8 @@ Route::group(['prefix' => 'v1'],function (){
     Route::post('forgot-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'forgotPassword']);
     Route::post('update-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'updatePassword']);
     Route::post('verify-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'verifyPassword']);
+    Route::post('visitor',[App\Http\Controllers\Api\V1\VisitorController::class,'store']);
+    Route::post('dashboard',[App\Http\Controllers\Api\V1\VisitorController::class,'index']);
     Route::post('weather-info',function (){
        return response()->json([
            'status_code' => 200,
