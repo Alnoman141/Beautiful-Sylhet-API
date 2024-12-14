@@ -11,7 +11,7 @@ Route::group(['prefix' => 'v1'],function (){
     //TODO @fa 11/24/24 Language list
     Route::post('language-list',[App\Http\Controllers\Api\V1\LanguageController::class,'index']);
     Route::get('/disk',function (){
-        \App\Jobs\WeatherForecastJob::dispatch('forecast');
+        \App\Jobs\WeatherForecastJob::dispatch('forecast')->delay(now()->addSeconds(2));
     });
     Route::get('/', function (){
         return response()->json([

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\RelationNotFoundException;
 use Illuminate\Database\QueryException;
@@ -151,5 +152,15 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 403);
             }
             abort(403, 'Fatal Error !');
+        });
+        $exceptions->render(function (BindingResolutionException $exception, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'status_code' => 500,
+                    'error' => 'BindingResolutionException',
+                    'message' => 'Binding Resolution Error'
+                ], 403);
+            }
+            abort(403, 'Binding Resolution Error !');
         });
     })->create();
