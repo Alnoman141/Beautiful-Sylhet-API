@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
@@ -91,9 +92,13 @@ class User extends Authenticatable
     protected function avatar(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => file_exists($this->attributes['avatar']) ? app('url')->to('/') . '/' .$this->attributes['avatar'] :
-                'https://ui-avatars.com/api/?name=' . Str::slug($this->first_name . ' ' . $this->last_name) .
-                '&size=256&color=fff&rounded=true&bold=true&background=0D8ABC',
+            get: fn() => config('filesystems.default') === 's3'
+                ? (!empty($this->attributes['avatar']) && Storage::disk('s3')->exists($this->attributes['avatar']))
+                    ? Storage::disk('s3')->url($this->attributes['avatar'])
+                    : 'https://ui-avatars.com/api/?name=' . urlencode(Str::slug($this->first_name . ' ' . $this->last_name)) .'&size=256&color=fff&rounded=true&bold=true&background=0D8ABC'
+                : (file_exists(public_path($this->attributes['avatar']))
+                    ? asset($this->attributes['avatar'])
+                    : 'https://ui-avatars.com/api/?name=' . urlencode(Str::slug($this->first_name . ' ' . $this->last_name)) .'&size=256&color=fff&rounded=true&bold=true&background=0D8ABC')
         );
     }
 }
