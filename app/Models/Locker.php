@@ -18,6 +18,6 @@ class Locker extends Model
 
     public function spot(): HasOneThrough
     {
-        return $this->hasOneThrough(SpotParent::class, LockerParent::class, 'id', 'id', 'locker_parent_id', 'spot_parent_id');
+        return $this->hasOneThrough(Spot::class, LockerParent::class, 'id', 'spot_parent_id','locker_parent_id','spot_parent_id');
     }
 }

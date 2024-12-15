@@ -211,7 +211,7 @@ class LockerController extends Controller
     {
         try {
             $lockers = Locker::query()
-                ->with(['spot.translate'=>fn($q) => $q->where('language_id', $this->lang)])
+                ->with(['parent','spot'=>fn($q) => $q->where('language_id', $this->lang)])
                 ->where('language_id', $this->lang)
                 //->latest()
                 ->get()
@@ -221,9 +221,10 @@ class LockerController extends Controller
                         'parent_id' => $locker->locker_parent_id,
                         'phone' => $locker->phone,
                         'address' => $locker->address,
+                        'map_link' => $locker->parent?->link,
                         'description' => $locker->description,
                         'spot_id' => $locker?->spot?->id,
-                        'spot_name' => $locker?->spot?->translate?->name,
+                        'spot_name' => $locker?->spot?->name,
                     ];
                 });
             return response()->json([
