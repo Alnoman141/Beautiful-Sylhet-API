@@ -119,7 +119,7 @@ class RolePermissionController extends Controller
             $permissions = collect($permissions)->map(function ($permission) {
                 return [
                     'action' => Str::after($permission->name, '-'),
-                    'subject' => Str::title(Str::before($permission->name, '-')),
+                    'subject' => Str::before($permission->name, '-'),
                 ];
             });
             return response()->json([
