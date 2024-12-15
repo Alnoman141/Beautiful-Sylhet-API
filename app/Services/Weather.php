@@ -186,7 +186,7 @@ class Weather
                         'time' => $tide->pluck('time'),
                         'height' => $tide->pluck('height'),
                     ],
-                    'tides'=>$tide,
+                    //'tides'=>$tide,
                     'weather_data' => $a['weather_data'],
                 ];
             });
