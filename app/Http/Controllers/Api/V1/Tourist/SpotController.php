@@ -19,7 +19,7 @@ class SpotController extends Controller
     public function index(Request $request)
     {
         try {
-            $spots = Spot::with(['parent:id,image'])
+            $spots = Spot::with(['parent'=>fn($a)=>$a->select('id','image')->with(['spot'=>fn($q) => $q->select(['spot_parent_id','name'])->where('language_id',$this->lang==1?2:1)])])
                 ->when($request->filled('name'),fn($q) => $q->where('name','like','%'.$request->name.'%'))
                 ->when($request->filled('id'),fn($q) => $q->where('id',$request->id))
                 ->where('language_id', $this->lang)
@@ -30,6 +30,7 @@ class SpotController extends Controller
                         'id' => $spot->id,
                         'parent_id' => $spot->spot_parent_id,
                         'name' => $spot->name,
+                        'name_en' => collect($spot?->parent?->spot)->pluck('name')->first(),
                         'image' => $spot?->parent?->image
                     ];
                 })

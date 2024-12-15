@@ -24,6 +24,9 @@ class BankController extends Controller
     {
         try {
             $banks = Bank::query()
+                ->with(['parent.banks'=>fn($q) => $q
+                    ->select(['id','name','bank_parent_id'])
+                    ->where('language_id',$this->lang==1 ? 2 : 1)])
                 ->where('language_id', $this->lang)
                 ->get()
                 ->map(function ($bank) {
@@ -31,6 +34,7 @@ class BankController extends Controller
                         'id' => $bank->id,
                         'parent_id' => $bank->bank_parent_id,
                         'name' => $bank->name,
+                        'name_en' => collect($bank->parent?->banks)->pluck('name')->first(),
                     ];
                 });
             return response()->json([
@@ -210,7 +214,10 @@ class BankController extends Controller
     public function atmList(Request $request)
     {
         try {
-            $banks = BankAtm::with(['parent','spot'=>fn($q) => $q
+            $banks = BankAtm::with(['parent'=>fn($q) => $q->with(['atms'=>fn($a) => $a
+                    ->select(['id','name','bank_atm_parent_id'])
+                    ->where('language_id',$this->lang==1 ? 2 : 1)]),
+                'spot'=>fn($q) => $q
                 ->where('language_id',$this->lang)
                 ->select(['name','spots.spot_parent_id'])])
                 ->when($request->filled('name'),fn($query) => $query->where('name','like','%'.$request->name.'%'))
@@ -225,6 +232,7 @@ class BankController extends Controller
                         'link' => $bank->parent?->map_link,
                         'image' => $bank->parent?->image,
                         'name' => $bank->name,
+                        'name_en' => collect($bank->parent?->atms)->pluck('name')->first(),
                         'address' => $bank->address,
                         'spot_id' => $bank?->spot?->spot_parent_id ?? '',
                         'spot_name' => $bank?->spot?->name ?? '',
