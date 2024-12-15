@@ -29,7 +29,7 @@ Route::group(['prefix' => 'v1'],function (){
        return response()->json([
            'status_code' => 200,
            'message' => 'Weather information',
-           'data' => \Illuminate\Support\Facades\Cache::get('weather')
+           'data' => \Illuminate\Support\Facades\Cache::get('weather') ?? \Illuminate\Support\Facades\Cache::get('tide-forecast'),
        ]);
     });
     Route::group(['prefix' => 'guideline'],function (){
