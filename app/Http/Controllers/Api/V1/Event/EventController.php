@@ -31,6 +31,7 @@ class EventController extends Controller
                         'time' => $event->time,
                         'location' => $event->location,
                         'description' => $event->description,
+                        'terms' => $event->terms,
                         'fare' => $event->fare,
                         'phone' => $event->phone,
                         'image' => $event?->parent?->image,
