@@ -20,6 +20,7 @@ class EventController extends Controller
             $events = Event::query()
                 ->with(['spotParent','parent'])
                 ->where('language_id', $this->lang)
+                ->latest()
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                 ->through(function ($event) {
                     return [
