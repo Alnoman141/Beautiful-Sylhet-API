@@ -8,6 +8,7 @@ use App\Models\Notice;
 use App\Models\NoticeParent;
 use App\Services\Fa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -57,7 +58,14 @@ class NoticeController extends Controller
                 ];
             })->values();*/
             ->paginate($request->integer('per_page', PaginationEnum::Default->value));
-            $groupedNotices = $notices->getCollection()->groupBy('date')->map(function ($item) {
+            $groupedNotices = $notices->getCollection()->groupBy(function ($item) {
+                if ($this->lang == 1) {
+                    return self::convertToBanglaNumbers(Carbon::parse($item->date)->locale('bn')->translatedFormat('d F, Y'));
+                } else {
+                    return Carbon::parse($item->date)->format('d F, Y');
+                }
+            })
+                ->map(function ($item) {
                 return $item->map(function ($notice) {
                     return [
                         'id' => $notice->id,
@@ -79,6 +87,12 @@ class NoticeController extends Controller
                 'errors' => $e->getMessage()
             ], 403);
         }
+    }
+    public static function convertToBanglaNumbers($string)
+    {
+        $banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        $englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        return str_replace($englishDigits, $banglaDigits, $string);
     }
     //TODO @fa 2024-11-28 show notice
     public function show(Request $request)
