@@ -18,7 +18,9 @@ class CampaignController extends Controller
     public function index(Request $request)
     {
         try {
-            $campaigns = Campaign::with('parent')
+            $campaigns = Campaign::with(['parent'=>fn($a)=>$a->with(['campaigns'=>fn($b)=>$b
+                    ->select(['id','campaign_parent_id','name'])
+                    ->where('language_id',$this->lang==1?2:1)])])
                 ->where('language_id', $this->lang)
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                 ->through(function ($campaign) {
@@ -26,6 +28,7 @@ class CampaignController extends Controller
                         'id' => $campaign->id,
                         'parent_id'=>$campaign->campaign_parent_id,
                         'name' => $campaign->name,
+                        'name_en'=>collect($campaign?->parent?->campaigns)->pluck('name')->first(),
                         'description' => $campaign->description,
                         'date' => $campaign->date,
                         'image' => $campaign?->parent?->image
