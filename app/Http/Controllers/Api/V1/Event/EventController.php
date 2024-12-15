@@ -18,7 +18,7 @@ class EventController extends Controller
     {
         try {
             $events = Event::query()
-                ->with(['spotParent','parent'])
+                ->with(['parent','spot'=>fn($q)=>$q->where('language_id',$this->lang)])
                 ->where('language_id', $this->lang)
                 ->latest()
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
@@ -35,8 +35,8 @@ class EventController extends Controller
                         'fare' => $event->fare,
                         'phone' => $event->phone,
                         'image' => $event?->parent?->image,
-                        'spot_id' => $event?->spotParent?->id,
-                        'spot_name' => $event?->spotParent?->translate?->name,
+                        'spot_id' => $event?->spot?->spot_parent_id,
+                        'spot_name' => $event?->spot?->name,
                     ];
                 });
             return response()->json([

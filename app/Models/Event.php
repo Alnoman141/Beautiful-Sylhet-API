@@ -20,4 +20,8 @@ class Event extends Model
     {
         return $this->hasOneThrough(SpotParent::class, EventParent::class, 'id', 'id', 'event_parent_id', 'spot_parent_id');
     }
+    public function spot(): HasOneThrough
+    {
+        return $this->hasOneThrough(Spot::class, EventParent::class, 'id', 'spot_parent_id','event_parent_id','spot_parent_id');
+    }
 }
