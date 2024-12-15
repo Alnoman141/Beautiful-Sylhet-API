@@ -20,6 +20,9 @@ class NoticeController extends Controller
         try {
             if ($request->filled('type') && $request->type == 'all') {
                 $notices = Notice::query()
+                    ->with(['parent.notice'=>fn($q)=>$q
+                        ->select(['id','name','notice_parent_id'])
+                        ->where('language_id', $this->lang==1?2:1)])
                     ->where('language_id', $this->lang)
                     ->orderByDesc('created_at')
                     ->paginate($request->integer('per_page', PaginationEnum::Default->value))
@@ -27,6 +30,7 @@ class NoticeController extends Controller
                         return [
                             'id' => $notice->id,
                             'name' => $notice->name,
+                            'name_en'=>collect($notice?->parent?->notice)->pluck('name')->first(),
                             'parent_id' => $notice->notice_parent_id,
                             'language_id' => $notice->language_id,
                             'date' => $notice->created_at,
