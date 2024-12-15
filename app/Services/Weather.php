@@ -18,7 +18,7 @@ class Weather
     public static function getWeather()
     {
         $weather = Cache::rememberForever('weather-api', function () {
-            $response = Http::get('https://tides.today/en/dynamic/tide-forecast/7625');
+            $response = Http::get('https://tides.today/en/dynamic/tide-forecast/7623');
             if ($response->successful()) {
                 Cache::forget('weather');
                 $content = $response->json()['content'];
@@ -156,7 +156,7 @@ class Weather
                         'icon' => $a['icon'],
                         'condition' => round($a['conditions']),
                         'cloud_cover' => round($a['cloudcover']),
-                        'humidity' => $a['humidity'],
+                        'humidity' => round($a['humidity']),
                     ]
                 ];
             });
@@ -217,7 +217,7 @@ class Weather
                         'date' => Carbon::parse($item['time'])->format('Y-m-d'),
                         'height' => round($item['height'],2),
                         'type' => $item['type'],
-                        'time' => Carbon::parse($item['time'])->format('h:i A')
+                        'time' => Carbon::parse($item['time'])->format('H:i')
                     ];
                 });
                 Cache::rememberForever('tides', function () use ($data) {
@@ -239,14 +239,14 @@ class Weather
                     return [
                         'date' => Carbon::parse($a['datetime'])->format('Y-m-d'),
                         'weather_data'=>[
-                            'sunrise' => Carbon::parse($a['sunrise'])->format('h:i A'),
-                            'sunset' => Carbon::parse($a['sunset'])->format('h:i A'),
+                            'sunrise' => Carbon::parse($a['sunrise'])->format('H:i'),
+                            'sunset' => Carbon::parse($a['sunset'])->format('H:i'),
                             'high_temperature' => self::fToc($a['tempmax']),
                             'low_temperature' => self::fToc($a['tempmin']),
                             'icon' => $a['icon'],
-                            'conditions' => $a['conditions'],
-                            'cloud_cover' => $a['cloudcover'],
-                            'humidity' => $a['humidity'],
+                            'condition' => $a['conditions'],
+                            'cloud_cover' => round($a['cloudcover']).'%',
+                            'humidity' =>round( $a['humidity']).'%',
                         ]
                     ];
                 });
