@@ -23,10 +23,13 @@ class HotelController extends Controller
     {
         try {
             $types = HotelType::query()
+                ->with(['parent'=>fn($a)=>$a->with(['translate'=>fn($b)=>$b->where('language_id',$this->lang==1?2:1)])])
                 ->where('language_id', $this->lang)
                 ->get()
                 ->map(function ($type){
                     $type['parent_id']=$type->hotel_type_parent_id;
+                    $type['name_en']=$type?->parent?->translate?->name;
+                    unset($type['parent']);
                     return $type;
                 });
             return response()->json([
