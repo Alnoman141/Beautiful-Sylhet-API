@@ -139,11 +139,11 @@ class Weather
         return $data;
     }
     //TODO @fa 2024-12-12 visual
-    public static function visual()
+    public static function visual($name='coxsbazar')
     {
         $key = config('fa.weather.visual');
-        $data = Cache::rememberForever('forecast', function ()use ($key) {
-            $response = Http::get("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/coxsbazar?unitGroup=us&include=days&key=$key&contentType=json");
+        $data = Cache::rememberForever('forecast', function ()use ($key,$name) {
+            $response = Http::get("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/$name?unitGroup=us&include=days&key=$key&contentType=json");
             $results =  $response->json();
             return collect($results['days'])->map(function ($a) {
                 return [
@@ -227,13 +227,15 @@ class Weather
         }catch (\Exception $e) {}
     }
     //TODO @fa 2024-12-12 get forecast
-    public static function getForecast()
+    public static function getForecast($name='coxsbazar',$type='visual')
     {
         try {
             $key = config('fa.weather.visual');
-            $response = Http::get("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/coxsbazar?unitGroup=us&include=days&key=$key&contentType=json");
+            $response = Http::get("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/$name?unitGroup=us&include=days&key=$key&contentType=json");
             if ($response->successful()) {
-                Cache::forget('forecast');
+                if ($type == 'visual') {
+                    Cache::forget('forecast');
+                }
                 $results =  $response->json();
                 $data = collect($results['days'])->map(function ($a) {
                     return [
@@ -250,10 +252,47 @@ class Weather
                         ]
                     ];
                 });
+                if ($type !== 'visual') {
+                    return $data;
+                }
                 Cache::rememberForever('forecast', function () use ($data) {
                     return $data;
                 });
             }
         }catch (\Exception $e) {}
+    }
+    //TODO @fa 2024-12-12 open weather
+    public static function openWeather($name,$id,$days=null)
+    {
+        if (empty($name)){
+            return [];
+        }
+        //13d4ddd75f8148649bc53144240812
+            return Cache::remember('open-weather-'.$id, now()->addDays(6), function () use ($name,$days) {
+                $response = Http::get("http://api.weatherapi.com/v1/forecast.json", [
+                    'key' => '13d4ddd75f8148649bc53144240812',
+                    'q' => $name,
+                    'days' => $days ?? 7
+                ]);
+                if ($response->successful()) {
+                    $data = $response->json();
+                    return isset($data['forecast']['forecastday']) ? collect($data['forecast']['forecastday'])->map(function ($a) {
+                        return [
+                            'date' => $a['date'],
+                            'weather_data' => [
+                                'sunrise' => Carbon::parse($a['astro']['sunrise'])->format('H:i'),
+                                'sunset' => Carbon::parse($a['astro']['sunset'])->format('H:i'),
+                                'high_temperature' => round($a['day']['maxtemp_c']) . 'Â°C',
+                                'low_temperature' => round($a['day']['mintemp_c']) . 'Â°C',
+                                'icon' => Str::remove('//', $a['day']['condition']['icon']),
+                                'condition' => $a['day']['condition']['text'],
+                                'cloud_cover' => '0%',
+                                'humidity' => '0%',
+                            ]
+                        ];
+                    }) : [];
+                }
+                return [];
+            });
     }
 }

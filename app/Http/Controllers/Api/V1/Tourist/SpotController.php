@@ -8,6 +8,7 @@ use App\Models\Spot;
 use App\Models\SpotImage;
 use App\Models\SpotParent;
 use App\Services\Fa;
+use App\Services\Weather;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -62,9 +63,13 @@ class SpotController extends Controller
                     ];
                 }))
             ]);
+            $map = $spot?->parent?->map_link;
+            $link = Str::between($map, 'place/', '/@');
+            $name = Str::lower(Str::replace('+',' ', $link));
             return response()->json([
                 'status_code' => 200,
-                'data' => $spot
+                'data' => $spot,
+                'weather' => Weather::openWeather($name,$spot?->spot_parent_id),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
