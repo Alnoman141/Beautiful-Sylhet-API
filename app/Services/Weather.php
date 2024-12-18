@@ -268,7 +268,7 @@ class Weather
             return [];
         }
         //13d4ddd75f8148649bc53144240812
-            return Cache::remember('open-weather-'.$id, now()->addDays(6), function () use ($name,$days) {
+            return Cache::remember('open-weather-'.$id, now()->addDays(6), function () use ($name,$days,$id) {
                 $response = Http::get("http://api.weatherapi.com/v1/forecast.json", [
                     'key' => '13d4ddd75f8148649bc53144240812',
                     'q' => $name,
@@ -292,6 +292,7 @@ class Weather
                         ];
                     }) : [];
                 }
+                Cache::forget('open-weather-'.$id);
                 return [];
             });
     }
