@@ -72,10 +72,12 @@ class Weather
                 }
             }
             $weatherPanel = $xpath->query(".//div[contains(@class, 'weather-container')]", $tabPanel)->item(0);
+            $high = $xpath->query(".//span[contains(@class, 'value-high')]//span[contains(@class, 'value-primary')]", $weatherPanel)->item(0)->textContent ?? '';
+            $low = $xpath->query(".//span[contains(@class, 'value-low')]//span[contains(@class, 'value-primary')]", $weatherPanel)->item(0)->textContent ?? '';
             $weatherDetails = [
                 'condition' => $xpath->query(".//div[contains(@class, 'weather-icon')]//strong", $weatherPanel)->item(0)->textContent ?? '',
-                'high_temperature' => $xpath->query(".//span[contains(@class, 'value-high')]//span[contains(@class, 'value-primary')]", $weatherPanel)->item(0)->textContent ?? '',
-                'low_temperature' => $xpath->query(".//span[contains(@class, 'value-low')]//span[contains(@class, 'value-primary')]", $weatherPanel)->item(0)->textContent ?? '',
+                'high_temperature' => Str::replace('Â°c','Â°C', $high),
+                'low_temperature' => Str::replace('Â°c','Â°C', $low),
             ];
             $weatherTableRows = $xpath->query(".//table//tbody/tr", $weatherPanel);
             foreach ($weatherTableRows as $row) {
