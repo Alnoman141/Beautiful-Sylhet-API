@@ -67,7 +67,8 @@ class Weather
                 }
                 $height = $cols->item(3)->textContent ?? '';
                 if ($height){
-                    $tideDetails['height'][] = trim($height);
+                    //trim($height)
+                    $tideDetails['height'][] = (double) Str::before(trim($height),'m');
                 }
             }
             $weatherPanel = $xpath->query(".//div[contains(@class, 'weather-container')]", $tabPanel)->item(0);
