@@ -232,6 +232,7 @@ class BankController extends Controller
                 ->through(function ($bank) {
                     return [
                         'id' => $bank->id,
+                        'atm_parent_id'=>$bank->bank_atm_parent_id,
                         'parent_id'=>$bank->bank?->bank_parent_id,
                         'bank_name'=>$bank->bank?->name,
                         'link' => $bank->parent?->map_link,
