@@ -18,16 +18,25 @@ class ServiceController extends Controller
                 ->where('type',$request->type ?? 1)
                 //->whereJsonContains('descriptions->*.language_id', $this->lang)
                 ,
-                'spot'=>fn($a)=>$a->where('language_id',$this->lang)
-                    ->select('spots.id as id','spots.spot_parent_id as spot_parent_id','name')
+                'spots:spots.id as id,name,language_id,spots.spot_parent_id as parent_id',
+                /*'spot'=>fn($a)=>$a->where('language_id',$this->lang)
+                    ->select('spots.id as id','spots.spot_parent_id as spot_parent_id','name')*/
             ])->get()
                 ->map(function ($item) use ($request){
                     return [
                         'id'=>$item->id,
                         'descriptions'=> $request->filled('app') ? $item?->parent?->descriptions : collect($item?->parent?->descriptions)->where('language_id',$this->lang)->first(),
                         'link'=>$item?->parent?->link,
-                        'spot_id'=>$item?->spot?->spot_parent_id,
-                        'name'=>$item?->spot?->name,
+                        'spots'=> $request->filled('app') ? collect($item?->spots)->map(function ($item){
+                            return [
+                                'id'=>$item->id,
+                                'parent_id'=>$item->parent_id,
+                                'name'=>$item->name,
+                                'language_id'=>$item->language_id,
+                            ];
+                        }) : collect($item?->spots)->where('language_id',$this->lang)->first(),
+                           // ->where('language_id',$this->lang)->first(),
+                        //'name_en'=>$item?->spot?->name,
                         'booking_numbers'=>$item->booking_numbers,
                         'supervisor_numbers'=>$item->supervisor_numbers,
                     ];
