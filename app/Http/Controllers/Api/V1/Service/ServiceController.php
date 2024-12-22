@@ -40,16 +40,16 @@ class ServiceController extends Controller
                                 'booking_numbers'=>$item->booking_numbers,
                                 'supervisor_numbers'=>$item->supervisor_numbers,
                             ];
-                        })->values()->first() : collect($item->services)->map(function ($item){
+                        }) : collect($item->services)->map(function ($item){
                             return [
                                 'id'=>$item->id,
                                 'spots'=>collect($item->spots)->where('language_id',$this->lang)->first(),
                                 'booking_numbers'=>$item->booking_numbers,
                                 'supervisor_numbers'=>$item->supervisor_numbers,
                             ];
-                        })->values()->first(),
+                        }),
                     ];
-                });
+                })->values()->first();
             return response()->json([
                 'status_code'=>200,
                 'data'=>$services],200);
@@ -105,7 +105,7 @@ class ServiceController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'descriptions' => 'required',
+            //'descriptions' => 'required',
             'spot_parent_id' => 'required|exists:spot_parents,id',
             'booking_numbers' => 'required|array',
             'supervisor_numbers' => 'required|array',
@@ -118,11 +118,15 @@ class ServiceController extends Controller
         }
         DB::beginTransaction();
         try {
-            $parent = ServiceParent::firstOrCreate([
-                'descriptions'=>$request->descriptions,
-                'link'=>$request->link ?? null,
-                'type'=>$request->type ?? 1,
-            ]);
+            $parent = ServiceParent::where('type',$request->type ?? 1)
+                ->first();
+            if (!$parent){
+                $parent = ServiceParent::firstOrCreate([
+                    'descriptions'=>$request->descriptions,
+                    'link'=>$request->link ?? null,
+                    'type'=>$request->type ?? 1,
+                ]);
+            }
             Service::create([
                 'service_parent_id'=>$parent->id,
                 'spot_parent_id'=>$request->spot_parent_id,
