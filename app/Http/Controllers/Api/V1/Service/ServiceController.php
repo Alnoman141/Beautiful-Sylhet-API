@@ -107,8 +107,8 @@ class ServiceController extends Controller
         $validator = Validator::make($request->all(), [
             //'descriptions' => 'required',
             'spot_parent_id' => 'required|exists:spot_parents,id',
-            'booking_numbers' => 'required|array',
-            'supervisor_numbers' => 'required|array',
+            'booking_numbers' => 'nullable|array',
+            'supervisor_numbers' => 'nullable|array',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -171,8 +171,8 @@ class ServiceController extends Controller
             'id' => 'required|exists:services,id',
             'descriptions' => 'required',
             'spot_parent_id' => 'required|exists:spot_parents,id',
-            'booking_numbers' => 'required|array',
-            'supervisor_numbers' => 'required|array',
+            'booking_numbers' => 'nullable|array',
+            'supervisor_numbers' => 'nullable|array',
         ]);
         if ($validator->fails()) {
             return response()->json([
