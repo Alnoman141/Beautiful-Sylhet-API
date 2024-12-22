@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ServiceParent extends Model
 {
@@ -13,5 +14,10 @@ class ServiceParent extends Model
         return [
             'descriptions' => 'object',
         ];
+    }
+
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class, 'service_parent_id');
     }
 }

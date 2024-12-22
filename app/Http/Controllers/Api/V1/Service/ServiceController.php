@@ -14,6 +14,55 @@ class ServiceController extends Controller
     public function index(Request $request)
     {
         try {
+            $services = ServiceParent::query()
+                ->where('type',$request->type ?? 1)
+                ->with(['services'=>fn($a)=>$a
+                    ->with('spots:spots.id as id,name,language_id,spots.spot_parent_id as parent_id')
+                ])
+                ->get()
+                ->map(function ($item) use ($request){
+                    return [
+                        'id'=>$item->id,
+                        'descriptions'=> $request->filled('app') ? $item->descriptions : collect($item->descriptions)->where('language_id',$this->lang)->first(),
+                        'link'=>$item->link,
+                        'type'=>$item->type,
+                        'services'=> $request->filled('app') ? collect($item->services)->map(function ($item){
+                            return [
+                                'id'=>$item->id,
+                                'spots'=>collect($item->spots)->map(function ($item){
+                                    return [
+                                        'id'=>$item->id,
+                                        'parent_id'=>$item->parent_id,
+                                        'name'=>$item->name,
+                                        'language_id'=>$item->language_id,
+                                    ];
+                                }),
+                                'booking_numbers'=>$item->booking_numbers,
+                                'supervisor_numbers'=>$item->supervisor_numbers,
+                            ];
+                        })->values()->first() : collect($item->services)->map(function ($item){
+                            return [
+                                'id'=>$item->id,
+                                'spots'=>collect($item->spots)->where('language_id',$this->lang)->first(),
+                                'booking_numbers'=>$item->booking_numbers,
+                                'supervisor_numbers'=>$item->supervisor_numbers,
+                            ];
+                        })->values()->first(),
+                    ];
+                });
+            return response()->json([
+                'status_code'=>200,
+                'data'=>$services],200);
+        }catch (\Exception $e){
+            return response()->json([
+                'status_code'=>403,
+                'message'=>'Data not found',
+                'error'=>$e->getMessage()],403);
+        }
+    }
+    public function indexOLD(Request $request)
+    {
+        try {
             $data = Service::with(['parent'=>fn($a)=>$a
                 ->where('type',$request->type ?? 1)
                 //->whereJsonContains('descriptions->*.language_id', $this->lang)
@@ -27,6 +76,7 @@ class ServiceController extends Controller
                         'id'=>$item->id,
                         'descriptions'=> $request->filled('app') ? $item?->parent?->descriptions : collect($item?->parent?->descriptions)->where('language_id',$this->lang)->first(),
                         'link'=>$item?->parent?->link,
+                        'type'=>$item?->parent?->type,
                         'spots'=> $request->filled('app') ? collect($item?->spots)->map(function ($item){
                             return [
                                 'id'=>$item->id,
@@ -68,7 +118,7 @@ class ServiceController extends Controller
         }
         DB::beginTransaction();
         try {
-            $parent = ServiceParent::create([
+            $parent = ServiceParent::firstOrCreate([
                 'descriptions'=>$request->descriptions,
                 'link'=>$request->link ?? null,
                 'type'=>$request->type ?? 1,
