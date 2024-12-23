@@ -115,6 +115,52 @@ class ServiceController extends Controller
         }
     }
 
+    public function type(Request $request)
+    {
+        try {
+            $data = ServiceParent::query()
+                ->where('type',$request->type ?? 1)
+                ->when($request->filled('id'),fn($a)=>$a->where('id',$request->id))
+                ->first();
+            return response()->json([
+                'status_code'=>200,
+                'data'=>$data],200);
+        }catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Data not found',
+                'error' => $e->getMessage()], 403);
+        }
+    }
+
+    public function updateService(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:service_parents,id',
+            'descriptions' => 'required',
+            'link' => 'nullable',
+            'type' => 'nullable',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code'=>422,
+                'message'=>'Validation Error',
+                'error'=>$validator->errors()],422);
+        }
+        try {
+            $service = ServiceParent::findOrFail($request->id);
+            $service->update([
+                'descriptions'=>$request->descriptions,
+                'link'=>$request->link ?? null,
+                'type'=>$request->type ?? 1,
+            ]);
+        }catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Data not found',
+                'error' => $e->getMessage()], 403);
+        }
+    }
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

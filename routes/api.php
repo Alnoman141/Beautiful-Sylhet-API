@@ -296,6 +296,8 @@ Route::group(['prefix' => 'v1'],function (){
         //TODO @fa 2024-12-19 service
         Route::group(['prefix' => 'service'],function (){
             Route::post('store',[App\Http\Controllers\Api\V1\Service\ServiceController::class,'store']);
+            Route::post('get-service',[App\Http\Controllers\Api\V1\Service\ServiceController::class,'type']);
+            Route::post('update-service',[App\Http\Controllers\Api\V1\Service\ServiceController::class,'updateService']);
             Route::post('edit',[App\Http\Controllers\Api\V1\Service\ServiceController::class,'show']);
             Route::post('update',[App\Http\Controllers\Api\V1\Service\ServiceController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\Service\ServiceController::class,'destroy']);
