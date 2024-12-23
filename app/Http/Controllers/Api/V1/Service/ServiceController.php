@@ -26,20 +26,33 @@ class ServiceController extends Controller
                         'descriptions'=> $request->filled('app') ? $item->descriptions : collect($item->descriptions)->where('language_id',$this->lang)->first(),
                         'link'=>$item->link,
                         'type'=>$item->type,
-                        'services'=> $request->filled('app') ? collect($item->services)->map(function ($item){
-                            return [
-                                'id'=>$item->id,
-                                'spots'=>collect($item->spots)->map(function ($item){
-                                    return [
-                                        'id'=>$item->id,
-                                        'parent_id'=>$item->parent_id,
-                                        'name'=>$item->name,
-                                        'language_id'=>$item->language_id,
-                                    ];
-                                }),
-                                'booking_numbers'=>$item->booking_numbers,
-                                'supervisor_numbers'=>$item->supervisor_numbers,
-                            ];
+                        'services'=> $request->filled('app') ? collect($item->services)->map(function ($item) use($request){
+                            if (in_array($request->type,[1,2]))
+                            {
+                                $b = collect($item->booking_numbers)->first();
+                                //$s = collect($item->supervisor_numbers)->first();
+                                return [
+                                    'name'=>@$b['name'] ?? '',
+                                    'number'=>isset($b['numbers']) ? collect($b['numbers'])->first() : '',
+                                    /* 's_name'=>$s['name'],
+                                     's_number'=>collect($s['numbers'])->first(),*/
+                                ];
+                            }
+                            else{
+                                return [
+                                    'id'=>$item->id,
+                                    'spots'=>collect($item->spots)->map(function ($item){
+                                        return [
+                                            'id'=>$item->id,
+                                            'parent_id'=>$item->parent_id,
+                                            'name'=>$item->name,
+                                            'language_id'=>$item->language_id,
+                                        ];
+                                    }),
+                                    'booking_numbers'=>$item->booking_numbers,
+                                    'supervisor_numbers'=>$item->supervisor_numbers,
+                                ];
+                            }
                         }) : collect($item->services)->map(function ($item){
                             return [
                                 'id'=>$item->id,
