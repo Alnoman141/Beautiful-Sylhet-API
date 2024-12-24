@@ -52,6 +52,7 @@ class TransportController extends Controller
     {
         try {
             $transports = Transport::query()
+                ->with(['parent'])
                 ->when($request->transport_type_parent_id,fn($query) => $query->whereHas('parent',fn($q) => $q->where('transport_type_parent_id',$request->transport_type_parent_id)))
                 ->when($request->transport_parent_id,fn($query) => $query->where('transport_parent_id',$request->transport_parent_id))
                 ->where('language_id',$this->lang)
@@ -60,6 +61,7 @@ class TransportController extends Controller
                     return [
                         'id' => $transport->id,
                         'parent_id' => $transport->transport_parent_id,
+                        'link'=>$transport?->parent?->map_link,
                         'name' => $transport->name,
                         'time' => $transport->time,
                         'destination' => $transport->destination,
