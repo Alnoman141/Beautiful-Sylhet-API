@@ -39,7 +39,8 @@ class NewsController extends Controller
                     ->with('type')
                     ->where(fn($q) => $q
                         ->where('status',$request->status ?? 1)
-                        ->where('news_type_id',$request->news_type_id ?? 1)))
+                        //->where('news_type_id',$request->news_type_id ?? 1)
+                    ))
                 ->where('language_id', $this->lang)
                 ->orderByDesc('id')
                 ->paginate($request->integer('per_page',PaginationEnum::Default->value))
