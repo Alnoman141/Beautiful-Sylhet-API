@@ -164,7 +164,7 @@ class ServiceController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            //'descriptions' => 'required',
+            //'descriptions' => 'required', //
             'spot_parent_id' => 'nullable|exists:spot_parents,id',
             'booking_numbers' => 'nullable|array',
             'supervisor_numbers' => 'nullable|array',
