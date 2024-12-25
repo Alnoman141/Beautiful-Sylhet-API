@@ -165,7 +165,7 @@ class ServiceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             //'descriptions' => 'required',
-            'spot_parent_id' => 'required|exists:spot_parents,id',
+            'spot_parent_id' => 'nullable|exists:spot_parents,id',
             'booking_numbers' => 'nullable|array',
             'supervisor_numbers' => 'nullable|array',
         ]);
@@ -188,7 +188,7 @@ class ServiceController extends Controller
             }
             Service::create([
                 'service_parent_id'=>$parent->id,
-                'spot_parent_id'=>$request->spot_parent_id,
+                'spot_parent_id'=>$request->spot_parent_id ?? null,
                 'booking_numbers'=>$request->booking_numbers,
                 'supervisor_numbers'=>$request->supervisor_numbers,
             ]);
@@ -229,7 +229,7 @@ class ServiceController extends Controller
         $validator = Validator::make($request->all(), [
             'id' => 'required|exists:services,id',
             'descriptions' => 'required',
-            'spot_parent_id' => 'required|exists:spot_parents,id',
+            'spot_parent_id' => 'nullable|exists:spot_parents,id',
             'booking_numbers' => 'nullable|array',
             'supervisor_numbers' => 'nullable|array',
         ]);
@@ -243,7 +243,7 @@ class ServiceController extends Controller
         try {
             $service = Service::findOrFail($request->id);
             $service->update([
-                'spot_parent_id'=>$request->spot_parent_id,
+                'spot_parent_id'=>$request->spot_parent_id ?? null,
                 'booking_numbers'=>$request->booking_numbers,
                 'supervisor_numbers'=>$request->supervisor_numbers,
             ]);
@@ -279,7 +279,7 @@ class ServiceController extends Controller
         }
         DB::beginTransaction();
         try {
-            $service = Service::destroy($request->id);
+             Service::destroy($request->id);
             DB::commit();
             return response()->json([
                 'status_code'=>200,
