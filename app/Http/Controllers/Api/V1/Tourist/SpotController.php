@@ -177,7 +177,7 @@ class SpotController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'id' => 'required|exists:spot_parents,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
             'link' => 'nullable',
             'map_link' => 'nullable',
             'data' => 'required|array',
