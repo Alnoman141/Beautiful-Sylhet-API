@@ -83,7 +83,7 @@ class SpotController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
             'link' => 'nullable',
             'map_link' => 'nullable',
             'data'=> 'required|array',
