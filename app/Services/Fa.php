@@ -38,7 +38,7 @@ class Fa
             $photo =  ImageManager::gd()->read($data)->toJpeg(30);
             if (config('filesystems.default') == 's3') {
                 //Storage::disk('s3')->put($path . $name, $data, 'public');
-                Storage::disk('s3')->put($path . $name, $photo, 'public');
+                Storage::disk('s3')->put($path . $name, $photo, 'public'); //TODO @fa 2024-12-27 original image to adjust resolution
               //return  $temporaryUrl = Storage::disk('s3')->temporaryUrl($path . $name, now()->addMinutes(1));
                 return $path.$name;
             } else {
