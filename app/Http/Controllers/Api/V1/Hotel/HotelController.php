@@ -333,7 +333,7 @@ class HotelController extends Controller
                 ])
                 ->when($request->filled('spot_parent_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('spot_parent_id',$request->spot_parent_id)))
                 ->where('language_id', $this->lang)
-                ->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                ->paginate($request->integer('per_page', PaginationEnum::Max->value))
                 ->through(function ($hotel){
                     return [
                         'id' => $hotel->id,
