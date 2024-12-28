@@ -25,7 +25,7 @@ class SpotController extends Controller
                 ->when($request->filled('id'),fn($q) => $q->where('id',$request->id))
                 ->where('language_id', $this->lang)
                 ->select('id', 'name','spot_parent_id')
-                ->paginate($request->integer('per_page',PaginationEnum::Default->value))
+                ->paginate($request->integer('per_page',PaginationEnum::Max->value))
                 ->through(function ($spot) {
                     return [
                         'id' => $spot->id,
