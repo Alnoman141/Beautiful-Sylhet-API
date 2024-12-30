@@ -41,6 +41,8 @@ class NewsController extends Controller
                         ->where('status',$request->status ?? 1)
                         //->where('news_type_id',$request->news_type_id ?? 1)
                     ))
+                ->when($request->missing('web'),fn($a)=>$a->whereHas('parent',fn($a)=>$a->where('expiry','>',now()->format('Y-m-d H:i:s'))
+                    ->orWhereNull('expiry')))
                 ->where('language_id', $this->lang)
                 ->orderByDesc('id')
                 ->paginate($request->integer('per_page',PaginationEnum::Default->value))
@@ -114,6 +116,7 @@ class NewsController extends Controller
             $parent = NewsParent::create([
                 'news_type_id' => $request->news_type_id,
                 'status' => 0,
+                'expiry' => $request->expiry ?? null,
             ]);
             foreach ( $request->data as $data) {
                 $news = new News();
@@ -193,6 +196,7 @@ class NewsController extends Controller
                     if ($key==0 && $request->filled('news_type_id')) {
                         $news->parent->update([
                             'news_type_id' => $request->news_type_id,
+                            'expiry' => $request->expiry ?? $news?->parent?->expiry,
                         ]);
                     }
                 }

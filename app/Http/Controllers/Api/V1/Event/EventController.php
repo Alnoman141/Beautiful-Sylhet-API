@@ -19,8 +19,8 @@ class EventController extends Controller
         try {
             $events = Event::query()
                 ->with(['parent','spot'=>fn($q)=>$q->where('language_id',$this->lang)])
-                ->whereHas('parent',fn($a)=>$a->where('expiry','>',now()->format('Y-m-d H:i:s'))
-                    ->orWhereNull('expiry'))
+                ->when($request->missing('web'),fn($a)=>$a->whereHas('parent',fn($a)=>$a->where('expiry','>',now()->format('Y-m-d H:i:s'))
+                    ->orWhereNull('expiry')))
                 ->where('language_id', $this->lang)
                 ->latest()
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
