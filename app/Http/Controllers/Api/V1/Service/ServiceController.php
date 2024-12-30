@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Service;
 use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Models\ServiceParent;
+use App\Services\Fa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -36,6 +37,7 @@ class ServiceController extends Controller
                                     'number'=>isset($b['numbers']) ? collect($b['numbers'])->first() : '',
                                     /* 's_name'=>$s['name'],
                                      's_number'=>collect($s['numbers'])->first(),*/
+                                    'owner_information'=>$item->owner_information,
                                 ];
                             }
                             else{
@@ -51,6 +53,7 @@ class ServiceController extends Controller
                                     }),
                                     'booking_numbers'=>$item->booking_numbers,
                                     'supervisor_numbers'=>$item->supervisor_numbers,
+                                    'owner_information'=>$item->owner_information,
                                 ];
                             }
                         }) : collect($item->services)->map(function ($item){
@@ -59,6 +62,7 @@ class ServiceController extends Controller
                                 'spots'=>collect($item->spots)->where('language_id',$this->lang)->first(),
                                 'booking_numbers'=>$item->booking_numbers,
                                 'supervisor_numbers'=>$item->supervisor_numbers,
+                                'owner_information'=>$item->owner_information,
                             ];
                         }),
                     ];
@@ -149,6 +153,12 @@ class ServiceController extends Controller
         }
         try {
             $service = ServiceParent::findOrFail($request->id);
+            if ($request->hasFile('image')){
+                Fa::deleteImage($service?->image);
+                $service->update([
+                    'image'=>Fa::uploadImage($request->file('image'),'service'),
+                ]);
+            }
             $service->update([
                 'descriptions'=>$request->descriptions,
                 'link'=>$request->link ?? null,
@@ -184,6 +194,7 @@ class ServiceController extends Controller
                     'descriptions'=>$request->descriptions,
                     'link'=>$request->link ?? null,
                     'type'=>$request->type ?? 1,
+                    'image'=>$request->hasFile('image') ? Fa::uploadImage($request->file('image'),'service') : null,
                 ]);
             }
             Service::create([
@@ -191,6 +202,7 @@ class ServiceController extends Controller
                 'spot_parent_id'=>$request->spot_parent_id ?? null,
                 'booking_numbers'=>$request->booking_numbers,
                 'supervisor_numbers'=>$request->supervisor_numbers,
+                'owner_information'=>$request->owner_information ?? null,
             ]);
             DB::commit();
             return response()->json([
@@ -246,6 +258,7 @@ class ServiceController extends Controller
                 'spot_parent_id'=>$request->spot_parent_id ?? null,
                 'booking_numbers'=>$request->booking_numbers,
                 'supervisor_numbers'=>$request->supervisor_numbers,
+                'owner_information'=>$request->owner_information ?? null,
             ]);
             $service->parent->update([
                 'descriptions'=>$request->descriptions,

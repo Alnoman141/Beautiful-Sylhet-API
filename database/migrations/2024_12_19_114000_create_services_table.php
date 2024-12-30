@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('spot_parent_id')->constrained('spot_parents')->cascadeOnDelete();
             $table->longText('booking_numbers')->nullable();
             $table->longText('supervisor_numbers')->nullable();
+            $table->longText('owner_information')->nullable();
             $table->timestamps();
         });
     }
