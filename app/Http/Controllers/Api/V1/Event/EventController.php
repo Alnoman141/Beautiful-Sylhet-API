@@ -19,6 +19,8 @@ class EventController extends Controller
         try {
             $events = Event::query()
                 ->with(['parent','spot'=>fn($q)=>$q->where('language_id',$this->lang)])
+                ->whereHas('parent',fn($a)=>$a->where('expiry','>',now()->format('Y-m-d H:i:s'))
+                    ->orWhereNull('expiry'))
                 ->where('language_id', $this->lang)
                 ->latest()
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
@@ -107,6 +109,7 @@ class EventController extends Controller
             $parent = EventParent::create([
                 'spot_parent_id' => $request->spot_parent_id,
                 'image' => $request->hasFile('image') ? Fa::uploadImage($request->image, 'event') : null,
+                'expiry' => $request->expiry,
             ]);
             foreach ($request->data as $data) {
                 $parent->events()->create(collect($data)->only([
@@ -191,6 +194,7 @@ class EventController extends Controller
                 ->findOrFail($request->id);
             $parent->update([
                 'spot_parent_id' => $request->spot_parent_id ?? $parent->spot_parent_id,
+                'expiry' => $request->expiry ?? $parent->expiry,
             ]);
             if ($request->hasFile('image')) {
                 Fa::deleteImage($parent?->image);

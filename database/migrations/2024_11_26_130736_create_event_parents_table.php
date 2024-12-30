@@ -17,6 +17,7 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('spot_parents')->onDelete('cascade');
             $table->string('image')->nullable();
+            $table->string('expiry')->nullable();
             $table->timestamps();
         });
     }

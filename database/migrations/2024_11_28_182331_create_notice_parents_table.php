@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('notice_parents', function (Blueprint $table) {
             $table->id();
             $table->string('image')->nullable();
+            $table->string('expiry')->nullable();
             $table->timestamps();
         });
     }

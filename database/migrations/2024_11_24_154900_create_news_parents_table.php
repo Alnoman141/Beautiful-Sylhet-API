@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('news_type_id')->constrained('news_types')->cascadeOnDelete();
             $table->boolean('status')->default(0);
+            $table->string('expiry')->nullable();
             $table->timestamps();
         });
     }

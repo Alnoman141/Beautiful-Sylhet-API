@@ -43,6 +43,8 @@ class NoticeController extends Controller
             }
             $notices = Notice::query()
                 ->with('parent')
+                ->whereHas('parent',fn($a)=>$a->where('expiry','>',now()->format('Y-m-d H:i:s'))
+                    ->orWhereNull('expiry'))
                 ->where('language_id', $this->lang)
                   ->selectRaw('*,DATE(created_at) as date')
                 ->orderByDesc('created_at')
@@ -143,7 +145,8 @@ class NoticeController extends Controller
         DB::beginTransaction();
         try {
             $parent = NoticeParent::create([
-                'image'=>$request->hasFile('image') ? Fa::uploadImage($request->file('image'),'notice') : null
+                'image'=>$request->hasFile('image') ? Fa::uploadImage($request->file('image'),'notice') : null,
+                'expiry'=>$request->expiry,
             ]);
             foreach ($request->data as $data) {
                 Notice::create([
@@ -209,13 +212,16 @@ class NoticeController extends Controller
         }
         DB::beginTransaction();
         try {
+            $parent = NoticeParent::findOrFail($request->id);
             if ($request->hasFile('image')){
-                $parent = NoticeParent::findOrFail($request->id);
                 Fa::deleteImage($parent?->image);
                 $parent->update([
                     'image'=>Fa::uploadImage($request->file('image'),'notice')
                 ]);
             }
+            $parent->update([
+                'expiry'=>$request->expiry ?? $parent->expiry,
+            ]);
             foreach ($request->data as $data) {
                 $notice = Notice::findOrFail($data['id']);
                 $notice->update([
