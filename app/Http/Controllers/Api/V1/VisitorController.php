@@ -47,9 +47,9 @@ class VisitorController extends Controller
     public function index(Request $request)
     {
         try {
-            $spot = SpotParent::query()->count();
-            $hotel = HotelParent::query()->count();
-            $locker = LockerParent::query()->count();
+            $spot = SpotParent::query()->whereHas('spot')->count();
+            $hotel = HotelParent::query()->whereHas('hotels')->count();
+            $locker = LockerParent::query()->whereHas('lockers')->count();
             $visitorToday = Visitor::query()
                 ->where('date', now()->format('Y-m-d'))
                 ->count();
