@@ -39,6 +39,7 @@ class EventController extends Controller
                         'image' => $event?->parent?->image,
                         'spot_id' => $event?->spot?->spot_parent_id,
                         'spot_name' => $event?->spot?->name,
+                        'expiry' => $event?->parent?->expiry,
                     ];
                 });
             return response()->json([

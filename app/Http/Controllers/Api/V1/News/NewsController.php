@@ -54,6 +54,7 @@ class NewsController extends Controller
                         'status' => $news?->parent?->status,
                         'news_type_id'=>$news?->parent?->type?->id,
                         'news_type_name'=>$news?->parent?->type?->name,
+                        'expiry' => $news?->parent?->expiry,
                     ];
                 });
             return response()->json([

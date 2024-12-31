@@ -34,6 +34,7 @@ class NoticeController extends Controller
                             'parent_id' => $notice->notice_parent_id,
                             'language_id' => $notice->language_id,
                             'date' => $notice->created_at,
+                            'expiry' => $notice?->parent?->expiry,
                         ];
                     });
                 return response()->json([
