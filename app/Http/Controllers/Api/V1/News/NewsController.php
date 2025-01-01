@@ -104,6 +104,7 @@ class NewsController extends Controller
             'data' => 'required|array',
             'data.*.name' => 'required|string',
             'data.*.language_id' => 'required|exists:languages,id',
+            'expiry' => 'nullable|date_format:Y-m-d H:i:s',
         ]);
         if ($validate->fails()) {
             return response()->json([
@@ -176,6 +177,7 @@ class NewsController extends Controller
             'data.*.language_id' => 'required|exists:languages,id',
             'data.*.id' => 'required|exists:news,id',
             'news_type_id' => 'nullable|exists:news_types,id',
+            'expiry' => 'nullable|date_format:Y-m-d H:i:s',
         ]);
         if ($validate->fails()) {
             return response()->json([

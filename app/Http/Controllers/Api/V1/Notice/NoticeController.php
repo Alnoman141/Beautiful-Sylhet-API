@@ -138,6 +138,7 @@ class NoticeController extends Controller
             'data' => 'required|array',
             'data.*.name' => 'required|string',
             'data.*.language_id' => 'required|exists:languages,id',
+            'expiry' => 'nullable|date_format:Y-m-d H:i:s',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -206,6 +207,7 @@ class NoticeController extends Controller
             'data.*.id' => 'required|exists:notices,id',
             'data.*.name' => 'required|string',
             'data.*.language_id' => 'required|exists:languages,id',
+            'expiry' => 'nullable|date_format:Y-m-d H:i:s',
         ]);
         if ($validator->fails()) {
             return response()->json([

@@ -96,6 +96,7 @@ class EventController extends Controller
             'data.*.terms' => 'nullable|string',
             'spot_parent_id' => 'nullable|integer|exists:spot_parents,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg',
+            'expiry' => 'nullable|date_format:Y-m-d H:i:s',
         ]);
 
         if ($validation->fails()) {
@@ -181,6 +182,7 @@ class EventController extends Controller
             'data.*.fare' => 'nullable|string|max:255',
             'data.*.description' => 'nullable|string',
             'data.*.terms' => 'nullable|string',
+            'expiry' => 'nullable|date_format:Y-m-d H:i:s',
         ]);
         if ($validation->fails()) {
             return response()->json([
