@@ -44,8 +44,9 @@ class NoticeController extends Controller
             }
             $notices = Notice::query()
                 ->with('parent')
-                ->when($request->missing('web'),fn($a)=>$a->whereHas('parent',fn($a)=>$a->where('expiry','>',now()->format('Y-m-d H:i:s'))
-                    ->orWhereNull('expiry')))
+                ->when($request->missing('web'),fn($a)=>$a->whereHas('parent',fn($a)=>$a->where('expiry','<',now()->format('Y-m-d H:i:s'))
+                    //->orWhereNull('expiry')
+                ))
                 ->where('language_id', $this->lang)
                   ->selectRaw('*,DATE(created_at) as date')
                 ->orderByDesc('created_at')
@@ -80,6 +81,7 @@ class NoticeController extends Controller
                         'parent_id' => $notice->notice_parent_id,
                         'name' => $notice->name,
                         'image' => $notice?->parent?->image,
+                        'expiry' => $notice?->parent?->expiry,
                     ];
                 });
             });
