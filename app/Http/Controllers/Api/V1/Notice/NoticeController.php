@@ -45,7 +45,7 @@ class NoticeController extends Controller
             $notices = Notice::query()
                 ->with('parent')
                 ->when($request->missing('web'),fn($a)=>$a->whereHas('parent',fn($a)=>$a->where('expiry','<',now()->format('Y-m-d H:i:s'))
-                    //->orWhereNull('expiry')
+                    ->orWhereNull('expiry')
                 ))
                 ->where('language_id', $this->lang)
                   ->selectRaw('*,DATE(created_at) as date')
