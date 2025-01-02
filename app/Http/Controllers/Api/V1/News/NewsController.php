@@ -81,6 +81,7 @@ class NewsController extends Controller
                 ->through(function ($news) {
                     $news['parent_id']=$news->news_parent_id;
                     $news['status']=$news?->parent?->status;
+                    $news['expiry']=$news?->parent?->expiry;
                     unset($news->parent);
                     return $news;
                 });
