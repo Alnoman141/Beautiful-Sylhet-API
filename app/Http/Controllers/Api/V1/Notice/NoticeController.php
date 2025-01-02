@@ -225,7 +225,7 @@ class NoticeController extends Controller
                 ]);
             }
             $parent->update([
-                'expiry'=>$request->expiry ?? $parent->expiry,
+                'expiry'=>$request->expiry,
             ]);
             foreach ($request->data as $data) {
                 $notice = Notice::findOrFail($data['id']);

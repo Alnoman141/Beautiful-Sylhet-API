@@ -197,7 +197,7 @@ class EventController extends Controller
                 ->findOrFail($request->id);
             $parent->update([
                 'spot_parent_id' => $request->spot_parent_id ?? $parent->spot_parent_id,
-                'expiry' => $request->expiry ?? $parent->expiry,
+                'expiry' => $request->expiry,
             ]);
             if ($request->hasFile('image')) {
                 Fa::deleteImage($parent?->image);

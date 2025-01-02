@@ -200,7 +200,7 @@ class NewsController extends Controller
                     if ($key==0 && $request->filled('news_type_id')) {
                         $news->parent->update([
                             'news_type_id' => $request->news_type_id,
-                            'expiry' => $request->expiry ?? $news?->parent?->expiry,
+                            'expiry' => $request->expiry,
                         ]);
                     }
                 }
