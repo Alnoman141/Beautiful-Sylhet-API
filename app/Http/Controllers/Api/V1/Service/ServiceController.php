@@ -164,6 +164,10 @@ class ServiceController extends Controller
                 'link'=>$request->link ?? null,
                 'type'=>$request->type ?? 1,
             ]);
+            return response()->json([
+                'status_code'=>200,
+                'message'=>'Data updated successfully',
+            ],200);
         }catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
