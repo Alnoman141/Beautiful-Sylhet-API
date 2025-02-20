@@ -45,6 +45,9 @@ class RestaurantController extends Controller
             'map_link' => 'nullable|string',
             'website_link' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
+            'phone' => 'nullable|string',
+            'open_time' => 'nullable|date_format:H:i:s',
+            'close_time' => 'nullable|date_format:H:i:s',
             'data' => 'required|array',
             'data.*.name' => 'required|string',
             'data.*.language_id' => 'required|integer|exists:languages,id',
@@ -76,13 +79,13 @@ class RestaurantController extends Controller
                     'restaurant_parent_id' => $parent->id,
                     'language_id' => $data['language_id'],
                     'name' => @$data['name'] ?? null,
-                    'phone' => @$data['phone'] ?? null,
+                    'phone' => @$data['phone'] ?? $request->phone,
                     'address' => @$data['address'] ?? null,
                     'description' => @$data['description'] ?? null,
                     'menu' => @$data['menu'] ?? null,
                     'facilities' => @$data['facilities'] ?? null,
-                    'open_time' => @$data['open_time'] ?? null,
-                    'close_time' => @$data['close_time'] ?? null,
+                    'open_time' => @$data['open_time'] ?? $request->open_time,
+                    'close_time' => @$data['close_time'] ?? $request->close_time,
                 ]);
             }
             DB::commit();
@@ -106,6 +109,9 @@ class RestaurantController extends Controller
             'map_link' => 'nullable|string',
             'website_link' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
+            'phone' => 'nullable|string',
+            'open_time' => 'nullable|date_format:H:i:s',
+            'close_time' => 'nullable|date_format:H:i:s',
             'id' => 'required|integer|exists:restaurant_parents,id',
             'data' => 'required|array',
             'data.*.id' => 'required|integer|exists:restaurants,id',
@@ -143,13 +149,13 @@ class RestaurantController extends Controller
                 $restaurant->update([
                     'language_id' => $data['language_id'],
                     'name' => @$data['name'] ?? $restaurant->name,
-                    'phone' => @$data['phone'] ?? null,
+                    'phone' => @$data['phone'] ?? $request->phone,
                     'address' => @$data['address'] ?? null,
                     'description' => @$data['description'] ?? null,
                     'menu' => @$data['menu'] ?? null,
                     'facilities' => @$data['facilities'] ?? null,
-                    'open_time' => @$data['open_time'] ?? null,
-                    'close_time' => @$data['close_time'] ?? null,
+                    'open_time' => @$data['open_time'] ?? $request->open_time,
+                    'close_time' => @$data['close_time'] ?? $request->close_time,
                 ]);
             }
             return response()->json([
