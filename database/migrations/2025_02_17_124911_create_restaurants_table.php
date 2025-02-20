@@ -17,7 +17,10 @@ return new class extends Migration
             $table->foreignId('language_id')->constrained('languages')->cascadeOnDelete();
             $table->string('name');
             $table->string('phone')->nullable();
+            $table->string('open_time')->nullable();
+            $table->string('close_time')->nullable();
             $table->longText('address')->nullable();
+            $table->longText('menu')->nullable();
             $table->longText('description')->nullable();
             $table->longText('facilities')->nullable();
             $table->timestamps();

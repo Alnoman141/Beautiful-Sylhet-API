@@ -7,12 +7,14 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
+use Nelexa\GPlay\GPlayApps;
 
 class Fa
 {
@@ -75,5 +77,53 @@ class Fa
             'user_id' => auth()->id(),
             'content' => $data
         ]);
+    }
+    //TODO @fa 2025-02-18 app downloads
+    public static function appDownloadAndroid()
+    {
+        return Cache::remember('app_download_android', 60*60*24, function () {
+            $packageName = 'com.inflack.coxs_bazar_app'; // Your app's package ID
+            $google = new GPlayApps();
+            $app = $google->getAppInfo($packageName);
+            $data = [
+                'title' => $app->getName(),
+                'androidDownloads' => self::counting($app->getInstalls()),
+                'installText' => $app->getInstallsText(),
+                'appleDownloads' => self::appDownloadIos(),
+            ];
+            return $data;
+        });
+    }
+    public static function appDownloadIos()
+    {
+        $url = 'https://apps.apple.com/us/app/vromonika/id6741048193';
+        $response = Http::get($url);
+        $html = $response->body();
+        preg_match('/<dt[^>]*>\s*Age Rating\s*<\/dt>\s*<dd[^>]*>\s*(.*?)\s*</', $html, $matches);
+        return @$matches[1] ?? '0';
+    }
+    public static function counting($n=0,$precision=1)
+    {
+        if ($n < 900) {
+            $n_format = number_format($n, $precision);
+            $suffix = '';
+        } else if ($n < 900000) {
+            $n_format = number_format($n / 1000, $precision);
+            $suffix = 'K';
+        } else if ($n < 900000000) {
+            $n_format = number_format($n / 1000000, $precision);
+            $suffix = 'M';
+        } else if ($n < 900000000000) {
+            $n_format = number_format($n / 1000000000, $precision);
+            $suffix = 'B';
+        } else {
+            $n_format = number_format($n / 1000000000000, $precision);
+            $suffix = 'T';
+        }
+        if ( $precision > 0 ) {
+            $dotZero = '.' . str_repeat( '0', $precision );
+            $n_format = str_replace( $dotZero, '', $n_format );
+        }
+        return $n_format . $suffix;
     }
 }

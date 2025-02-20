@@ -127,6 +127,12 @@ Route::group(['prefix' => 'v1'],function (){
     Route::group(['prefix' => 'service'],function (){
         Route::post('list',[App\Http\Controllers\Api\V1\Service\ServiceController::class,'index']);
     });
+
+
+    //TODO @fa 2025-02-18 version V2 API
+
+
+
     //TODO @fa 2024-11-27 authentication
     Route::group(['middleware' => 'auth:sanctum'],function (){
         Route::post('logout',[App\Http\Controllers\Api\V1\Auth\AuthController::class,'logout']);
@@ -301,6 +307,27 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('edit',[App\Http\Controllers\Api\V1\Service\ServiceController::class,'show']);
             Route::post('update',[App\Http\Controllers\Api\V1\Service\ServiceController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\Service\ServiceController::class,'destroy']);
+        });
+
+
+        //TODO @fa 2025-02-18 Version V2 API
+        //TODO ***************************************************
+        //TODO @fa 2025-02-18 restaurant
+        Route::group(['prefix' => 'restaurant'],function (){
+            Route::post('list',[App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class,'index']);
+            Route::post('store',[App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class,'store']);
+            Route::post('edit',[App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class,'edit']);
+            Route::post('update',[App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class,'update']);
+            Route::post('delete',[App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class,'destroy']);
+        });
+
+        //TODO @fa 2025-02-20 fair board
+        Route::group(['prefix' => 'fair-board'],function (){
+            Route::post('list',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'index']);
+            Route::post('store',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'store']);
+            Route::post('edit',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'edit']);
+            Route::post('update',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'update']);
+            Route::post('delete',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'destroy']);
         });
     });
 });
