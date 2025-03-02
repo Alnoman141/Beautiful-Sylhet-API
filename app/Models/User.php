@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -100,5 +101,10 @@ class User extends Authenticatable
                     ? asset($this->attributes['avatar'])
                     : 'https://ui-avatars.com/api/?name=' . urlencode(Str::slug($this->first_name . ' ' . $this->last_name)) .'&size=256&color=fff&rounded=true&bold=true&background=0D8ABC')
         );
+    }
+    //TODO @fa 2025-02-24 info
+    public function info(): HasOne
+    {
+        return $this->hasOne(Info::class,'user_id');
     }
 }
