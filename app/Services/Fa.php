@@ -90,6 +90,17 @@ class Fa
                 'androidDownloads' => self::counting($app->getInstalls()),
                 'installText' => $app->getInstallsText(),
                 'appleDownloads' => self::appDownloadIos(),
+                'androidReviews'=>collect($google->getReviews($packageName))
+                    ->map(function ($review) {
+                        $data = collect($review)->toArray();
+                        return [
+                            'avatar'=>$data['avatar'],
+                            'name'=>$data['userName'],
+                            'text'=>$data['text'],
+                            'score'=>$data['score'],
+                            'date'=>$data['date']
+                        ];
+                    })->filter(fn($a)=>$a['score']>4)->values()
             ];
             return $data;
         });

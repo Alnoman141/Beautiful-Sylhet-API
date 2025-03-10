@@ -13,6 +13,7 @@ Route::group(['prefix' => 'v1'],function (){
     Route::get('/disk',function (){
         \App\Jobs\WeatherForecastJob::dispatch('forecast')->delay(now()->addSeconds(2));
     });
+    Route::post('app-info',[\App\Http\Controllers\Api\V1\VisitorController::class,'appInformation']);
     Route::get('/', function (){
         return response()->json([
             'status' => true,
@@ -335,6 +336,13 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('edit',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'edit']);
             Route::post('update',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'destroy']);
+        });
+        //TODO @fa 2025-03-10 content
+        Route::group(['prefix' => 'content'],function (){
+            Route::post('list',[App\Http\Controllers\Api\V2\Content\ContentController::class,'index']);
+            Route::post('store',[App\Http\Controllers\Api\V2\Content\ContentController::class,'update']);
+            Route::post('edit',[App\Http\Controllers\Api\V2\Content\ContentController::class,'edit']);
+            Route::post('delete',[App\Http\Controllers\Api\V2\Content\ContentController::class,'destroy']);
         });
     });
 });

@@ -8,11 +8,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Content;
 use App\Models\HotelParent;
 use App\Models\LockerParent;
 use App\Models\SpotParent;
 use App\Models\TransportTypeParent;
 use App\Models\Visitor;
+use App\Services\Fa;
 use Illuminate\Http\Request;
 
 class VisitorController extends Controller
@@ -81,5 +83,16 @@ class VisitorController extends Controller
                 'errors' => $e->getMessage(),
             ],403);
         }
+    }
+
+    public function appInformation()
+    {
+        $app = Fa::appDownloadAndroid();
+        $content = Content::query()->latest()->first();
+        return response()->json([
+            'status_code'=>200,
+            'app'=>$app,
+            'content'=>$content
+        ],200);
     }
 }
