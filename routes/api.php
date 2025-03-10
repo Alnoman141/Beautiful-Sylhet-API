@@ -24,6 +24,7 @@ Route::group(['prefix' => 'v1'],function (){
         Route::post('register',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'register']);
         Route::post('login',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'login']);
         Route::post('verify',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'verify']);
+        Route::post('otp-verify',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'otpVerify']);
     });
     Route::post('login',[App\Http\Controllers\Api\V1\Auth\AuthController::class,'login'])->name('login');
     Route::post('forgot-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'forgotPassword']);
