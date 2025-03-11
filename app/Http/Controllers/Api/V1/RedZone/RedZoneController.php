@@ -264,9 +264,9 @@ class RedZoneController extends Controller
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                 ->through(function ($category) {
                     return [
-                        'id' => $category->id,
+                        //'id' => $category->id,
                         'name' => $category->name,
-                        'parent_id' => $category->red_zone_category_parent_id,
+                        'id' => $category->red_zone_category_parent_id,
                     ];
                 })
             ;

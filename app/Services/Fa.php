@@ -71,6 +71,29 @@ class Fa
             }
         }
     }
+    //TODO @fa 2025-03-11 upload file
+    public static function uploadFile(array|\Illuminate\Http\UploadedFile|null $file, string $string)
+    {
+        try {
+            $extension = $file->extension();
+            $name = $file->hashName();
+            $path = 'coxbazaar/' . $string . '/' . $extension . '/';
+            $data = File::get($file);
+            if (config('filesystems.default') == 's3') {
+                Storage::disk('s3')->put($path . $name, $data, 'public');
+                return $path . $name;
+            } else {
+                $disk = Storage::build([
+                    'driver' => 'local',
+                    'root' => public_path('storage/' . $path),
+                ]);
+                $disk->put($name, $data);
+                return 'storage/' . $path . $name;
+            }
+        } catch (\Exception $exception) {
+            return '';
+        }
+    }
     public static function activity($data)
     {
         \App\Models\Log::create([

@@ -357,5 +357,19 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('list',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'list']);
             Route::post('show',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'show']);
         });
+
+        //TODO @fa 2025-03-11 complain
+        Route::group(['prefix' => 'complain'],function (){
+            Route::post('list',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'index']);
+            Route::post('submit',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'complainStore']);
+            //TODO @fa 2025-03-11 category
+            Route::group(['prefix' => 'category'],function (){
+                Route::post('list',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'categoryList']);
+                Route::post('store',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'store']);
+                Route::post('edit',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'show']);
+                Route::post('update',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'update']);
+                Route::post('delete',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'destroy']);
+            });
+        });
     });
 });
