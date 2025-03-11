@@ -181,10 +181,10 @@ class AuthController extends Controller
                 ->whereHas('roles', fn($q) => $q->where('name', RoleEnum::tourist->value))
                 ->when($request->name, fn($q) => $q
                     ->whereRaw("CONCAT(first_name,' ',last_name) LIKE ?", ["%$request->name%"])
-                    ->orWhereAll(['phone', 'email'], 'like', '%' . $request->name . '%')
+                    ->orWhereAny(['phone', 'email'], 'like', '%' . $request->name . '%')
                 )
                 ->with('info')
-                ->paginate($request->per_page ?? PaginationEnum::Default->value);
+                ->paginate($request->integer('per_page') ?? PaginationEnum::Default->value);
             return response()->json([
                 'status_code' => 200,
                 'data' => $users,

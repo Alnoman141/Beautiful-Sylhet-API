@@ -270,6 +270,14 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('edit',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'edit']);
             Route::post('update',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'update']);
             Route::post('delete',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'destroy']);
+            //TODO @fa 2025-03-11 category added for v2
+            Route::group(['prefix' => 'category'],function (){
+                Route::post('list',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'categoryList']);
+                Route::post('store',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'categoryStore']);
+                Route::post('edit',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'categoryEdit']);
+                Route::post('update',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'categoryUpdate']);
+                Route::post('delete',[App\Http\Controllers\Api\V1\RedZone\RedZoneController::class,'categoryDelete']);
+            });
         });
 
         //TODO @fa 2024-11-28 police

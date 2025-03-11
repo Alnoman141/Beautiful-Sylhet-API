@@ -9,6 +9,8 @@ namespace App\Http\Controllers\Api\V1\RedZone;
 use App\Enum\PaginationEnum;
 use App\Http\Controllers\Controller;
 use App\Models\RedZone;
+use App\Models\RedZoneCategory;
+use App\Models\RedZoneCategoryParent;
 use App\Models\RedZoneParent;
 use App\Services\Fa;
 use Illuminate\Http\Request;
@@ -24,7 +26,10 @@ class RedZoneController extends Controller
             $reds = RedZone::query()
                 ->with(['parent','spot'=>fn($q) => $q
                     ->where('language_id',$this->lang)
-                    ->select(['name','spots.spot_parent_id'])
+                    ->select(['name','spots.spot_parent_id']),
+                    'category'=>fn($q) => $q
+                        ->where('language_id',$this->lang)
+                        ->select(['name','red_zone_categories.red_zone_category_parent_id'])
                 ])
                 ->where('language_id', $this->lang)
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
@@ -38,6 +43,8 @@ class RedZoneController extends Controller
                         'spot_id' => $red?->spot?->spot_parent_id,
                         'spot_name' => $red?->spot?->name,
                         'instruction' => $red->instruction,
+                        'category_id' => $red->category?->red_zone_category_parent_id,
+                        'category_name' => $red->category?->name,
                     ];
                 })
             ;
@@ -67,7 +74,10 @@ class RedZoneController extends Controller
         try {
             $red = RedZone::with(['parent','spot'=>fn($q) => $q
                     ->where('language_id',$this->lang)
-                    ->select(['spots.id as id','name'])
+                    ->select(['spots.id as id','name']),
+                'category'=>fn($q) => $q
+                    ->where('language_id',$this->lang)
+                    ->select(['red_zone_categories.id as id','name'])
                 ])->where('language_id', $this->lang)
                 ->findOrFail($request->id);
             return response()->json([
@@ -86,6 +96,7 @@ class RedZoneController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'spot_parent_id' => 'nullable|integer|exists:spot_parents,id',
+            'red_zone_category_parent_id' => 'nullable|integer|exists:red_zone_category_parents,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg',
             'map_link' => 'nullable|string',
             'short_description' => 'nullable|string',
@@ -105,6 +116,7 @@ class RedZoneController extends Controller
         try {
             $parent = RedZoneParent::create([
                 'spot_parent_id' => $request->spot_parent_id,
+                'red_zone_category_parent_id' => $request->red_zone_category_parent_id,
                 'image'=>$request->hasFile('image') ? Fa::uploadImage($request->image, 'red-zones') : null,
                 'map_link' => $request->map_link,
                 'short_description' => $request->short_description,
@@ -136,6 +148,7 @@ class RedZoneController extends Controller
         $validator = Validator::make($request->all(), [
             'id' => 'required|integer|exists:red_zone_parents,id',
             'spot_parent_id' => 'nullable|integer|exists:spot_parents,id',
+            'red_zone_category_parent_id' => 'nullable|integer|exists:red_zone_category_parents,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg',
             'data' => 'required|array',
             'data.*.id' => 'required|integer|exists:red_zones,id',
@@ -155,6 +168,7 @@ class RedZoneController extends Controller
             $parent = RedZoneParent::findOrFail($request->id);
             $parent->update([
                 'spot_parent_id' => $request->spot_parent_id ?? $parent->spot_parent_id,
+                'red_zone_category_parent_id' => $request->red_zone_category_parent_id ?? $parent->red_zone_category_parent_id,
                 'map_link' => $request->map_link ?? $parent->map_link,
                 'short_description' => $request->short_description ?? $parent->short_description,
             ]);
@@ -232,6 +246,166 @@ class RedZoneController extends Controller
             return response()->json([
                 'status_code'=>200,
                 'message' => 'Red zone deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status_code'=>403,
+                'errors' => $e->getMessage()
+            ], 403);
+        }
+    }
+    //TODO @fa 2025-03-11 category of red zone
+    public function categoryList(Request $request)
+    {
+        try {
+            $category = RedZoneCategory::query()
+                ->where('language_id', $this->lang)
+                ->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                ->through(function ($category) {
+                    return [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'parent_id' => $category->red_zone_category_parent_id,
+                    ];
+                })
+            ;
+            return response()->json([
+                'status_code'=>200,
+                'data' => $category
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code'=>403,
+                'errors' => $e->getMessage()
+            ], 403);
+        }
+    }
+    //TODO @fa 2025-03-11 store red zone category parent
+    public function categoryStore(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            //'name' => 'required|string',
+            'data' => 'required|array',
+            'data.*.name' => 'required|string',
+            'data.*.language_id' => 'required|integer|exists:languages,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code'=>422,
+                'message'=>'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        DB::beginTransaction();
+        try {
+            $parent = RedZoneCategoryParent::create([]);
+            foreach ($request->data as $data) {
+                RedZoneCategory::create([
+                    'red_zone_category_parent_id' => $parent->id,
+                    'name' => $data['name'],
+                    'language_id' => $data['language_id'],
+                ]);
+            }
+            DB::commit();
+            return response()->json([
+                'status_code'=>200,
+                'message' => 'Red zone category created successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status_code'=>403,
+                'errors' => $e->getMessage()
+            ], 403);
+        }
+    }
+    //TODO @fa 2025-03-11 update red zone category parent
+    public function categoryUpdate(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            //'id' => 'required|integer|exists:red_zone_category_parents,id',
+            'data' => 'required|array',
+            'data.*.id' => 'required|integer|exists:red_zone_categories,id',
+            'data.*.name' => 'required|string',
+            'data.*.language_id' => 'required|integer|exists:languages,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code'=>422,
+                'message'=>'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        DB::beginTransaction();
+        try {
+            //$parent = RedZoneCategoryParent::findOrFail($request->id);
+            foreach ($request->data as $data) {
+                $category = RedZoneCategory::findOrFail($data['id']);
+                $category->update([
+                    'name' => $data['name'],
+                    'language_id' => $data['language_id'],
+                ]);
+            }
+            DB::commit();
+            return response()->json([
+                'status_code'=>200,
+                'message' => 'Red zone category updated successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status_code'=>403,
+                'errors' => $e->getMessage()
+            ], 403);
+        }
+    }
+    //TODO @fa 2025-03-11 detail of red zone category
+    public function categoryEdit(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:red_zone_category_parents,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code'=>403,
+                'errors' => $validator->errors()
+            ], 403);
+        }
+        try {
+            $category = RedZoneCategoryParent::with('categories')->findOrFail($request->id);
+            return response()->json([
+                'status_code'=>200,
+                'data' => $category
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code'=>403,
+                'errors' => $e->getMessage()
+            ], 403);
+        }
+    }
+    //TODO @fa 2025-03-11 delete red zone category parent
+    public function categoryDelete(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:red_zone_category_parents,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code'=>403,
+                'errors' => $validator->errors()
+            ], 403);
+        }
+        DB::beginTransaction();
+        try {
+            $parent = RedZoneCategoryParent::with('categories')->findOrFail($request->id);
+            $parent->categories()->delete();
+            $parent->delete();
+            DB::commit();
+            return response()->json([
+                'status_code'=>200,
+                'message' => 'Red zone category deleted successfully'
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
