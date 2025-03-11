@@ -344,5 +344,10 @@ Route::group(['prefix' => 'v1'],function (){
             Route::post('edit',[App\Http\Controllers\Api\V2\Content\ContentController::class,'edit']);
             Route::post('delete',[App\Http\Controllers\Api\V2\Content\ContentController::class,'destroy']);
         });
+        //TODO @fa 2025-03-11 tourist
+        Route::group(['prefix' => 'tourist'],function (){
+            Route::post('list',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'list']);
+            Route::post('show',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'show']);
+        });
     });
 });

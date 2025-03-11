@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2\Auth;
 
+use App\Enum\PaginationEnum;
 use App\Enum\RoleEnum;
 use App\Http\Controllers\Controller;
 use App\Models\PasswordResetToken;
@@ -31,33 +32,34 @@ class AuthController extends Controller
         }
         DB::beginTransaction();
         try {
-            $name =  $request->phone;
-            $email = $request->email ?: $name.'+'.Str::lower(Str::random(10)) . '@gmail.com';
+            $name = $request->phone;
+            $email = $request->email ?: $name . '+' . Str::lower(Str::random(10)) . '@gmail.com';
             $user = User::create([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'phone' => $request->phone,
                 'email' => $email,
-                'password' => bcrypt($request->password?:$request->phone),
+                'password' => bcrypt($request->password ?: $request->phone),
             ]);
             $user->assignRole(RoleEnum::tourist->value);
             $user->info()->create([
-               'data' => $request->except(['first_name', 'last_name', 'email', 'phone', 'password', 'password_confirmation']),
+                'data' => $request->except(['first_name', 'last_name', 'email', 'phone', 'password', 'password_confirmation']),
             ]);
             DB::commit();
             return response()->json([
                 'status_code' => 200,
                 'message' => 'User registered successfully',
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
-                'message'=> 'Something went wrong',
+                'message' => 'Something went wrong',
                 'errors' => $e->getMessage(),
             ], 403);
         }
     }
+
     //TODO @fa 2025-03-02 authentication login using phone number
     public function login(Request $request)
     {
@@ -78,7 +80,7 @@ class AuthController extends Controller
         if ($credentials) {
             PasswordResetToken::updateOrCreate([
                 'email' => $request->phone,
-            ],['token' => '1234',]);
+            ], ['token' => '1234',]);
             return response()->json([
                 'status_code' => 200,
                 'message' => 'OTP sent successfully',
@@ -89,6 +91,7 @@ class AuthController extends Controller
             'message' => 'Unauthorized',
         ], 401);
     }
+
     //TODO @fa 2025-03-02 verify
     public function verify(Request $request)
     {
@@ -120,7 +123,7 @@ class AuthController extends Controller
                     'status_code' => 200,
                     'message' => 'User registered successfully',
                     'data' => $user,
-                ],200);
+                ], 200);
             }
         }
         return response()->json([
@@ -129,6 +132,7 @@ class AuthController extends Controller
             'data' => $user,
         ], 200);
     }
+
     //TODO @fa 2025-03-10 otp verify
     public function otpVerify(Request $request)
     {
@@ -167,5 +171,59 @@ class AuthController extends Controller
             'status_code' => 403,
             'message' => 'OTP not matched',
         ], 403);
+    }
+
+    //TODO @fa 2025-03-11 list
+    public function list(Request $request)
+    {
+        try {
+            $users = User::query()
+                ->whereHas('roles', fn($q) => $q->where('name', RoleEnum::tourist->value))
+                ->when($request->name, fn($q) => $q
+                    ->whereRaw("CONCAT(first_name,' ',last_name) LIKE ?", ["%$request->name%"])
+                    ->orWhereAll(['phone', 'email'], 'like', '%' . $request->name . '%')
+                )
+                ->with('info')
+                ->paginate($request->per_page ?? PaginationEnum::Default->value);
+            return response()->json([
+                'status_code' => 200,
+                'data' => $users,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
+
+    //TODO @fa 2025-03-11 show
+    public function show(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'id' => 'required|exists:users,id',
+        ]);
+        if ($validate->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+        try {
+            $user = User::query()
+                ->whereHas('roles', fn($q) => $q->where('name', RoleEnum::tourist->value))
+                ->with('info')
+                ->findOrFail($request->id);
+            return response()->json([
+                'status_code' => 200,
+                'data' => $user,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
     }
 }
