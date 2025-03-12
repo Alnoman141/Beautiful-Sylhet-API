@@ -177,7 +177,8 @@ class ComplainController extends Controller
             'id' => 'required|integer|exists:complain_category_parents,id',
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg',
-            'file' => 'nullable|file|mimes:pdf,doc,docx',
+            //max 20 mb
+            'file'=>'nullable|mimes:mp4,mov,avi,wmv,flv|max:20480',
         ]);
         if ($validator->fails()) {
             return response()->json([
