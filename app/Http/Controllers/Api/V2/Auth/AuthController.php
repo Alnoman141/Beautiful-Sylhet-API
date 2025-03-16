@@ -163,7 +163,7 @@ class AuthController extends Controller
         if ($token->token == $request->otp) {
             $token->delete();
             $user = User::query()->where($check, $request->phone)->first();
-            $accessToken = $user->createToken('authToken')->accessToken;
+            $accessToken = $user->createToken('authToken')->plainTextToken;
             return response()->json([
                 'status_code' => 200,
                 'message' => 'User logged in successfully',
