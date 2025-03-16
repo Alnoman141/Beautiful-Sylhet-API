@@ -190,7 +190,7 @@ class ComplainController extends Controller
         try {
             Complain::create([
                 'user_id'=>auth()->id(),
-                'complain_category_id' => $request->complain_category_id,
+                'complain_category_parent_id' => $request->id,
                 'description' => $request->description,
                 'image' => $request->hasFile('image')? Fa::uploadImage($request->file('image'),'complain') : null,
                 'file'=>$request->hasFile('file')? Fa::uploadFile($request->file('file'),'complain') : null,
