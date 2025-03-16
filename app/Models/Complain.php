@@ -11,9 +11,20 @@ class Complain extends Model
 {
     protected $guarded = [];
 
-    public function category(): BelongsTo
+    public function category(): HasOneThrough
     {
-       // return $this->hasOneThrough(ComplainCategory::class, ComplainCategoryParent::class, 'id', 'complain_category_parent_id', 'complain_category_parent_id', 'complain_category_parent_id');
-        return $this->belongsTo(ComplainCategoryParent::class,'complain_category_parent_id');
+        return $this->hasOneThrough(
+            ComplainCategory::class,  // Final target model
+            ComplainCategoryParent::class, // Intermediate model
+            'id',  // Foreign key on ComplainCategoryParent (Primary key of ComplainCategoryParent)
+            'complain_category_parent_id', // Foreign key on ComplainCategory (points to ComplainCategoryParent)
+            'complain_category_parent_id', // Foreign key on Complain model (points to ComplainCategoryParent)
+            'id'  // Primary key of ComplainCategoryParent
+        );
     }
+
+    /*public function category(): BelongsTo
+    {
+        return $this->belongsTo(ComplainCategoryParent::class,'complain_category_parent_id');
+    }*/
 }

@@ -21,7 +21,8 @@ class ComplainController extends Controller
     {
         try {
             $complains = Complain::query()
-                ->with(['category'=>fn($a)=>$a->where('language_id',$this->lang)->select('complain_categories.id', 'name')])
+                ->with(['category'=>fn($a)=>$a->where('language_id',$this->lang)->select('complain_categories.id','name')])
+                ->latest()
                 ->paginate($request->input('per_page', PaginationEnum::Default->value));
             return response()->json([
                 'status_code'=> 200,
