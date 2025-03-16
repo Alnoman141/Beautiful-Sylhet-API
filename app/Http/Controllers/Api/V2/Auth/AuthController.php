@@ -153,7 +153,7 @@ class AuthController extends Controller
                 'errors' => $validate->errors(),
             ], 422);
         }
-        $token = PasswordResetToken::query()->where($check, $request->phone)->first();
+        $token = PasswordResetToken::query()->where('email', $request->phone)->first();
         if (!$token) {
             return response()->json([
                 'status_code' => 404,
