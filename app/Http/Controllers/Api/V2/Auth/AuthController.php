@@ -63,8 +63,12 @@ class AuthController extends Controller
     //TODO @fa 2025-03-02 authentication login using phone number
     public function login(Request $request)
     {
+        //check phone or email
+        $check = filter_var($request->phone, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        //if phone then required phone and start with 01 otherwise email
+        $required = $check == 'phone' ? 'required|string|starts_with:01|exists:users,phone' : 'required|email|exists:users,email';
         $validate = Validator::make($request->all(), [
-            'phone' => 'required|string|starts_with:01|exists:users,phone',
+            'phone' =>$required, //'required|string|starts_with:01|exists:users,phone',
             'password' => 'nullable|string',
         ]);
         if ($validate->fails()) {
@@ -75,7 +79,7 @@ class AuthController extends Controller
             ], 422);
         }
         //$credentials = $request->only(['phone', 'password']);
-        $credentials = User::query()->where('phone', $request->phone)->first();
+        $credentials = User::query()->where($check, $request->phone)->first();
         //if (auth()->attempt($credentials)) {
         if ($credentials) {
             PasswordResetToken::updateOrCreate([
@@ -83,7 +87,7 @@ class AuthController extends Controller
             ], ['token' => '1234',]);
             return response()->json([
                 'status_code' => 200,
-                'message' => 'OTP sent successfully',
+                'message' => 'OTP sent successfully to your '.$check,
             ], 200);
         }
         return response()->json([
@@ -136,8 +140,10 @@ class AuthController extends Controller
     //TODO @fa 2025-03-10 otp verify
     public function otpVerify(Request $request)
     {
+        $check = filter_var($request->phone, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $required = $check == 'phone' ? 'required|string|starts_with:01|exists:users,phone' : 'required|email|exists:users,email';
         $validate = Validator::make($request->all(), [
-            'phone' => 'required|string|starts_with:01',
+            'phone' => $required,
             'otp' => 'required|string',
         ]);
         if ($validate->fails()) {
@@ -147,16 +153,16 @@ class AuthController extends Controller
                 'errors' => $validate->errors(),
             ], 422);
         }
-        $token = PasswordResetToken::query()->where('email', $request->phone)->first();
+        $token = PasswordResetToken::query()->where($check, $request->phone)->first();
         if (!$token) {
             return response()->json([
                 'status_code' => 404,
-                'message' => 'Phone number not found',
+                'message' => $check=='phone'?'Phone number not found':'Email not found',
             ], 404);
         }
         if ($token->token == $request->otp) {
             $token->delete();
-            $user = User::query()->where('phone', $request->phone)->first();
+            $user = User::query()->where($check, $request->phone)->first();
             $accessToken = $user->createToken('authToken')->accessToken;
             return response()->json([
                 'status_code' => 200,
