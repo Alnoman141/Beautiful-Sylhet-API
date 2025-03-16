@@ -375,7 +375,7 @@ class RedZoneController extends Controller
             ], 403);
         }
         try {
-            $category = RedZoneCategoryParent::with('categories')->findOrFail($request->id);
+            $category = RedZoneCategoryParent::with('category')->findOrFail($request->id);
             return response()->json([
                 'status_code'=>200,
                 'data' => $category
