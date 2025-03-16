@@ -261,8 +261,10 @@ class RedZoneController extends Controller
         try {
             $category = RedZoneCategory::query()
                 ->where('language_id', $this->lang)
-                ->paginate($request->integer('per_page', PaginationEnum::Default->value))
-                ->through(function ($category) {
+                //->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                ->get()
+                //->through(function ($category) {
+                ->map(function ($category) {
                     return [
                         //'id' => $category->id,
                         'name' => $category->name,
