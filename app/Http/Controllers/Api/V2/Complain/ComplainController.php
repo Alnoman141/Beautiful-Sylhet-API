@@ -23,7 +23,20 @@ class ComplainController extends Controller
             $complains = Complain::query()
                 ->with(['category'=>fn($a)=>$a->where('language_id',$this->lang)->select('complain_categories.id','name')])
                 ->latest()
-                ->paginate($request->input('per_page', PaginationEnum::Default->value));
+                ->paginate($request->input('per_page', PaginationEnum::Default->value))
+                ->through(function ($item){
+                    return [
+                        'id' => $item->id,
+                        'category' => [
+                            'id' => $item->category->id,
+                            'name' => $item->category->name,
+                        ],
+                        'description' => $item->description,
+                        'image' => $item->image,
+                        'file' => $item->file,
+                        'date' => now()->parse($item->created_at)->format('Y-m-d h:i a'),
+                    ];
+                });
             return response()->json([
                 'status_code'=> 200,
                 'data' => $complains
