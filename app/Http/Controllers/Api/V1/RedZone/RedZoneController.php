@@ -401,8 +401,8 @@ class RedZoneController extends Controller
         }
         DB::beginTransaction();
         try {
-            $parent = RedZoneCategoryParent::with('categories')->findOrFail($request->id);
-            $parent->categories()->delete();
+            $parent = RedZoneCategoryParent::with('category')->findOrFail($request->id);
+            $parent->category()->delete();
             $parent->delete();
             DB::commit();
             return response()->json([
