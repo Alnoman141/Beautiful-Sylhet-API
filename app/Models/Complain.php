@@ -12,6 +12,6 @@ class Complain extends Model
 
     public function category(): HasOneThrough
     {
-        return $this->hasOneThrough(ComplainCategory::class, ComplainCategoryParent::class, 'id', 'complain_category_parent_id', 'complain_category_id', 'complain_category_parent_id');
+        return $this->hasOneThrough(ComplainCategory::class, ComplainCategoryParent::class, 'id', 'complain_category_parent_id', 'complain_category_parent_id', 'complain_category_parent_id');
     }
 }
