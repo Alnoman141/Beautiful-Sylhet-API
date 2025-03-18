@@ -7,8 +7,12 @@ use App\Enum\RoleEnum;
 use App\Http\Controllers\Controller;
 use App\Models\PasswordResetToken;
 use App\Models\User;
+use App\Notifications\AuthTokenNotification;
+use App\Services\Fa;
+use App\Services\SmsGateway;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -65,7 +69,6 @@ class AuthController extends Controller
     {
         //check phone or email
         $check = filter_var($request->phone, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
-        //if phone then required phone and start with 01 otherwise email
         $required = $check == 'phone' ? 'required|string|starts_with:01|exists:users,phone' : 'required|email|exists:users,email';
         $validate = Validator::make($request->all(), [
             'phone' =>$required, //'required|string|starts_with:01|exists:users,phone',
@@ -82,13 +85,32 @@ class AuthController extends Controller
         $credentials = User::query()->where($check, $request->phone)->first();
         //if (auth()->attempt($credentials)) {
         if ($credentials) {
-            PasswordResetToken::updateOrCreate([
-                'email' => $request->phone,
-            ], ['token' => '1234',]);
-            return response()->json([
-                'status_code' => 200,
-                'message' => 'OTP sent successfully to your '.$check,
-            ], 200);
+            if ($request->isNotFilled('type')){
+                $type = $check=='phone'?'sms':'email';
+                $request->merge(['type'=>$type]);
+            }
+            try {
+                $token = self::sendToken($credentials,$request->type);
+                if ($token['code']==200){
+                    return response()->json([
+                        'status_code' => 200,
+                        'message' => 'OTP sent successfully to your '.$check,
+                        'token'=>$token['token']
+                    ], 200);
+                }
+                else{
+                    return response()->json([
+                        'status_code' => 403,
+                        'message' => $token['message'],
+                    ], 403);
+                }
+            }catch (\Exception $e){
+                return response()->json([
+                    'status_code' => 403,
+                    'message' => 'Something went wrong',
+                    'errors' => $e->getMessage(),
+                ], 403);
+            }
         }
         return response()->json([
             'status_code' => 401,
@@ -231,5 +253,29 @@ class AuthController extends Controller
                 'errors' => $e->getMessage(),
             ], 403);
         }
+    }
+
+    private function sendToken($user,$type)
+    {
+        $token = Fa::token();
+        if ($type=='sms')
+        {
+            $status = SmsGateway::send($user->phone,$token);
+            if (@$status['code']!=200){
+                return [
+                    'code'=>403,
+                    'message'=>$status['message']
+                ];
+            }
+        }else{
+            Notification::route('mail', $user->email)->notify(new AuthTokenNotification($token));
+        }
+        PasswordResetToken::updateOrCreate([
+            'email' => $type=='sms'?$user->phone:$user->email,
+        ], ['token' => $token]);
+        return [
+            'code'=>200,
+            'token'=>$token
+        ];
     }
 }

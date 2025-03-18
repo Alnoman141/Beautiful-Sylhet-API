@@ -6,9 +6,9 @@
  */
 return [
     'sms' => [
-        'username' => env('SMS_USERNAME','Jahedul'),
+        'username' => env('SMS_USERNAME','Token afe717bcc239dc8b087c9261b9c63687bb92e348'),
         'password' => env('SMS_PASSWORD','Dhaka@07'),
-        'sender_id' => env('SMS_SENDER_ID','Vromonika'),
-        'url' => env('SMS_URL','http://clients.muthofun.com:8901/esmsgw/sendsms.jsp'),
+        'sender_id' => env('SMS_SENDER_ID','8809617613332'),
+        'url' => env('SMS_URL','https://sysadmin.muthobarta.com/api/v1/send-sms'),
     ]
 ];
