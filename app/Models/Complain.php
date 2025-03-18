@@ -23,8 +23,8 @@ class Complain extends Model
         );
     }
 
-    /*public function category(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(ComplainCategoryParent::class,'complain_category_parent_id');
-    }*/
+        return $this->belongsTo(User::class,'user_id');
+    }
 }

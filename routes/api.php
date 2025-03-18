@@ -144,6 +144,8 @@ Route::group(['prefix' => 'v1'],function (){
     //TODO @fa 2024-11-27 authentication
     Route::group(['middleware' => 'auth:sanctum'],function (){
         Route::post('logout',[App\Http\Controllers\Api\V1\Auth\AuthController::class,'logout']);
+        Route::post('profile',[App\Http\Controllers\Api\V1\User\UserController::class,'profile']);
+        Route::post('profile-update',[App\Http\Controllers\Api\V1\User\UserController::class,'profileUpdate']);
         Route::post('avatar-upload', [\App\Http\Controllers\Api\V1\User\UserController::class, 'avatarUpload']);
         //TODO @fa 2022-11-30 password update
         Route::post('password-update', [\App\Http\Controllers\Api\V1\User\UserController::class, 'passwordUpdate']);
@@ -370,6 +372,12 @@ Route::group(['prefix' => 'v1'],function (){
                 Route::post('update',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'update']);
                 Route::post('delete',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'destroy']);
             });
+        });
+        //TODO @fa 2025-03-18 location
+        Route::group(['prefix' => 'location'],function (){
+            Route::post('division',[App\Http\Controllers\Api\V2\Location\LocationController::class,'division']);
+            Route::post('district',[App\Http\Controllers\Api\V2\Location\LocationController::class,'district']);
+            Route::post('upazila',[App\Http\Controllers\Api\V2\Location\LocationController::class,'upazila']);
         });
     });
 });

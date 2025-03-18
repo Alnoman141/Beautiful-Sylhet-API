@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             NewsTypeSeeder::class,
             TransportTypeSeeder::class,
             UsersTableSeeder::class,
+            LocationTableSeeder::class,
         ]);
     }
 }

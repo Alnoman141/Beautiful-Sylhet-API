@@ -376,4 +376,72 @@ class UserController extends Controller
             ], 403);
         }
     }
+    //TODO @fa 2025-03-18 profile
+    public function profile(Request $request)
+    {
+        try {
+            $user = User::with('info')->findOrFail(Auth::id());
+            return response()->json([
+                'status_code' => 200,
+                'data' => $user,
+            ], 200);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Profile Failed',
+                'errors' => $exception->getMessage(),
+            ], 403);
+        }
+    }
+
+    public function profileUpdate(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'first_name' => 'required|string',
+            'last_name' => 'nullable|string',
+            'phone' => 'nullable|string|max:20|unique:users,phone,' . Auth::id(),
+            'email' => 'nullable|string|email|max:255|unique:users,email,' . Auth::id(),
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+        ]);
+        if ($validate->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation Error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+        DB::beginTransaction();
+        try {
+            $user = User::findOrFail(Auth::id());
+            $user->update([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'phone' => $request->phone,
+                'email' => $request->email,
+            ]);
+            if ($request->hasFile('avatar')) {
+                Fa::deleteImage($user?->avatar);
+                $user->update([
+                    'avatar' => Fa::uploadImage($request->avatar, 'avatar')
+                ]);
+            }
+            //which data update then log
+            //TODO @fa 2024-12-08 log
+            $user->info()->update([
+                'data'=>collect($request->except(['first_name','last_name','email','phone'])
+            ])
+            DB::commit();
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Profile Update Successfully',
+            ], 200);
+        }catch (\Exception $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Profile Update Failed',
+                'errors' => $exception->getMessage(),
+            ], 403);
+        }
+    }
 }

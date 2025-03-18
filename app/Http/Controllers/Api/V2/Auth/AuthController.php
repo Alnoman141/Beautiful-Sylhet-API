@@ -24,7 +24,7 @@ class AuthController extends Controller
             'first_name' => 'required|string',
             'last_name' => 'nullable|string',
             'email' => 'nullable|email|unique:users,email',
-            'phone' => 'required|string|unique:users,phone|starts_with:01',
+            'phone' => 'nullable|string|unique:users,phone',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
         if ($validate->fails()) {
@@ -44,6 +44,7 @@ class AuthController extends Controller
                 'phone' => $request->phone,
                 'email' => $email,
                 'password' => bcrypt($request->password ?: $request->phone),
+                'avatar' => $request->hasFile('avatar') ? Fa::uploadFile($request->file('avatar'), 'avatar') : null,
             ]);
             $user->assignRole(RoleEnum::tourist->value);
             $user->info()->create([

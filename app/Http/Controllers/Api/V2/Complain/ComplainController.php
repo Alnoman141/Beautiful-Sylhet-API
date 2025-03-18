@@ -22,10 +22,19 @@ class ComplainController extends Controller
         try {
             $complains = Complain::query()
                 ->with(['category'=>fn($a)=>$a->where('language_id',$this->lang)->select('complain_categories.id','name')])
+                ->when(auth()->hasRole(RoleEnum::tourist->value), fn($q) => $q->where('user_id',auth()->id()))
+                ->when(!auth()->hasRole(RoleEnum::tourist->value), fn($q) => $q->with('user'))
                 ->latest()
                 ->paginate($request->input('per_page', PaginationEnum::Default->value))
                 ->through(function ($item){
-                    return [
+                    if (!auth()->hasRole(RoleEnum::tourist->value)){
+                        $data['user'] = [
+                            'id' => $item?->user?->id,
+                            'name' => $item?->user?->name,
+                            'avatar' => $item?->user?->avatar,
+                        ];
+                    }
+                    $data = [
                         'id' => $item->id,
                         'category' => [
                             'id' => $item->category->id,
@@ -35,7 +44,9 @@ class ComplainController extends Controller
                         'image' => $item->image,
                         'file' => $item->file,
                         'date' => now()->parse($item->created_at)->format('Y-m-d h:i a'),
+                        'status' => $item->status,
                     ];
+                    return $data;
                 });
             return response()->json([
                 'status_code'=> 200,
