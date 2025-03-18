@@ -377,7 +377,7 @@ class UserController extends Controller
         }
     }
     //TODO @fa 2025-03-18 profile
-    public function profile(Request $request)
+    public function profile()
     {
         try {
             $user = User::with('info')->findOrFail(Auth::id());
@@ -393,7 +393,6 @@ class UserController extends Controller
             ], 403);
         }
     }
-
     public function profileUpdate(Request $request)
     {
         $validate = Validator::make($request->all(), [
@@ -425,17 +424,16 @@ class UserController extends Controller
                     'avatar' => Fa::uploadImage($request->avatar, 'avatar')
                 ]);
             }
-            //which data update then log
-            //TODO @fa 2024-12-08 log
             $user->info()->update([
-                'data'=>collect($request->except(['first_name','last_name','email','phone'])
-            ])
+                'data'=>collect($request)->except(['first_name','last_name','phone','email'])
+            ]);
             DB::commit();
             return response()->json([
                 'status_code' => 200,
                 'message' => 'Profile Update Successfully',
             ], 200);
-        }catch (\Exception $exception) {
+        }
+        catch (\Exception $exception) {
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
