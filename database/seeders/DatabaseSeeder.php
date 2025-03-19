@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             TransportTypeSeeder::class,
             UsersTableSeeder::class,
             LocationTableSeeder::class,
+            CountrySeeder::class,
         ]);
     }
 }
