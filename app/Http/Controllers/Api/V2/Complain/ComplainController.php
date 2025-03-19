@@ -41,6 +41,7 @@ class ComplainController extends Controller
                         'file' => $item->file,
                         'date' => now()->parse($item->created_at)->format('Y-m-d h:i a'),
                         'status' => $item->status,
+                        'replies_count' => $item->replies_count,
                     ];
                     if (!auth()->user()->hasRole(RoleEnum::tourist->value)){
                         $data['user'] = [
