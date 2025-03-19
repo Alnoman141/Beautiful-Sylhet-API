@@ -294,6 +294,7 @@ class ComplainController extends Controller
                 'user_id'=>auth()->id(),
                 'complain_id' => $request->complain_id,
                 'description' => $request->description,
+                'image' => $request->hasFile('image')? Fa::uploadImage($request->file('image'),'complain') : null,
             ]);
             DB::commit();
             return response()->json([
