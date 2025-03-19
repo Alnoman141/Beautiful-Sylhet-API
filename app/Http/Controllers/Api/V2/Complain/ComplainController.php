@@ -27,13 +27,6 @@ class ComplainController extends Controller
                 ->latest()
                 ->paginate($request->input('per_page', PaginationEnum::Default->value))
                 ->through(function ($item){
-                    if (!auth()->user()->hasRole(RoleEnum::tourist->value)){
-                        $data['user'] = [
-                            'id' => $item?->user?->id,
-                            'name' => $item?->user?->name,
-                            'avatar' => $item?->user?->avatar,
-                        ];
-                    }
                     $data = [
                         'id' => $item->id,
                         'category' => [
@@ -46,6 +39,13 @@ class ComplainController extends Controller
                         'date' => now()->parse($item->created_at)->format('Y-m-d h:i a'),
                         'status' => $item->status,
                     ];
+                    if (!auth()->user()->hasRole(RoleEnum::tourist->value)){
+                        $data['user'] = [
+                            'id' => $item?->user?->id,
+                            'name' => $item?->user?->name,
+                            'avatar' => $item?->user?->avatar,
+                        ];
+                    }
                     return $data;
                 });
             return response()->json([
