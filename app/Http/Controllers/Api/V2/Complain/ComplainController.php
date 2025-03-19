@@ -277,7 +277,7 @@ class ComplainController extends Controller
             ], 422);
         }
         $complain = Complain::query()->withCount('replies')->findOrFail($request->complain_id);
-        if (!auth()->user()->hasRole(RoleEnum::tourist->value) && $complain->replies_count < 0){
+        if (!auth()->user()->hasRole(RoleEnum::tourist->value) && $complain->replies_count == 0){
             $complain->update([
                 'status' => ComplainStatusEnum::in_progress->value,
             ]);
