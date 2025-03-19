@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V2\Location;
 
 use App\Http\Controllers\Controller;
+use App\Models\Country;
 use App\Models\District;
 use App\Models\Division;
 use App\Models\Upazila;
@@ -92,6 +93,31 @@ class LocationController extends Controller
             return response()->json([
                 'status_code'=> 200,
                 'data' => $upazilas
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json([
+                'status_code'=> 403,
+                'errors' => $e->getMessage()
+            ], 403);
+        }
+    }
+    //TODO @fa 2025-03-19 country
+    public function country(Request $request)
+    {
+        try {
+            $countries = Country::query()
+                ->when($request->filled('name'),fn($q) => $q->where('name','like','%'.$request->name.'%'))
+                ->get()
+                ->map(function ($item){
+                    return [
+                        'id' => $item->id,
+                        'name'=>$item->name,
+                        'flag'=>$item->flag,
+                    ];
+                });
+            return response()->json([
+                'status_code'=> 200,
+                'data' => $countries
             ], 200);
         }catch (\Exception $e) {
             return response()->json([
