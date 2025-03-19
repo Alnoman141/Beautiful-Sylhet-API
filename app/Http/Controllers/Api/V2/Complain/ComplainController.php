@@ -22,12 +22,12 @@ class ComplainController extends Controller
         try {
             $complains = Complain::query()
                 ->with(['category'=>fn($a)=>$a->where('language_id',$this->lang)->select('complain_categories.id','name')])
-                ->when(auth()->hasRole(RoleEnum::tourist->value), fn($q) => $q->where('user_id',auth()->id()))
-                ->when(!auth()->hasRole(RoleEnum::tourist->value), fn($q) => $q->with('user'))
+                ->when(auth()->user()->hasRole(RoleEnum::tourist->value), fn($q) => $q->where('user_id',auth()->id()))
+                ->when(!auth()->user()->hasRole(RoleEnum::tourist->value), fn($q) => $q->with('user'))
                 ->latest()
                 ->paginate($request->input('per_page', PaginationEnum::Default->value))
                 ->through(function ($item){
-                    if (!auth()->hasRole(RoleEnum::tourist->value)){
+                    if (!auth()->user()->hasRole(RoleEnum::tourist->value)){
                         $data['user'] = [
                             'id' => $item?->user?->id,
                             'name' => $item?->user?->name,
