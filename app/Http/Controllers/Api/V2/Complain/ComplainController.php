@@ -165,7 +165,8 @@ class ComplainController extends Controller
     public function show(Request $request)
     {
         try {
-            $complain = ComplainCategory::query()
+            $complain = ComplainCategoryParent::query()
+                ->with('categories')
                 ->findOrFail($request->id);
             return response()->json([
                 'status_code'=>200,
