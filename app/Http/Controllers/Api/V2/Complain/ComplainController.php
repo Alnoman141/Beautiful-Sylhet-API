@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api\V2\Complain;
 
+use App\Enum\ComplainStatusEnum;
 use App\Enum\PaginationEnum;
 use App\Enum\RoleEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Complain;
 use App\Models\ComplainCategory;
 use App\Models\ComplainCategoryParent;
+use App\Models\ComplainReply;
 use App\Services\Fa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -229,6 +231,115 @@ class ComplainController extends Controller
             DB::rollBack();
             return response()->json([
                 'status_code'=>403,
+                'errors' => $e->getMessage()
+            ], 403);
+        }
+    }
+    //TODO @fa 2025-03-19 complainDetails
+    public function complainDetails(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:complains,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code'=>422,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        try {
+            $complain = Complain::query()
+                ->with(['category'=>fn($a)=>$a->where('language_id',$this->lang)->select('complain_categories.id','name'),'replies'])
+                ->findOrFail($request->id);
+            return response()->json([
+                'status_code'=>200,
+                'data' => $complain
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json([
+                'status_code'=>403,
+                'errors' => $e->getMessage()
+            ], 403);
+        }
+    }
+    //TODO @fa 2025-03-19 reply
+    public function reply(Request $request)
+    {
+        //abort_unless(Gate::allows(RoleEnum::tourist->value), 403);
+        $validator = Validator::make($request->all(), [
+            'complain_id' => 'required|integer|exists:complains,id',
+            'description' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code'=>422,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        $complain = Complain::query()->withCount('replies')->findOrFail($request->complain_id);
+        if (!auth()->user()->hasRole(RoleEnum::tourist->value) && $complain->replies_count < 0){
+            $complain->update([
+                'status' => ComplainStatusEnum::in_progress->value,
+            ]);
+        }
+        elseif (auth()->user()->hasRole(RoleEnum::tourist->value) && $complain->replies_count < 0){
+            return response()->json([
+                'status_code'=>403,
+                'message' => 'You can not reply to this complain. Please wait for admin reply.',
+            ], 403);
+        }
+        DB::beginTransaction();
+        try {
+            ComplainReply::create([
+                'user_id'=>auth()->id(),
+                'complain_id' => $request->complain_id,
+                'description' => $request->description,
+            ]);
+            DB::commit();
+            return response()->json([
+                'status_code'=>200,
+                'message' => 'Complain reply successfully',
+            ], 200);
+        }catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status_code'=>403,
+                'errors' => $e->getMessage()
+            ], 403);
+        }
+    }
+    //TODO @fa 2025-03-19 status update
+    public function statusUpdate(Request $request)
+    {
+       if (auth()->user()->hasRole(RoleEnum::tourist->value)) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'You are not allowed to access this action.',
+            ], 403);
+        }
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:complains,id',
+            'status' => 'required|integer|not_in:0,1',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        try {
+            $complain = Complain::query()->findOrFail($request->id);
+            $complain->update([
+                'status' => $request->status,
+            ]);
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Complain status updated successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
                 'errors' => $e->getMessage()
             ], 403);
         }

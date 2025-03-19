@@ -364,6 +364,9 @@ Route::group(['prefix' => 'v1'],function (){
         Route::group(['prefix' => 'complain'],function (){
             Route::post('list',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'index']);
             Route::post('submit',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'complainStore']);
+            Route::post('details',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'complainDetails']);
+            Route::post('reply',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'reply']);
+            Route::post('status-update',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'statusUpdate']);
             //TODO @fa 2025-03-11 category
             Route::group(['prefix' => 'category'],function (){
                 Route::post('list',[App\Http\Controllers\Api\V2\Complain\ComplainController::class,'categoryList']);

@@ -38,7 +38,7 @@ class LocationController extends Controller
     public function district(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'division_id' => 'required|integer|exists:divisions,id',
+            'division_id' => 'nullable|integer|exists:divisions,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -48,7 +48,7 @@ class LocationController extends Controller
         }
         try {
             $districts = District::query()
-                ->where('division_id',$request->division_id)
+                ->when($request->filled('division_id'),fn($q) => $q->where('division_id',$request->division_id))
                 ->get()
                 ->map(function ($item){
                     return [
