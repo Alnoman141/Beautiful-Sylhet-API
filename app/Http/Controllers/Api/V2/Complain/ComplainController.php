@@ -23,6 +23,7 @@ class ComplainController extends Controller
     {
         try {
             $complains = Complain::query()
+                ->withCount('replies')
                 ->with(['category'=>fn($a)=>$a->where('language_id',$this->lang)->select('complain_categories.id','name')])
                 ->when(auth()->user()->hasRole(RoleEnum::tourist->value), fn($q) => $q->where('user_id',auth()->id()))
                 ->when(!auth()->user()->hasRole(RoleEnum::tourist->value), fn($q) => $q->with('user'))
