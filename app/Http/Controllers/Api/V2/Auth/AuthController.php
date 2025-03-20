@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V2\Auth;
 use App\Enum\PaginationEnum;
 use App\Enum\RoleEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Log;
 use App\Models\PasswordResetToken;
 use App\Models\User;
 use App\Notifications\AuthTokenNotification;
@@ -259,20 +260,17 @@ class AuthController extends Controller
     private function sendToken($user,$type)
     {
         $token = Fa::token();
+        \Illuminate\Support\Facades\Log::info('token: '.$token);
         if ($type=='sms')
         {
-            if (config('app.env')== 'local'){
-                return [
-                    'code'=>200,
-                    'token'=>$token
-                ];
-            }
-            $status = SmsGateway::send($user->phone,$token);
-            if (@$status['code']!=200){
-                return [
-                    'code'=>403,
-                    'message'=>$status['message']
-                ];
+            if (config('app.env') == 'production'){
+                $status = SmsGateway::send($user->phone,$token);
+                if (@$status['code']!=200){
+                    return [
+                        'code'=>403,
+                        'message'=>$status['message']
+                    ];
+                }
             }
         }else{
             Notification::route('mail', $user->email)->notify(new AuthTokenNotification($token));
