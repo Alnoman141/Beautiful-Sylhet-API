@@ -280,7 +280,7 @@ class AuthController extends Controller
         ], ['token' => $token]);
         return [
             'code'=>200,
-            'token'=>$token
+            'token'=> config('app.env') == 'local' ? $token : null,
         ];
     }
 }
