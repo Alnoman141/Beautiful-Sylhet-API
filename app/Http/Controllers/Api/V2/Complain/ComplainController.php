@@ -252,7 +252,7 @@ class ComplainController extends Controller
         }
         try {
             $complain = Complain::query()
-                ->with(['category'=>fn($a)=>$a->where('language_id',$this->lang)->select('complain_categories.id','name'),'replies'])
+                ->with(['category'=>fn($a)=>$a->where('language_id',$this->lang)->select('complain_categories.id','name'),'replies'=>['user:id,first_name,last_name,avatar']])
                 ->findOrFail($request->id);
             return response()->json([
                 'status_code'=>200,
