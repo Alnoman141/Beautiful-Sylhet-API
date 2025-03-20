@@ -15,7 +15,7 @@ class LocationTableSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::beginTransaction();
+        //DB::beginTransaction();
         try {
             collect(Location::maps()['divisions'])->map(function ($a){
                 $division = Division::firstOrCreate([
@@ -35,10 +35,10 @@ class LocationTableSeeder extends Seeder
                     });
                 });
             });
-            DB::commit();
+            //DB::commit();
             $this->command->info('Location table seeded successfully');
         }catch (\Exception $e){
-            DB::rollBack();
+            //DB::rollBack();
             $this->command->error($e->getMessage());
         }
     }
