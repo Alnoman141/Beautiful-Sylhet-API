@@ -261,6 +261,12 @@ class AuthController extends Controller
         $token = Fa::token();
         if ($type=='sms')
         {
+            if (config('app.env')== 'local'){
+                return [
+                    'code'=>200,
+                    'token'=>$token
+                ];
+            }
             $status = SmsGateway::send($user->phone,$token);
             if (@$status['code']!=200){
                 return [
