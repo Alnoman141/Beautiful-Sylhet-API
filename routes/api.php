@@ -23,6 +23,10 @@ Route::group(['prefix' => 'v1'],function (){
     //TODO @fa 2025-03-02 authentication for tourist
     Route::group(['prefix' => 'tourist'],function (){
         Route::post('register',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'register']);
+        //TODO @fa 2025-03-20 verify user
+        Route::post('verify-user',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'verifyUser']);
+        //TODO @fa 2025-03-20 verify token
+        Route::post('verify-otp',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'verifyToken']);
         Route::post('login',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'login']);
         Route::post('verify',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'verify']);
         Route::post('otp-verify',[App\Http\Controllers\Api\V2\Auth\AuthController::class,'otpVerify']);

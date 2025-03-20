@@ -51,10 +51,15 @@ class AuthController extends Controller
             $user->info()->create([
                 'data' => $request->except(['first_name', 'last_name', 'email', 'phone', 'password', 'password_confirmation']),
             ]);
+            $accessToken = $user->createToken('authToken')->plainTextToken;
             DB::commit();
             return response()->json([
                 'status_code' => 200,
                 'message' => 'User registered successfully',
+                'data' => [
+                    'token' => $accessToken,
+                    'user' => $user,
+                ],
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -177,7 +182,9 @@ class AuthController extends Controller
                 'errors' => $validate->errors(),
             ], 422);
         }
-        $token = PasswordResetToken::query()->where('email', $request->phone)->first();
+        $token = PasswordResetToken::query()->where('email', $request->phone)
+            ->whereNotNull('created_at')
+            ->first();
         if (!$token) {
             return response()->json([
                 'status_code' => 404,
@@ -260,7 +267,7 @@ class AuthController extends Controller
     private function sendToken($user,$type)
     {
         $token = Fa::token();
-        \Illuminate\Support\Facades\Log::info('token: '.$token);
+        //\Illuminate\Support\Facades\Log::info('token: '.$token);
         if ($type=='sms')
         {
             if (config('app.env') == 'production'){
@@ -282,5 +289,74 @@ class AuthController extends Controller
             'code'=>200,
             'token'=> config('app.env') == 'local' ? $token : null,
         ];
+    }
+    //TODO @fa 2025-03-20 user verification
+    public function verifyUser(Request $request)
+    {
+        $check = filter_var($request->phone, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $required = $check == 'phone' ? 'required|string|starts_with:01|exists:users,phone' : 'required|email|exists:users,email';
+        $validate = Validator::make($request->all(), [
+            'phone' => $required,
+        ]);
+        if ($validate->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+        $token = Fa::token();
+        if ($request->isNotFilled('type')) {
+            $type = $check == 'phone' ? 'sms' : 'email';
+            $request->merge(['type' => $type]);
+        }
+        if (config('app.env') == 'production') {
+            if ($request->type == 'sms') {
+                $status = SmsGateway::send($request->phone, $token);
+                if (@$status['code'] != 200) {
+                    return response()->json([
+                        'status_code' => 403,
+                        'message' => $status['message'],
+                    ], 403);
+                }
+            } else {
+                Notification::route('mail', $request->phone)->notify(new AuthTokenNotification($token));
+            }
+        }
+        PasswordResetToken::updateOrCreate([
+            'email' => $request->phone,
+        ], ['token' => $token,'created_at'=>now()]);
+        return response()->json([
+            'status_code' => 200,
+            'token' => config('app.env') == 'local' ? $token : null,
+        ], 200);
+    }
+    //TODO @fa 2025-03-20 user verification
+    public function verifyToken(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'otp' => 'required|string|exists:password_reset_tokens,token',
+        ]);
+        if ($validate->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+        $token = PasswordResetToken::query()->where('token', $request->otp)
+            ->whereNotNull('created_at')
+            ->first();
+        if (!$token) {
+            return response()->json([
+                'status_code' => 404,
+                'message' => 'Verification unsuccessful',
+            ], 404);
+        }
+        $token->delete();
+        return response()->json([
+            'status_code' => 200,
+            'message' => 'Verification successful',
+        ], 200);
     }
 }
