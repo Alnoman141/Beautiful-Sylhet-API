@@ -45,6 +45,37 @@ class FairBoardController extends Controller
             ], 403);
         }
     }
+    //TODO @fa 22-Mar-25 show
+    public function show(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:fair_boards,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+        try {
+            $data = FairBoard::query()->with(['spot'=>fn($a)=>$a
+                ->where('language_id',$this->lang)
+                ->select('spots.id as id','spots.spot_parent_id','name')])
+                ->where('language_id',$this->lang)
+                ->findOrFail($request->id);
+            return response()->json([
+                'status_code' => 200,
+                'data' => $data,
+            ], 200);
+        }catch (\Exception $e){
+            return response()->json([
+                'status_code' => 403,
+                'message'=> 'Something went wrong',
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
     //TODO @fa 2025-02-18 store fair board
     public function store(Request $request)
     {
@@ -134,7 +165,8 @@ class FairBoardController extends Controller
         DB::beginTransaction();
         try {
             if ($request->filled('spot_parent_id')){
-                FairBoardParent::where('id',$request->id)->update([
+                FairBoardParent::query()->where('id',$request->id)
+                    ->update([
                     'spot_parent_id' => $request->spot_parent_id,
                 ]);
             }

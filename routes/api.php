@@ -149,10 +149,13 @@ Route::group(['prefix' => 'v1'],function (){
 
 
     //TODO @fa 2025-02-18 version V2 API
+    Route::group(['prefix' => 'fair-board'],function () {
+        Route::post('list', [App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class, 'index']);
+        Route::post('details', [App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class, 'show']);
+    });
 
 
-
-    //TODO @fa 2024-11-27 authentication
+        //TODO @fa 2024-11-27 authentication
     Route::group(['middleware' => 'auth:sanctum'],function (){
         Route::post('logout',[App\Http\Controllers\Api\V1\Auth\AuthController::class,'logout']);
         Route::post('profile',[App\Http\Controllers\Api\V1\User\UserController::class,'profile']);
@@ -352,7 +355,7 @@ Route::group(['prefix' => 'v1'],function (){
 
         //TODO @fa 2025-02-20 fair board
         Route::group(['prefix' => 'fair-board'],function (){
-            Route::post('list',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'index']);
+            //Route::post('list',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'index']);
             Route::post('store',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'store']);
             Route::post('edit',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'edit']);
             Route::post('update',[App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class,'update']);
