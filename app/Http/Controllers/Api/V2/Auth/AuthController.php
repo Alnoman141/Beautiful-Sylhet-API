@@ -51,15 +51,37 @@ class AuthController extends Controller
             $user->info()->create([
                 'data' => $request->except(['first_name', 'last_name', 'email', 'phone', 'password', 'password_confirmation']),
             ]);
-            $accessToken = $user->createToken('authToken')->plainTextToken;
+            //$accessToken = $user->createToken('authToken')->plainTextToken;
+            $check = filter_var($request->phone, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+            $token = config('app.env') == 'production' ? Fa::token() : "123456";
+            if ($request->isNotFilled('type')) {
+                $type = $check == 'phone' ? 'sms' : 'email';
+                $request->merge(['type' => $type]);
+            }
+            if (config('app.env') == 'production') {
+                if ($request->type == 'sms') {
+                    $status = SmsGateway::send($request->phone, $token);
+                    if (@$status['code'] != 200) {
+                        return response()->json([
+                            'status_code' => 403,
+                            'message' => $status['message'],
+                        ], 403);
+                    }
+                } else {
+                    Notification::route('mail', $request->phone)->notify(new AuthTokenNotification($token));
+                }
+            }
+            PasswordResetToken::updateOrCreate([
+                'email' => $request->phone,
+            ], ['token' => $token,'created_at'=>now()]);
             DB::commit();
             return response()->json([
                 'status_code' => 200,
-                'message' => 'User registered successfully',
-                'data' => [
+                'message' => 'Otp sent successfully to your ' . $check,
+               /* 'data' => [
                     'token' => $accessToken,
                     'user' => $user,
-                ],
+                ],*/
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -138,7 +160,7 @@ class AuthController extends Controller
                 'errors' => $validate->errors(),
             ], 422);
         }
-        $user = User::where('phone', $request->phone)->first();
+        $user = User::query()->where('phone', $request->phone)->first();
         if (!$user) {
             if ($request->filled('type') && $request->type == 'register') {
                 $user = User::create([
@@ -353,10 +375,17 @@ class AuthController extends Controller
                 'message' => 'Verification unsuccessful',
             ], 404);
         }
+        $check = filter_var($token->email, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $user = User::query()->where($check, $request->phone)->first();
+        $accessToken = $user->createToken('authToken')->plainTextToken;
         $token->delete();
         return response()->json([
             'status_code' => 200,
-            'message' => 'Verification successful',
+            'message' => 'User logged in successfully',
+            'data' => [
+                'token' => $accessToken,
+                'user' => $user,
+            ],
         ], 200);
     }
 }

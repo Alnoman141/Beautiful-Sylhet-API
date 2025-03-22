@@ -31,6 +31,7 @@ class RedZoneController extends Controller
                         ->where('language_id',$this->lang)
                         ->select(['name','red_zone_categories.red_zone_category_parent_id'])
                 ])
+                ->when($request->filled('category_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('red_zone_category_parent_id',$request->category_id)))
                 ->where('language_id', $this->lang)
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                 ->through(function ($red) {
