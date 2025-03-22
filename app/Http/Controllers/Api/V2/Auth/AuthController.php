@@ -266,7 +266,7 @@ class AuthController extends Controller
 
     private function sendToken($user,$type)
     {
-        $token = Fa::token();
+        $token = config('app.env') == 'production' ? Fa::token() : "123456";
         //\Illuminate\Support\Facades\Log::info('token: '.$token);
         if ($type=='sms')
         {
@@ -305,7 +305,7 @@ class AuthController extends Controller
                 'errors' => $validate->errors(),
             ], 422);
         }
-        $token = Fa::token();
+        $token = config('app.env') == 'production' ? Fa::token() : "123456";
         if ($request->isNotFilled('type')) {
             $type = $check == 'phone' ? 'sms' : 'email';
             $request->merge(['type' => $type]);
