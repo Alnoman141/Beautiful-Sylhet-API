@@ -143,7 +143,7 @@ class ComplainController extends Controller
         DB::beginTransaction();
         try {
             foreach ($request->data as $data) {
-                ComplainCategory::where('id', $data['id'])->update([
+                ComplainCategory::query()->where('id', $data['id'])->update([
                     'name' => $data['name'],
                     'language_id' => $data['language_id'],
                 ]);
