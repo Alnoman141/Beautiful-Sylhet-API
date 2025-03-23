@@ -37,10 +37,10 @@ class AuthController extends Controller
                 'errors' => $validate->errors(),
             ], 422);
         }
+        $check = $request->is_bangladeshi==0?'email':'phone';
+        $column = $check=='phone' ? $request->phone : $request->email;
         if ($request->filled('is_bangladeshi')){
             try {
-                $check = $request->is_bangladeshi==0?'email':'phone';
-                $column = $check=='phone' ? $request->phone : $request->email;
                 $exists = User::query()->where($check,$column)->first();
                 if ($exists && $exists->email_verified_at != null){
                     return response()->json([
@@ -63,7 +63,7 @@ class AuthController extends Controller
                         }
                     }
                     PasswordResetToken::updateOrCreate([
-                        'email' => $request->phone,
+                        'email' => $column,
                     ], ['token' => $token,'created_at'=>now()]);
                     return response()->json([
                         'status_code' => 200,
@@ -113,7 +113,7 @@ class AuthController extends Controller
                 }
             }
             PasswordResetToken::updateOrCreate([
-                'email' => $request->phone,
+                'email' => $column,
             ], ['token' => $token,'created_at'=>now()]);
             DB::commit();
             return response()->json([
