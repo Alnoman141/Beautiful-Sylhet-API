@@ -359,7 +359,7 @@ Route::group(['prefix' => 'v1'], function () {
             Route::post('edit', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'edit']);
             Route::post('update', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'update']);
             Route::post('delete', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'destroy']);
-            Route::group(['category'], function () {
+            Route::group(['prefix' => 'category'], function () {
                 Route::post('store', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'categoryStore']);
                 Route::post('edit', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'categoryEdit']);
                 Route::post('update', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'categoryUpdate']);
