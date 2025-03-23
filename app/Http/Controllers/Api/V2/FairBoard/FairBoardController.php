@@ -19,8 +19,11 @@ class FairBoardController extends Controller
                 ->with(['spot'=>fn($a)=>$a->where('language_id',$this->lang)->select('spots.id as id','spots.spot_parent_id','name')])
                 ->where('language_id',$this->lang)
                 ->when($request->filled('spot_parent_id'),fn($a)=>$a->whereHas('spot',fn($b)=>$b->where('spots.spot_parent_id',$request->spot_parent_id)))
-                ->paginate($request->per_page ?? PaginationEnum::Default->value)
-                ->through(function ($item){
+                ->latest('id')
+                ->take(1)
+                //->paginate($request->per_page ?? PaginationEnum::Default->value)
+                ->get()
+                ->map(function ($item){
                     return [
                         'id' => $item->id,
                         'fair_board_parent_id' => $item->fair_board_parent_id,
@@ -31,7 +34,7 @@ class FairBoardController extends Controller
                             'name' => $item?->spot?->name,
                         ],
                     ];
-                })
+                })->values()->first()
             ;
             return response()->json([
                 'status_code' => 200,
