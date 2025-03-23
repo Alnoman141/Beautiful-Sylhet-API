@@ -79,6 +79,10 @@ class Fa
             $name = $file->hashName();
             $path = 'coxbazaar/' . $string . '/' . $extension . '/';
             $data = File::get($file);
+            if (in_array($extension,['jpg','jpeg','png','JPG','JPEG','PNG']))
+            {
+                $data =  ImageManager::gd()->read($data)->toJpeg(30);
+            }
             if (config('filesystems.default') == 's3') {
                 Storage::disk('s3')->put($path . $name, $data, 'public');
                 return $path . $name;

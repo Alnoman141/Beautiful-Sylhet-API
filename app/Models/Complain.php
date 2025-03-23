@@ -43,4 +43,10 @@ class Complain extends Model
             get: fn($value) => $this->disk($value),
         );
     }
+    protected function file(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => $this->disk($value),
+        );
+    }
 }

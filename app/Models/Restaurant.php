@@ -19,11 +19,4 @@ class Restaurant extends Model
     {
         return $this->hasOneThrough(Spot::class, RestaurantParent::class, 'id', 'spot_parent_id','restaurant_parent_id','spot_parent_id');
     }
-
-    protected function image(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => $this->disk($value),
-        );
-    }
 }
