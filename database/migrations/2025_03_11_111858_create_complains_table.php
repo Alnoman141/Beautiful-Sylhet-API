@@ -21,6 +21,7 @@ return new class extends Migration
             $table->boolean('status')->default(0);
             $table->string('image')->nullable();
             $table->string('file')->nullable();
+            $table->string('serial')->nullable();
             $table->timestamps();
         });
     }

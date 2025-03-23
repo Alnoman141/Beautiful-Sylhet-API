@@ -36,6 +36,7 @@ class ComplainController extends Controller
                             'id' => $item->category->id,
                             'name' => $item->category->name,
                         ],
+                        'serial'=> $item->serial,
                         'description' => $item->description,
                         'image' => $item->image,
                         'file' => $item->file,
@@ -224,6 +225,7 @@ class ComplainController extends Controller
                 'description' => $request->description,
                 'image' => $request->hasFile('image')? Fa::uploadImage($request->file('image'),'complain') : null,
                 'file'=>$request->hasFile('file')? Fa::uploadFile($request->file('file'),'complain') : null,
+                'serial'=>'V-'.now()->format('Y').Complain::count()+1
             ]);
             DB::commit();
             return response()->json([
