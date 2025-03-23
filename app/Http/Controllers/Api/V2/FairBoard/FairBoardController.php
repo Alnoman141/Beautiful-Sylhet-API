@@ -109,7 +109,7 @@ class FairBoardController extends Controller
             DB::commit();
             return response()->json([
                 'status_code' => 200,
-                'message' => 'Fair board created successfully',
+                'message' => 'Fare board created successfully',
             ], 200);
         }catch (\Exception $e){
             DB::rollBack();
@@ -183,7 +183,7 @@ class FairBoardController extends Controller
             DB::commit();
             return response()->json([
                 'status_code' => 200,
-                'message' => 'Fair board updated successfully',
+                'message' => 'Fare board updated successfully',
             ], 200);
         }catch (\Exception $e){
             DB::rollBack();
@@ -215,7 +215,7 @@ class FairBoardController extends Controller
             DB::commit();
             return response()->json([
                 'status_code' => 200,
-                'message' => 'Fair board deleted successfully',
+                'message' => 'Fare board deleted successfully',
             ], 200);
         }catch (\Exception $e){
             DB::rollBack();
