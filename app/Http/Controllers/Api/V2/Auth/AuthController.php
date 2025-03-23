@@ -21,11 +21,13 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        $email = $request->is_bangladeshi == 0 ? 'required|email' : 'nullable|email';
+        $phone = $request->is_bangladeshi == 1 ? 'required|string|starts_with:01' : 'nullable|string';
         $validate = Validator::make($request->all(), [
             'first_name' => 'required|string',
             'last_name' => 'nullable|string',
-            'email' => 'nullable|email|unique:users,email',
-            'phone' => 'nullable|string|unique:users,phone',
+            'email' => $email,
+            'phone' => $phone,
             'password' => 'nullable|string|min:8|confirmed',
         ]);
         if ($validate->fails()) {
@@ -35,10 +37,49 @@ class AuthController extends Controller
                 'errors' => $validate->errors(),
             ], 422);
         }
+        if ($request->filled('is_bangladeshi')){
+            try {
+                $check = $request->is_bangladeshi==0?'email':'phone';
+                $column = $check=='phone' ? $request->phone : $request->email;
+                $exists = User::query()->where($check,$column)->first();
+                if ($exists && $exists->email_verified_at != null){
+                    return response()->json([
+                        'status_code' => 403,
+                        'message' => 'Account already exists with this '.$check,
+                    ], 403);
+                }elseif ($exists && $exists->email_verified_at == null){
+                    $token = config('app.env') == 'production' ? Fa::token() : "123456";
+                    if (config('app.env') == 'production') {
+                        if ($check == 'phone') {
+                            $status = SmsGateway::send($request->phone, $token);
+                            if (@$status['code'] != 200) {
+                                return response()->json([
+                                    'status_code' => 403,
+                                    'message' => $status['message'],
+                                ], 403);
+                            }
+                        } else {
+                            Notification::route('mail', $request->email)->notify(new AuthTokenNotification($token));
+                        }
+                    }
+                    PasswordResetToken::updateOrCreate([
+                        'email' => $request->phone,
+                    ], ['token' => $token,'created_at'=>now()]);
+                    return response()->json([
+                        'status_code' => 200,
+                        'message' => 'Otp sent successfully to your ' . $check,
+                    ], 200);
+                }
+            }catch (\Exception $e) {
+                return response()->json([
+                    'status_code' => 403,
+                    'message' => $e->getMessage(),
+                ], 403);
+            }
+        }
         DB::beginTransaction();
         try {
-            $name = $request->phone;
-            $email = $request->email ?: $name . '+' . Str::lower(Str::random(10)) . '@gmail.com';
+            $email = $request->email;
             $user = User::create([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
@@ -114,6 +155,12 @@ class AuthController extends Controller
         $credentials = User::query()->where($check, $request->phone)->first();
         //if (auth()->attempt($credentials)) {
         if ($credentials) {
+            if (!$credentials->hasRole(RoleEnum::tourist->value)) {
+                return response()->json([
+                    'status_code' => 403,
+                    'message' => "You don't have permission to login",
+                ], 403);
+            }
             if ($request->isNotFilled('type')){
                 $type = $check=='phone'?'sms':'email';
                 $request->merge(['type'=>$type]);
@@ -216,6 +263,11 @@ class AuthController extends Controller
         if ($token->token == $request->otp) {
             $token->delete();
             $user = User::query()->where($check, $request->phone)->first();
+            if ($user?->email_verified_at == null) {
+                $user->update([
+                    'email_verified_at' => now(),
+                ]);
+            }
             $accessToken = $user->createToken('authToken')->plainTextToken;
             return response()->json([
                 'status_code' => 200,
@@ -377,6 +429,9 @@ class AuthController extends Controller
         }
         $check = filter_var($token->email, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
         $user = User::query()->where($check, $request->phone)->first();
+        $user->update([
+            'email_verified_at' => now(),
+        ]);
         $accessToken = $user->createToken('authToken')->plainTextToken;
         $token->delete();
         return response()->json([

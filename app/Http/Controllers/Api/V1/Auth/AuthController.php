@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Enum\RoleEnum;
 use App\Facade\Alal;
 use App\Http\Controllers\Controller;
 use App\Jobs\PasswordSentJob;
@@ -34,6 +35,12 @@ class AuthController extends Controller
             $credentials = $request->only('email', 'password');
             if (auth()->attempt($credentials)) {
                 $user = auth()->user();
+                if ($user->hasRole(RoleEnum::tourist->value)) {
+                    return response()->json([
+                        'status_code'=>403,
+                        'message'=>'You are not allowed to login',
+                    ],403);
+                }
                 $token = $user->createToken('authToken'
                     ,['*'],now()->addDays(5)
                 )->plainTextToken;
