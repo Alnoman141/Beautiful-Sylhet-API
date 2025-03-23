@@ -30,6 +30,7 @@ Route::group(['prefix' => 'v1'], function () {
         Route::post('login', [App\Http\Controllers\Api\V2\Auth\AuthController::class, 'login']);
         Route::post('verify', [App\Http\Controllers\Api\V2\Auth\AuthController::class, 'verify']);
         Route::post('otp-verify', [App\Http\Controllers\Api\V2\Auth\AuthController::class, 'otpVerify']);
+        Route::post('resend-otp', [App\Http\Controllers\Api\V2\Auth\AuthController::class, 'resendOtp']);
     });
     //TODO @fa 2025-03-18 location
     Route::group(['prefix' => 'location'], function () {

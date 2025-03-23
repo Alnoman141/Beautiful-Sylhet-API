@@ -443,4 +443,36 @@ class AuthController extends Controller
             ],
         ], 200);
     }
+    //TODO @fa 2025-03-23 resendOtp
+    public function resendOtp(Request $request)
+    {
+        $check = filter_var($request->phone, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $required = $check == 'phone' ? 'required|string|starts_with:01|exists:users,phone' : 'required|email|exists:users,email';
+        $validate = Validator::make($request->all(), [
+            'phone' => $required,
+        ]);
+        if ($validate->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation error',
+                'errors' => $validate->errors(),
+            ], 422);
+        }
+        if ($request->isNotFilled('type')) {
+            $request->merge(['type' => $check == 'phone' ? 'sms' : 'email']);
+        }
+        $user = User::query()->where($check, $request->phone)->first();
+        $data = $this->sendToken($user,$request->type);
+        if ($data['status_code'] == 200) {
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'OTP sent successfully',
+            ], 200);
+        }else{
+            return response()->json([
+                'status_code' => $data['status_code'],
+                'message' => $data['message'],
+            ], $data['status_code']);
+        }
+    }
 }
