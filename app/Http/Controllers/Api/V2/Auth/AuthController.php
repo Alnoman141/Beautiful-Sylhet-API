@@ -128,8 +128,8 @@ class AuthController extends Controller
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
-                'message' => 'Something went wrong',
-                'errors' => $e->getMessage(),
+                'message' => $e->getMessage(),
+                //'errors' => $e->getMessage(),
             ], 403);
         }
     }
