@@ -263,7 +263,7 @@ class AuthController extends Controller
         if ($token->token == $request->otp) {
             $token->delete();
             $user = User::query()->where($check, $request->phone)->first();
-            if ($user?->email_verified_at == null) {
+            if ($user->email_verified_at == null) {
                 $user->update([
                     'email_verified_at' => now(),
                 ]);
