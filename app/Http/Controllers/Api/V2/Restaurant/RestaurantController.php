@@ -25,6 +25,7 @@ class RestaurantController extends Controller
             $restaurants = Restaurant::query()
                 ->with(['spot'=>fn($a)=>$a->where('language_id',$this->lang)->select('spots.spot_parent_id as id', 'name')])
                 ->where('language_id',$this->lang)
+                ->when($request->filled('category_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('restaurant_category_parent_id',$request->category_id)))
                 ->when($request->filled('spot_parent_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('spot_parent_id',$request->spot_parent_id)))
                 ->when($request->filled('open_time'),fn($a)=>$a->where('open_time','>=',now()->parse($request->open_time)->format('H:i:s')))
                 ->when($request->filled('close_time'),fn($a)=>$a->where('close_time','<=',$request->close_time))

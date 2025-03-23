@@ -208,7 +208,7 @@ class ComplainController extends Controller
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg',
             //max 20 mb
-            'file'=>'nullable|mimes:mp4,mov,avi,wmv,flv|max:20480',
+            'file'=>'nullable',
         ]);
         if ($validator->fails()) {
             return response()->json([
