@@ -292,6 +292,9 @@ class UserController extends Controller
         DB::beginTransaction();
         try {
             $user = User::findOrFail($request->id);
+            $user->email = $user->email . '+deleted';
+            $user->phone = $user->phone? $user->phone . '+deleted' : null;
+            $user->save();
             Fa::deleteImage($user?->avatar);
             $user->delete();
             $content = [
