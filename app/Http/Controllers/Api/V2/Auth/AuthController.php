@@ -96,9 +96,9 @@ class AuthController extends Controller
                     $message = 'Account already exists with this ' .
                         ($existingUser->email === $request->email && $existingUser->phone === $request->phone ? 'email and phone' : ($existingUser->email === $request->email ? 'email' : 'phone'));
                     return response()->json([
-                        'status_code' => 403,
+                        'status_code' => 422,
                         'message' => $message,
-                    ], 403);
+                    ], 422);
                 }
             }
         }
