@@ -73,6 +73,13 @@ class AuthController extends Controller
             if ($existingUser) {
                 if ($existingUser && $existingUser->email_verified_at == null) {
                     $token = config('app.env') == 'production' ? Fa::token() : '123456';
+                    if ($existingUser?->phone !=$request->phone) {
+                        $existingUser->phone = $request->phone;
+                    }
+                    elseif ($existingUser?->email !=$request->email) {
+                        $existingUser->email = $request->email;
+                    }
+                    $existingUser->save();
                     if (config('app.env') == 'production') {
                         if ($request->type == 'sms') {
                             $status = SmsGateway::send($request->phone, $token);
