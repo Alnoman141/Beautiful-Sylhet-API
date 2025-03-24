@@ -37,10 +37,10 @@ class AuthController extends Controller
         $identifier = $request->is_bangladeshi ? 'phone' : 'email';
         $columnValue = $request->{$identifier};
         if ($request->isNotFilled('type')) {
-            $type = $identifier == 'phone' ? 'sms' : 'email';
+            $type = $identifier== 'phone' && $request->is_bangladeshi==1 ? 'sms' : 'email';
             $request->merge(['type' => $type]);
         }elseif ($request->filled('type')) {
-            $identifier = $request->type == 'sms' ? $request->phone : $request->email;
+            $identifier = $request->type == 'sms' && $identifier== 'phone' ? $request->phone : $request->email;
         }
         if ($request->filled($identifier)) {
             $existingUser = User::query()
