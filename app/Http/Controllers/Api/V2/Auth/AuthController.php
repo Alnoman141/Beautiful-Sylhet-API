@@ -24,13 +24,18 @@ class AuthController extends Controller
         $rules = [
             'first_name' => 'required|string',
             'last_name' => 'nullable|string',
-            'email' => $request->is_bangladeshi ? 'nullable|email' : 'required|email',
+            'email' => $request->is_bangladeshi ? 'nullable|email|regex:/^[a-z0-9_.+-]{3,}@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,4}$/i' : 'required|email|regex:/^[a-z0-9_.+-]{3,}@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,4}$/i',
             'phone' => $request->is_bangladeshi ? 'required|string|starts_with:01|digits:11' : 'nullable|string',
             'password' => 'nullable|string|min:8|confirmed',
             'type'=>'required|in:sms,email',
         ];
 
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->all(), $rules, [
+            'email.regex' => $request->email . ' is not a valid email.',"",
+            'phone.starts_with' => 'The phone must be a start with 01.',
+            'phone.digits' => 'The phone must be a valid bangladeshi phone number.',
+            'type.in' => 'The type must be sms or email',
+        ]);
         if ($validator->fails()) {
             return response()->json(['status_code' => 422, 'message' => 'Validation error', 'errors' => $validator->errors()], 422);
         }
