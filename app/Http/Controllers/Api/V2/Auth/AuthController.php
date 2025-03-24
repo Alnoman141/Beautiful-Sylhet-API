@@ -566,30 +566,38 @@ class AuthController extends Controller
                 'errors' => $validate->errors(),
             ], 422);
         }
-        $token = PasswordResetToken::query()->where('token', $request->otp)
-            ->whereNotNull('created_at')
-            ->first();
-        if (!$token) {
+        try{
+            $token = PasswordResetToken::query()->where('token', $request->otp)
+                //->whereNotNull('created_at')
+                ->first();
+            if (!$token) {
+                return response()->json([
+                    'status_code' => 404,
+                    'message' => 'Verification unsuccessful',
+                ], 404);
+            }
+            $check = filter_var($request->phone ?? $token->email, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+            $user = User::query()->where($check, $request->phone)->first();
+            $user->update([
+                'email_verified_at' => now(),
+            ]);
+            $accessToken = $user->createToken('authToken')->plainTextToken;
+            $token->delete();
             return response()->json([
-                'status_code' => 404,
-                'message' => 'Verification unsuccessful',
-            ], 404);
+                'status_code' => 200,
+                'message' => 'User logged in successfully',
+                'data' => [
+                    'token' => $accessToken,
+                    'user' => $user,
+                ],
+            ], 200);
+        }catch (\Exception $e){
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Something went wrong',
+                'errors' => $e->getMessage(),
+            ], 403);
         }
-        $check = filter_var($token->email, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
-        $user = User::query()->where($check, $request->phone)->first();
-        $user->update([
-            'email_verified_at' => now(),
-        ]);
-        $accessToken = $user->createToken('authToken')->plainTextToken;
-        $token->delete();
-        return response()->json([
-            'status_code' => 200,
-            'message' => 'User logged in successfully',
-            'data' => [
-                'token' => $accessToken,
-                'user' => $user,
-            ],
-        ], 200);
     }
     //TODO @fa 2025-03-23 resendOtp
     public function resendOtp(Request $request)
