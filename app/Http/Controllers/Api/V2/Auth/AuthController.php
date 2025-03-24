@@ -42,7 +42,7 @@ class AuthController extends Controller
         }
         elseif ($request->filled('type')) {
             $identifier = $request->type == 'sms' ? $request->phone : $request->email;
-            if ($identifier=='email' && $request->is_bangladeshi == 1) {
+            if ($identifier!='sms' && $request->is_bangladeshi == 1) {
                 if ($request->isNotFilled('email')){
                     return response()->json(['status_code' => 422,
                         'message' => 'Validation error',
