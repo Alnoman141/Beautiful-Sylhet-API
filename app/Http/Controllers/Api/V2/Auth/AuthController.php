@@ -28,6 +28,7 @@ class AuthController extends Controller
             'phone' => $request->is_bangladeshi ? 'required|string|starts_with:01|digits:11' : 'nullable|string',
             'password' => 'nullable|string|min:8|confirmed',
             'type'=>'required|in:sms,email',
+            'is_bangladeshi' => 'required|boolean',
         ];
 
         $validator = Validator::make($request->all(), $rules, [
