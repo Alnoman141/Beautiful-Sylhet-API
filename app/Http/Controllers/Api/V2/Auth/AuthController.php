@@ -65,7 +65,8 @@ class AuthController extends Controller
                     PasswordResetToken::updateOrCreate([
                         'email' => $columnValue,
                     ], ['token' => $token, 'created_at' => now()]);
-                    return response()->json(['status_code' => 200, 'message' => 'OTP sent successfully to your ' . $identifier], 200);
+                    return response()->json(['status_code' => 200,
+                        'message' => 'OTP sent successfully to your ' . $identifier], 200);
                 }
                 else{
                     $message = 'Account already exists with this ' .
