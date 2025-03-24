@@ -42,6 +42,14 @@ class AuthController extends Controller
         }
         elseif ($request->filled('type')) {
             $identifier = $request->type == 'sms' ? $request->phone : $request->email;
+            if ($identifier=='email') {
+                if ($request->isNotFilled('email')){
+                    return response()->json(['status_code' => 422,
+                        'message' => 'Validation error',
+                        'errors' => ['email' => ['The email field is required.']],
+                    ], 422);
+                }
+            }
         }
         if ($request->filled('is_bangladeshi') && $request->is_bangladeshi == 0 && $request->type=='sms') {
             if ($request->isNotFilled('phone')){
