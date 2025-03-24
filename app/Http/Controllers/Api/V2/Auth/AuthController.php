@@ -25,8 +25,9 @@ class AuthController extends Controller
             'first_name' => 'required|string',
             'last_name' => 'nullable|string',
             'email' => $request->is_bangladeshi ? 'nullable|email' : 'required|email',
-            'phone' => $request->is_bangladeshi ? 'required|string|starts_with:01' : 'nullable|string',
+            'phone' => $request->is_bangladeshi ? 'required|string|starts_with:01|digits:11' : 'nullable|string',
             'password' => 'nullable|string|min:8|confirmed',
+            'type'=>'required|in:sms,email',
         ];
 
         $validator = Validator::make($request->all(), $rules);
