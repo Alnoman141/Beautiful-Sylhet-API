@@ -113,7 +113,10 @@ class AuthController extends Controller
             return response()->json(['status_code' => 200, 'message' => 'OTP sent successfully to your ' . $identifier], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['status_code' => 403, 'message' => $e->getMessage()], 403);
+            return response()->json(['status_code' => 403,
+                'message' => 'Something went wrong',
+                'errors' => $e->getMessage()
+            ], 403);
         }
     }
     public function registerOld(Request $request)
