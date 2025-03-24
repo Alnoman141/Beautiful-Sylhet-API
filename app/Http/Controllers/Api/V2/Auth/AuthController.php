@@ -83,9 +83,8 @@ class AuthController extends Controller
                             Notification::route('mail', $request->email)->notify(new AuthTokenNotification($token));
                         }
                     }
-
                     PasswordResetToken::updateOrCreate([
-                        'email' => $columnValue,
+                        'email' => $request->type == 'sms' ? $request->phone : $request->email,
                     ], ['token' => $token, 'created_at' => now()]);
                     return response()->json(['status_code' => 200,
                         'message' => 'OTP sent successfully to your ' . $identifier], 200);
