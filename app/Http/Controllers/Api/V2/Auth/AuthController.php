@@ -285,6 +285,7 @@ class AuthController extends Controller
         $validate = Validator::make($request->all(), [
             'phone' =>$required, //'required|string|starts_with:01|exists:users,phone',
             'password' => 'nullable|string',
+            'type'=>'required|in:sms,email',
         ]);
         if ($validate->fails()) {
             return response()->json([
