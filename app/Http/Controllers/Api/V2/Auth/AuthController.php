@@ -21,6 +21,100 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        $rules = [
+            'first_name' => 'required|string',
+            'last_name' => 'nullable|string',
+            'email' => $request->is_bangladeshi ? 'nullable|email' : 'required|email',
+            'phone' => $request->is_bangladeshi ? 'required|string|starts_with:01' : 'nullable|string',
+            'password' => 'nullable|string|min:8|confirmed',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return response()->json(['status_code' => 422, 'message' => 'Validation error', 'errors' => $validator->errors()], 422);
+        }
+
+        $identifier = $request->is_bangladeshi ? 'phone' : 'email';
+        $columnValue = $request->{$identifier};
+        if ($request->isNotFilled('type')) {
+            $type = $identifier == 'phone' ? 'sms' : 'email';
+            $request->merge(['type' => $type]);
+        }elseif ($request->filled('type')) {
+            $identifier = $request->type == 'sms' ? $request->phone : $request->email;
+        }
+        if ($request->filled($identifier)) {
+            $existingUser = User::query()
+                ->where($identifier, $columnValue)
+                ->when($identifier=='phone'&& $request->filled('email'), fn($q) => $q->orWhere('email', $request->email))
+                ->when($identifier=='email'&& $request->filled('phone'), fn($q) => $q->orWhere('phone', $request->phone))
+                ->first();
+            if ($existingUser) {
+                if ($existingUser && $existingUser->email_verified_at == null) {
+                    $token = config('app.env') == 'production' ? Fa::token() : '123456';
+                    if (config('app.env') == 'production') {
+                        if ($request->type == 'sms') {
+                            $status = SmsGateway::send($request->phone, $token);
+                            if (@$status['code'] != 200) {
+                                return response()->json(['status_code' => 403, 'message' => $status['message']], 403);
+                            }
+                        } else {
+                            Notification::route('mail', $request->email)->notify(new AuthTokenNotification($token));
+                        }
+                    }
+
+                    PasswordResetToken::updateOrCreate([
+                        'email' => $columnValue,
+                    ], ['token' => $token, 'created_at' => now()]);
+                    return response()->json(['status_code' => 200, 'message' => 'OTP sent successfully to your ' . $identifier], 200);
+                }
+                else{
+                    return response()->json([
+                        'status_code' => 403,
+                        'message' => 'Account already exists with this ' . $identifier,
+                    ], 403);
+                }
+            }
+        }
+        //return $request->all();
+        DB::beginTransaction();
+        try {
+            $user = User::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'phone' => $request->phone,
+                'email' => $request->email,
+                'password' => bcrypt($request->password ?: $request->phone),
+                'avatar' => $request->hasFile('avatar') ? Fa::uploadFile($request->file('avatar'), 'avatar') : null,
+            ]);
+
+            $user->assignRole(RoleEnum::tourist->value);
+            $user->info()->create(['data' => $request->except(['first_name', 'last_name', 'email', 'phone', 'password', 'password_confirmation'])]);
+
+            $token = config('app.env') == 'production' ? Fa::token() : '123456';
+            if (config('app.env') == 'production') {
+                if ($request->type == 'sms') {
+                    $status = SmsGateway::send($request->phone, $token);
+                    if (@$status['code'] != 200) {
+                        return response()->json(['status_code' => 403, 'message' => $status['message']], 403);
+                    }
+                } else {
+                    Notification::route('mail', $request->email)->notify(new AuthTokenNotification($token));
+                }
+            }
+
+            PasswordResetToken::updateOrCreate([
+                'email' => $columnValue,
+            ], ['token' => $token, 'created_at' => now()]);
+
+            DB::commit();
+            return response()->json(['status_code' => 200, 'message' => 'OTP sent successfully to your ' . $identifier], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['status_code' => 403, 'message' => $e->getMessage()], 403);
+        }
+    }
+    public function registerOld(Request $request)
+    {
         $email = $request->is_bangladeshi == 0 ? 'required|email' : 'nullable|email';
         $phone = $request->is_bangladeshi == 1 ? 'required|string|starts_with:01' : 'nullable|string';
         $validate = Validator::make($request->all(), [
@@ -41,6 +135,25 @@ class AuthController extends Controller
         $column = $check=='phone' ? $request->phone : $request->email;
         if ($request->filled('is_bangladeshi')){
             try {
+                //phone check already exists
+                if ($request->filled('phone')){
+                    $phoneFind = User::query()->where('phone', $request->phone)->first();
+                    if ($phoneFind){
+                        return response()->json([
+                            'status_code' => 403,
+                            'message' => 'Account already exists with this phone',
+                        ], 403);
+                    }
+                }
+                if ($request->filled('email')){
+                    $emailFind = User::query()->where('email', $request->email)->first();
+                    if ($emailFind){
+                        return response()->json([
+                            'status_code' => 403,
+                            'message' => 'Account already exists with this email',
+                        ], 403);
+                    }
+                }
                 $exists = User::query()->where($check,$column)->first();
                 if ($exists && $exists->email_verified_at != null){
                     return response()->json([
@@ -358,7 +471,7 @@ class AuthController extends Controller
         }
         PasswordResetToken::updateOrCreate([
             'email' => $type=='sms'?$user->phone:$user->email,
-        ], ['token' => $token]);
+        ], ['token' => $token,'created_at'=>null]);
         return [
             'code'=>200,
             'token'=> config('app.env') == 'local' ? $token : null,
