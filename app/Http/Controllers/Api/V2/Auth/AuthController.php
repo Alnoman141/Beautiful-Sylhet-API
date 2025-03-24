@@ -102,7 +102,7 @@ class AuthController extends Controller
                 }
             }
         }
-        return $request->all();
+        //return $request->all();
         DB::beginTransaction();
         try {
             $user = User::create([
