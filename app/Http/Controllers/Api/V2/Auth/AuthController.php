@@ -66,11 +66,9 @@ class AuthController extends Controller
                 ], 422);
             }
         }
-        if ($request->filled($identifier)) {
             $existingUser = User::query()
-                ->where($identifier, $columnValue)
-                ->when($identifier=='phone'&& $request->filled('email'), fn($q) => $q->orWhere('email', $request->email))
-                ->when($identifier=='email'&& $request->filled('phone'), fn($q) => $q->orWhere('phone', $request->phone))
+                ->when($request->filled('email'), fn($q) => $q->orWhere('email', $request->email))
+                ->when($request->filled('phone'), fn($q) => $q->orWhere('phone', $request->phone))
                 ->first();
             if ($existingUser) {
                 if ($existingUser && $existingUser->email_verified_at == null) {
@@ -101,7 +99,7 @@ class AuthController extends Controller
                     ], 422);
                 }
             }
-        }
+
         //return $request->all();
         DB::beginTransaction();
         try {
