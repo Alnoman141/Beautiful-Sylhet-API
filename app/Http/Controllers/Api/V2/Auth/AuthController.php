@@ -68,9 +68,11 @@ class AuthController extends Controller
                     return response()->json(['status_code' => 200, 'message' => 'OTP sent successfully to your ' . $identifier], 200);
                 }
                 else{
+                    $message = 'Account already exists with this ' .
+                        ($existingUser->email === $request->email && $existingUser->phone === $request->phone ? 'email and phone' : ($existingUser->email === $request->email ? 'email' : 'phone'));
                     return response()->json([
                         'status_code' => 403,
-                        'message' => 'Account already exists with this ' . $identifier,
+                        'message' => 'Account already exists with this ' . $message,
                     ], 403);
                 }
             }
