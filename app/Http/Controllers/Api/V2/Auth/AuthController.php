@@ -73,7 +73,7 @@ class AuthController extends Controller
                         ($existingUser->email === $request->email && $existingUser->phone === $request->phone ? 'email and phone' : ($existingUser->email === $request->email ? 'email' : 'phone'));
                     return response()->json([
                         'status_code' => 403,
-                        'message' => 'Account already exists with this ' . $message,
+                        'message' => $message,
                     ], 403);
                 }
             }
