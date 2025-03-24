@@ -39,8 +39,17 @@ class AuthController extends Controller
         if ($request->isNotFilled('type')) {
             $type = $identifier== 'phone' && $request->is_bangladeshi==1 ? 'sms' : 'email';
             $request->merge(['type' => $type]);
-        }elseif ($request->filled('type')) {
-            $identifier = $request->type == 'sms' && $identifier== 'phone' ? $request->phone : $request->email;
+        }
+        elseif ($request->filled('type')) {
+            $identifier = $request->type == 'sms' ? $request->phone : $request->email;
+        }
+        if ($request->filled('is_bangladeshi') && $request->is_bangladeshi == 0 && $request->type=='sms') {
+            if ($request->isNotFilled('phone')){
+                return response()->json(['status_code' => 422,
+                    'message' => 'Validation error',
+                    'errors' => ['phone' => ['The phone field is required.']],
+                ], 422);
+            }
         }
         if ($request->filled($identifier)) {
             $existingUser = User::query()
