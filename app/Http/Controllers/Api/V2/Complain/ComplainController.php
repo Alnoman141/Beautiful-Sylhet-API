@@ -24,16 +24,18 @@ class ComplainController extends Controller
         try {
             $complains = Complain::query()
                 ->withCount('replies')
-                ->with(['category'=>fn($a)=>$a->where('language_id',$this->lang)->select('complain_categories.id','name')])
+                ->with(['category'=>fn($a)=>$a->where('language_id',$this->lang)->select('complain_categories.id','name','complain_category_parent_id')])
                 ->when(auth()->user()->hasRole(RoleEnum::tourist->value), fn($q) => $q->where('user_id',auth()->id()))
                 ->when(!auth()->user()->hasRole(RoleEnum::tourist->value), fn($q) => $q->with('user'))
+                ->when($request->filled('category_id'), fn($q) => $q->where('complain_category_parent_id',$request->category_id))
+                ->when($request->filled('serial'), fn($q) => $q->where('serial',$request->serial))
                 ->latest()
                 ->paginate($request->input('per_page', PaginationEnum::Default->value))
                 ->through(function ($item){
                     $data = [
                         'id' => $item->id,
                         'category' => [
-                            'id' => $item->category->id,
+                            'id' => $item->category->complain_category_parent_id,
                             'name' => $item->category->name,
                         ],
                         'serial'=> $item->serial,
