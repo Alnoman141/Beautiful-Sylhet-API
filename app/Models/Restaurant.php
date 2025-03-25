@@ -19,4 +19,9 @@ class Restaurant extends Model
     {
         return $this->hasOneThrough(Spot::class, RestaurantParent::class, 'id', 'spot_parent_id','restaurant_parent_id','spot_parent_id');
     }
+
+    public function category(): HasOneThrough
+    {
+        return $this->hasOneThrough(RestaurantCategory::class, RestaurantParent::class, 'id', 'restaurant_category_parent_id','restaurant_parent_id','restaurant_category_parent_id');
+    }
 }

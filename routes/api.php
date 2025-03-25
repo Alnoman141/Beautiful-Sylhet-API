@@ -152,6 +152,7 @@ Route::group(['prefix' => 'v1'], function () {
     });
     Route::group(['prefix' => 'restaurant'], function () {
         Route::post('list', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'index']);
+        Route::post('details', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'show']);
         Route::group(['prefix' => 'category'], function () {
             Route::post('list', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'categoryList']);
         });

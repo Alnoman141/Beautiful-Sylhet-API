@@ -23,7 +23,7 @@ class RestaurantController extends Controller
     {
         try {
             $restaurants = Restaurant::query()
-                ->with(['spot'=>fn($a)=>$a->where('language_id',$this->lang)->select('spots.spot_parent_id as id', 'name')])
+                ->with(['parent','spot'=>fn($a)=>$a->where('language_id',$this->lang)->select('spots.spot_parent_id as id', 'name')])
                 ->where('language_id',$this->lang)
                 ->when($request->filled('category_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('restaurant_category_parent_id',$request->category_id)))
                 ->when($request->filled('spot_parent_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('spot_parent_id',$request->spot_parent_id)))
@@ -33,6 +33,35 @@ class RestaurantController extends Controller
             return response()->json([
                 'status_code' => 200,
                 'data' => $restaurants,
+            ], 200);
+        }catch (\Exception $e){
+            return response()->json([
+                'status_code' => 403,
+                'message'=> 'Something went wrong',
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
+    //TODO @fa 25-Mar-25 details
+    public function show(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:restaurants,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 403,
+                'errors' => $validator->errors(),
+            ], 403);
+        }
+        try {
+            $restaurant = Restaurant::query()
+                ->with(['parent','spot'=>fn($a)=>$a->where('language_id',$this->lang)->select('spots.spot_parent_id as id', 'name'),'category'=>fn($a)=>$a->where('language_id',$this->lang)->select('restaurant_categories.restaurant_category_parent_id as id', 'name')])
+                ->where('language_id',$this->lang)
+                ->findOrFail($request->id);
+            return response()->json([
+                'status_code' => 200,
+                'data' => $restaurant,
             ], 200);
         }catch (\Exception $e){
             return response()->json([
