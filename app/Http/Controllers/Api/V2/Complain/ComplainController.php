@@ -35,8 +35,8 @@ class ComplainController extends Controller
                     $data = [
                         'id' => $item->id,
                         'category' => [
-                            'id' => $item->category->complain_category_parent_id,
-                            'name' => $item->category->name,
+                            'id' => $item?->category?->complain_category_parent_id,
+                            'name' => $item?->category?->name,
                         ],
                         'serial'=> $item->serial,
                         'description' => $item->description,
