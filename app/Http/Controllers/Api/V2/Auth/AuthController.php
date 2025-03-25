@@ -74,17 +74,22 @@ class AuthController extends Controller
                 if ($existingUser && $existingUser->email_verified_at == null) {
                     $token = config('app.env') == 'production' ? Fa::token() : '123456';
                     if ($existingUser?->phone !=$request->phone) {
-                        $existingUser->phone = $request->phone;
+                        $existingUser->update(['phone' => $request->phone]);
                     }
                     elseif ($existingUser?->email !=$request->email) {
-                        $existingUser->email = $request->email;
+                        $existingUser->update(['email' => $request->email]);
                     }
-                    $existingUser->save();
                     if (config('app.env') == 'production') {
                         if ($request->type == 'sms') {
                             $status = SmsGateway::send($request->phone, $token);
                             if (@$status['code'] != 200) {
-                                return response()->json(['status_code' => 403, 'message' => $status['message']], 403);
+                                return response()->json(['status_code' => 403,
+                                    'message' => $status['message'],
+                                    'translate'=>[
+                                        "ভেরিফিকেশন কোড পাঠানো ব্যর্থ হয়েছে।",
+                                        "Verification code send failed."
+                                    ]
+                                ], 403);
                             }
                         } else {
                             Notification::route('mail', $request->email)->notify(new AuthTokenNotification($token));
@@ -94,14 +99,30 @@ class AuthController extends Controller
                         'email' => $request->type == 'sms' ? $request->phone : $request->email,
                     ], ['token' => $token, 'created_at' => now()]);
                     return response()->json(['status_code' => 200,
-                        'message' => 'OTP sent successfully to your ' . $identifier], 200);
+                        'message' => 'OTP sent successfully to your ' . $identifier,
+                        'translate'=>[
+                            "আপনার $identifier-এ ওটিপি সফলভাবে পাঠানো হয়েছে।",
+                            "OTP sent successfully to your $identifier."
+                        ]
+                    ], 200);
                 }
                 else{
                     $message = 'Account already exists with this ' .
                         ($existingUser->email === $request->email && $existingUser->phone === $request->phone ? 'email and phone' : ($existingUser->email === $request->email ? 'email' : 'phone'));
+                    if ($existingUser->email === $request->email && $existingUser->phone === $request->phone) {
+                        $bn = "এই ইমেইল এবং ফোন নম্বর দিয়ে অ্যাকাউন্ট ইতিমধ্যেই বিদ্যমান।";
+                    } elseif ($existingUser->email === $request->email) {
+                        $bn = "এই ইমেইল দিয়ে অ্যাকাউন্ট ইতিমধ্যেই বিদ্যমান।";
+                    } elseif ($existingUser->phone === $request->phone) {
+                        $bn = "এই ফোন নম্বর দিয়ে অ্যাকাউন্ট ইতিমধ্যেই বিদ্যমান।";
+                    }
                     return response()->json([
                         'status_code' => 403,
                         'message' => $message,
+                        'translate' => [
+                            $bn,
+                            $message
+                        ]
                     ], 403);
                 }
             }
@@ -138,11 +159,21 @@ class AuthController extends Controller
             ], ['token' => $token, 'created_at' => now()]);
 
             DB::commit();
-            return response()->json(['status_code' => 200, 'message' => 'OTP sent successfully to your ' . $identifier], 200);
+            return response()->json(['status_code' => 200,
+                'message' => 'OTP sent successfully to your ' . $identifier,
+                'translate'=>[
+                    "আপনার $identifier-এ ওটিপি সফলভাবে পাঠানো হয়েছে।",
+                    "OTP sent successfully to your $identifier."
+                ],
+            ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['status_code' => 403,
                 'message' => 'Something went wrong',
+                'translate'=>[
+                    "কিছু ভুল হয়েছে।",
+                    "Something went wrong."
+                ],
                 'errors' => $e->getMessage()
             ], 403);
         }
@@ -307,6 +338,10 @@ class AuthController extends Controller
                 return response()->json([
                     'status_code' => 403,
                     'message' => "You don't have permission to login",
+                    'translate'=>[
+                        "আপনার লগইন করার অনুমতি নেই।",
+                        "You don't have permission to login."
+                    ]
                 ], 403);
             }
             if ($request->isNotFilled('type')){
@@ -316,9 +351,14 @@ class AuthController extends Controller
             try {
                 $token = self::sendToken($credentials,$request->type);
                 if ($token['code']==200){
+                    $bn = $check=='phone'?'ফোন নম্বর':'ইমেইল';
                     return response()->json([
                         'status_code' => 200,
                         'message' => 'OTP sent successfully to your '.$check,
+                        'translate'=>[
+                            "আপনার $bn-এ ওটিপি সফলভাবে পাঠানো হয়েছে।",
+                            "OTP sent successfully to your $check."
+                        ],
                         'token'=>$token['token']
                     ], 200);
                 }
@@ -326,12 +366,20 @@ class AuthController extends Controller
                     return response()->json([
                         'status_code' => 403,
                         'message' => $token['message'],
+                        'translate'=>[
+                            "ভেরিফিকেশন কোড পাঠানো ব্যর্থ হয়েছে।",
+                            "Verification code send failed."
+                        ],
                     ], 403);
                 }
             }catch (\Exception $e){
                 return response()->json([
                     'status_code' => 403,
                     'message' => 'Something went wrong',
+                    'translate'=>[
+                        "কিছু ভুল হয়েছে।",
+                        "Something went wrong."
+                    ],
                     'errors' => $e->getMessage(),
                 ], 403);
             }
@@ -339,6 +387,10 @@ class AuthController extends Controller
         return response()->json([
             'status_code' => 401,
             'message' => 'Unauthorized',
+            'translate'=>[
+                "অননুমোদিত।",
+                "Unauthorized."
+            ]
         ], 401);
     }
 
@@ -403,9 +455,15 @@ class AuthController extends Controller
             //->whereNull('created_at')
             ->first();
         if (!$token) {
+            $en = $check=='phone'?'Phone number not found':'Email not found';
+            $bn = $check == 'phone' ? 'ফোন নম্বর পাওয়া যায়নি' : 'ইমেইল পাওয়া যায়নি';
             return response()->json([
                 'status_code' => 404,
-                'message' => $check=='phone'?'Phone number not found':'Email not found',
+                'message' => $en,
+                'translate'=>[
+                    $bn,
+                    $en
+                ]
             ], 404);
         }
         if ($token->token == $request->otp) {
@@ -420,6 +478,10 @@ class AuthController extends Controller
             return response()->json([
                 'status_code' => 200,
                 'message' => 'User logged in successfully',
+                'translate'=>[
+                    'ব্যবহারকারী সফলভাবে লগ ইন হয়েছে।',
+                    'User logged in successfully.'
+                ],
                 'data' => [
                     'token' => $accessToken,
                     'user' => $user,
@@ -429,6 +491,10 @@ class AuthController extends Controller
         return response()->json([
             'status_code' => 403,
             'message' => 'OTP not matched',
+            'translate'=>[
+                'ওটিপি মেলেনি।',
+                'OTP not matched.'
+            ]
         ], 403);
     }
 
@@ -539,6 +605,10 @@ class AuthController extends Controller
                     return response()->json([
                         'status_code' => 403,
                         'message' => $status['message'],
+                        'translate'=>[
+                            "ভেরিফিকেশন কোড পাঠানো ব্যর্থ হয়েছে।",
+                            "Verification code send failed."
+                        ]
                     ], 403);
                 }
             } else {
@@ -576,6 +646,10 @@ class AuthController extends Controller
                 return response()->json([
                     'status_code' => 404,
                     'message' => 'Verification unsuccessful',
+                    'translate'=>[
+                        "ভেরিফিকেশন ব্যর্থ হয়েছে।",
+                        "Verification unsuccessful."
+                    ]
                 ], 404);
             }
             $check = filter_var($request->phone ?? $token->email, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
@@ -588,6 +662,10 @@ class AuthController extends Controller
             return response()->json([
                 'status_code' => 200,
                 'message' => 'User logged in successfully',
+                'translate'=>[
+                    'ব্যবহারকারী সফলভাবে লগ ইন হয়েছে।',
+                    'User logged in successfully.'
+                ],
                 'data' => [
                     'token' => $accessToken,
                     'user' => $user,
@@ -597,6 +675,10 @@ class AuthController extends Controller
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',
+                'translate'=>[
+                    "কিছু ভুল হয়েছে।",
+                    "Something went wrong."
+                ],
                 'errors' => $e->getMessage(),
             ], 403);
         }
@@ -625,11 +707,19 @@ class AuthController extends Controller
             return response()->json([
                 'status_code' => 200,
                 'message' => 'OTP sent successfully',
+                'translate'=>[
+                    "ওটিপি সফলভাবে পাঠানো হয়েছে।",
+                    "OTP sent successfully."
+                ],
             ], 200);
         }else{
             return response()->json([
                 'status_code' => $data['status_code'],
                 'message' => $data['message'],
+                'translate'=>[
+                    "ভেরিফিকেশন কোড পাঠানো ব্যর্থ হয়েছে।",
+                    "Verification code send failed."
+                ]
             ], $data['status_code']);
         }
     }
