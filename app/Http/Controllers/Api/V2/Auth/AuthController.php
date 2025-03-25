@@ -567,7 +567,9 @@ class AuthController extends Controller
             ], 422);
         }
         try{
-            $token = PasswordResetToken::query()->where('token', $request->otp)
+            $token = PasswordResetToken::query()
+                ->where('email', $request->phone)
+                ->where('token', $request->otp)
                 //->whereNotNull('created_at')
                 ->first();
             if (!$token) {
