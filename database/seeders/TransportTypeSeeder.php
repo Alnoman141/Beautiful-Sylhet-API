@@ -79,7 +79,33 @@ class TransportTypeSeeder extends Seeder
                         'language_id' => 2,
                     ],
                 ]
-            ]
+            ],
+            [
+                'id'=>6,
+                'names'=>[
+                    [
+                        'name' => 'বাস',
+                        'language_id' => 1,
+                    ],
+                    [
+                        'name' => 'Bus',
+                        'language_id' => 2,
+                    ],
+                ]
+            ],
+            [
+                'id'=>7,
+                'names'=>[
+                    [
+                        'name' => 'লোকাল ট্রান্সপোর্ট',
+                        'language_id' => 1,
+                    ],
+                    [
+                        'name' => 'Local Transport',
+                        'language_id' => 2,
+                    ],
+                ]
+            ],
         ];
         DB::beginTransaction();
         try {
