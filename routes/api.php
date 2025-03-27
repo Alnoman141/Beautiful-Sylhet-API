@@ -45,6 +45,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('visitor', [App\Http\Controllers\Api\V1\VisitorController::class, 'store']);
     Route::post('dashboard', [App\Http\Controllers\Api\V1\VisitorController::class, 'index']);
     Route::post('country', [App\Http\Controllers\Api\V2\Location\LocationController::class, 'country']);
+    Route::post('tour-plan', [App\Http\Controllers\Api\V2\Location\LocationController::class, 'tourPlan']);
     Route::post('weather-info', function () {
         return response()->json([
             'status_code' => 200,
