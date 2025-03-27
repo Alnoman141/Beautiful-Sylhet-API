@@ -10,4 +10,5 @@ return [
         //'AIzaSyAfafD_51W9GVFuTia5NzHB0fTn8Y5-TNg' //alauddin020
         'AIzaSyA77SgI4D_p_zInHUYX5dqfGYEFh6OfsLM', //alal.inflack
     ),
+    'daily_limit'=>env('OPENAI_DAILY_LIMIT', 3),
 ];
