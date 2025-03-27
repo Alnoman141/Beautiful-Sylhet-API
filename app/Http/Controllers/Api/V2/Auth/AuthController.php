@@ -155,7 +155,7 @@ class AuthController extends Controller
             }
 
             PasswordResetToken::updateOrCreate([
-                'email' => $columnValue,
+                'email' => $request->type == 'sms' ? $request->phone : $request->email,
             ], ['token' => $token, 'created_at' => now()]);
 
             DB::commit();
