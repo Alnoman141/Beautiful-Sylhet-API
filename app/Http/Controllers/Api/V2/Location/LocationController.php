@@ -131,6 +131,15 @@ class LocationController extends Controller
     //TODO @fa 27-Mar-25 tour plan
     public function tourPlan(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'prompt' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code'=>422,
+                'errors' => $validator->errors()
+            ], 422);
+        }
         try {
             $tourPlans = OpenAIAPI::generate($request->prompt);
             return response()->json([
