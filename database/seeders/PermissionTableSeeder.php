@@ -15,7 +15,7 @@ class PermissionTableSeeder extends Seeder
      */
     public function run(): void
     {
-        $modules =
+        /*$modules =
             [
                 [
                     'name' => 'Dashboard',
@@ -528,6 +528,919 @@ class PermissionTableSeeder extends Seeder
                 ],
                 [
                     'name' => 'Notice',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+            ];*/
+        $modules =
+            [
+                [
+                    'name' => 'Dashboard',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Guideline',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Awareness',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Spot',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Hotel',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'HotelType',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'HotelCategory',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Restaurant',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'RestaurantCategory',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Transport',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Event',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Campaign',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+
+                [
+                    'name' => 'Info',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Locker',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Bank',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Atm',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'DangerZone',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'ZoneCategory',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'TouristBus',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'KitkotChair',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Fare',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Complain',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'ComplainCategory',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Emergency',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'DATourismCell',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Police',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Doctor',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Guard',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Volunteer',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'TourismCorporation',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Announcement',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'News',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'TouristList',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Settings',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'User',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Notice',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'LandingPage',
                     'permissions' => [
                         [
                             'name' => 'show menu',
