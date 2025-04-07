@@ -223,9 +223,15 @@ class TourPlanGenerateController extends Controller
             $plan = TourPlanHistory::query()
                 ->where('tour_plan_id', $request->tour_plan_id)
                 ->whereHas('plan',fn($a)=>$a->where('user_id', auth()->id()))
-                ->get();
+                ->get()
+                ->map(fn($a)=>[
+                    'id'=>$a->id,
+                    'role'=>$a->type,
+                    'data'=>self::markdownToHtml($a->data),
+                ]);
             return response()->json([
                 'status_code'=> 200,
+                'tour_plan_id' => $request->tour_plan_id,
                 'data' => $plan,
             ], 200);
         }catch (\Exception $e) {
