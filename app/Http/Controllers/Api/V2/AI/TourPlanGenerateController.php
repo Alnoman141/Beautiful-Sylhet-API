@@ -59,13 +59,23 @@ class TourPlanGenerateController extends Controller
             if ($request->filled('tour_plan_id')) {
                 $history = TourPlanHistory::query()
                     ->where('tour_plan_id', $request->tour_plan_id)
-                    ->latest()
+                    ->latest('id')
                     ->limit(4)
                     ->get()
                     ->map(fn($a)=>[
+                        'id'=>$a->id,
                         'role'=>$a->type,
                         'parts'=>[
                             'text'=>$a->data
+                        ]
+                    ])
+                    ->sortBy('id')
+                    ->values()
+                    ->map(fn($a)=>[
+                        //'id'=>$a['id'],
+                        'role'=>$a['role'],
+                        'parts'=>[
+                            'text'=>collect($a['parts'])->toArray()
                         ]
                     ]);
                 //new prompt push history
