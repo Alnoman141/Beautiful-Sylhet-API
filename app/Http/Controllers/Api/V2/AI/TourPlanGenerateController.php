@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2\AI;
 
+use App\Enum\PaginationEnum;
 use App\Http\Controllers\Controller;
 use App\Models\TourPlan;
 use App\Models\TourPlanHistory;
@@ -183,14 +184,14 @@ class TourPlanGenerateController extends Controller
         return $html;
     }
 
-    public function list()
+    public function list(Request $request)
     {
         try {
             $plans = TourPlan::with(['history'])
                 ->where('user_id', auth()->id())
                 //->whereHas('history')
                 ->latest()
-                ->paginate(10)
+                ->paginate($request->per_page ?? PaginationEnum::Default->value)
                 ->through(fn($plan) => [
                     'id' => $plan->id,
                     'prompt' => $plan?->history?->data,
