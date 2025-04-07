@@ -128,41 +128,4 @@ class LocationController extends Controller
             ], 403);
         }
     }
-    //TODO @fa 27-Mar-25 tour plan
-    public function tourPlan(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'prompt' => 'required|string',
-        ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'status_code'=>422,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        try {
-            $tourPlans = OpenAIAPI::generate($request->prompt);
-            return response()->json([
-                'status_code'=> 200,
-                'data' => $this->markdownToHtml($tourPlans)
-            ], 200);
-        }catch (\Exception $e) {
-            return response()->json([
-                'status_code'=> 403,
-                'errors' => $e->getMessage()
-            ], 403);
-        }
-    }
-    protected function markdownToHtml(string $markdown): string {
-        $html = nl2br(htmlspecialchars($markdown));
-        $html = preg_replace('/\*\*(.*?)\*\*/', '<b>$1</b>', $html);
-        $html = preg_replace('/\*(.*?)\*/', '<i>$1</i>', $html);
-        $html = preg_replace('/^## (.*)$/m', '<h2>$1</h2>', $html);
-        $html = preg_replace('/^\* (.*)$/m', '<li>$1</li>', $html); // Corrected regex
-        $html = preg_replace('/(<li>.*?<\/li>(\s*<br \/>\s*))+/', '<ul>$0</ul>', $html);
-        $html = str_replace("<br />\n<ul>", "<ul>", $html);
-        $html = str_replace("</ul><br />", "</ul>", $html);
-        $html = str_replace("---", "<hr>", $html);
-        return $html;
-    }
 }

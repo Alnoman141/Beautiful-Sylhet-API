@@ -45,7 +45,6 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('visitor', [App\Http\Controllers\Api\V1\VisitorController::class, 'store']);
     Route::post('dashboard', [App\Http\Controllers\Api\V1\VisitorController::class, 'index']);
     Route::post('country', [App\Http\Controllers\Api\V2\Location\LocationController::class, 'country']);
-    Route::post('tour-plan', [App\Http\Controllers\Api\V2\Location\LocationController::class, 'tourPlan'])->middleware('throttle:tour-plan');
     Route::post('weather-info', function () {
         return response()->json([
             'status_code' => 200,
@@ -405,6 +404,14 @@ Route::group(['prefix' => 'v1'], function () {
                 Route::post('edit', [App\Http\Controllers\Api\V2\Complain\ComplainController::class, 'show']);
                 Route::post('update', [App\Http\Controllers\Api\V2\Complain\ComplainController::class, 'update']);
                 Route::post('delete', [App\Http\Controllers\Api\V2\Complain\ComplainController::class, 'destroy']);
+            });
+
+            //TODO @fa 2025-04-07 AI
+            Route::post('tour-plan', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'tourPlan'])->middleware('throttle:tour-plan');
+            Route::group(['prefix' => 'ai'], function () {
+                Route::post('generate', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'tourPlanGenerate'])->middleware('throttle:tour-plan');
+                Route::post('list', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'list']);
+                Route::post('details', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'details']);
             });
         });
     });
