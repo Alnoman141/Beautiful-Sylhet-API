@@ -409,7 +409,7 @@ Route::group(['prefix' => 'v1'], function () {
 
             //TODO @fa 2025-04-07 AI
             Route::group(['prefix' => 'ai'], function () {
-                Route::post('generate', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'tourPlanGenerate'])->middleware('throttle:tour-plan');
+                Route::post('tour-plan', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'tourPlanGenerate'])->middleware('throttle:tour-plan');
                 Route::post('list', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'list']);
                 Route::post('details', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'details']);
             });
