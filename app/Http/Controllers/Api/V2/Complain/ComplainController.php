@@ -51,6 +51,8 @@ class ComplainController extends Controller
                             'id' => $item?->user?->id,
                             'name' => $item?->user?->name,
                             'avatar' => $item?->user?->avatar,
+                            'phone' => $item?->user?->phone,
+                            'email' => $item?->user?->email,
                         ];
                     }
                     return $data;
