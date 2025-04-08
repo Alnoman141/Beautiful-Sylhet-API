@@ -12,12 +12,14 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable,HasApiTokens,SoftDeletes,HasRoles;
+    use HasFactory, Notifiable,HasApiTokens,SoftDeletes,HasRoles,LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -107,5 +109,26 @@ class User extends Authenticatable
     public function info(): HasOne
     {
         return $this->hasOne(Info::class,'user_id');
+    }
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('user')
+            ->logAll()
+            ->logOnlyDirty()
+            ->logExcept(['created_at', 'updated_at','password','remember_token','avatar','email_verified_at'])
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(function (string $eventName) {
+                $userName = auth()->user() ? auth()->user()->name : 'Guest';
+                $user = $this->name ?? 'User';
+                if ($eventName === 'created') {
+                    return "{$userName} created a new user: {$user}.";
+                } elseif ($eventName === 'updated') {
+                    return "{$userName} updated the user: {$user}.";
+                } elseif ($eventName === 'deleted') {
+                    return "{$userName} deleted the user: {$user}.";
+                }
+                return "{$userName} performed an action on the user.";
+            });
     }
 }
