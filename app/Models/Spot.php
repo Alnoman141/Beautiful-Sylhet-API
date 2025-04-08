@@ -21,8 +21,10 @@ class Spot extends Model
     {
         return LogOptions::defaults()
             ->useLogName('spot')
+            ->logAll()
             ->logOnlyDirty()
             ->logExcept(['created_at', 'updated_at'])
+            ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(function (string $eventName) {
                 $userName = auth()->user() ? auth()->user()->name : 'Guest';
                 $sportName = $this->name ?? 'Sport';
