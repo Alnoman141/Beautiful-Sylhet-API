@@ -108,6 +108,8 @@ class UserController extends Controller
                         ->orWhere('email', 'like', '%' . $request->name . '%')
                     )
                 )
+                ->when($request->filled('role'), fn($q) => $q->whereHas('roles', fn($q) => $q->where('name', $request->role)))
+                ->when($request->isNotFilled('role'), fn($q) => $q->whereHas('roles', fn($q) => $q->whereNotIn('name', [RoleEnum::tourist->value])))
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                 ->through(function ($user) {
                     return [
