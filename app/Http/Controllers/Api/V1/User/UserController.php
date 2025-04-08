@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Spatie\Activitylog\Models\Activity;
 
 class UserController extends Controller
 {
@@ -354,23 +355,36 @@ class UserController extends Controller
     public function activity(Request $request)
     {
         try {
-            $logs = \App\Models\Log::with('user')
-                ->when($request->filled('name'), fn($q) => $q
-                    ->where(fn($q) => $q
-                        ->whereRaw('CONCAT(first_name," ",last_name) like ?', ['%' . $request->name . '%'])
-                        ->orWhere('phone', 'like', '%' . $request->name . '%')
-                        ->orWhere('email', 'like', '%' . $request->name . '%')
+            if ($request->filled('activity') && $request->activity==='new'){
+                $logs = Activity::query()
+                    ->latest()
+                    ->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                    ->through(function ($log) {
+                        return collect($log)->only(['log_name','description','event','properties','created_at'])
+                            /*->put('user', $log->causer?->name)
+                            ->put('id', $log->causer?->id)
+                            ->put('avatar', $log->causer?->avatar)*/
+                            ;
+                    });
+            }else{
+                $logs = \App\Models\Log::with('user')
+                    ->when($request->filled('name'), fn($q) => $q
+                        ->where(fn($q) => $q
+                            ->whereRaw('CONCAT(first_name," ",last_name) like ?', ['%' . $request->name . '%'])
+                            ->orWhere('phone', 'like', '%' . $request->name . '%')
+                            ->orWhere('email', 'like', '%' . $request->name . '%')
+                        )
                     )
-                )
-                ->paginate($request->integer('per_page', PaginationEnum::Default->value))
-                ->through(function ($log) {
-                    return [
-                        'id' => $log->id,
-                        'name' => $log?->user?->name,
-                        'content' => $log->content,
-                        'created_at' => $log->created_at,
-                    ];
-                });
+                    ->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                    ->through(function ($log) {
+                        return [
+                            'id' => $log->id,
+                            'name' => $log?->user?->name,
+                            'content' => $log->content,
+                            'created_at' => $log->created_at,
+                        ];
+                    });
+            }
             return response()->json([
                 'status_code' => 200,
                 'data' => $logs,
