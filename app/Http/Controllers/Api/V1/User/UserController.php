@@ -249,7 +249,9 @@ class UserController extends Controller
             //which data update then log
             //TODO @fa 2024-12-08 log
             //which column value change get data
-            $data = collect($user->getChanges())->map(function ($value, $key) use ($user) {
+            $data = collect($user->getChanges())
+                ->forget('updated_at')
+                ->map(function ($value, $key) use ($user) {
                 return [
                     'column' => $key,
                     'old' => $user->getOriginal($key),
