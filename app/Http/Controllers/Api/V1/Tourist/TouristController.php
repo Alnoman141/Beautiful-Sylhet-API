@@ -318,13 +318,23 @@ class TouristController extends Controller
         }
         DB::beginTransaction();
         try {
-            foreach ($request->data as $data) {
+            /*foreach ($request->data as $data) {
                 TouristAwareness::query()
                     ->where('id', $data['id'])
                     ->update([
                         'name' => $data['name'],
                     ]);
-            }
+            }*/
+            collect($request->data)->each(function ($data) {
+                TouristAwareness::query()
+                    ->where('id', $data['id'])
+                    ->get()
+                    ->each(function ($model) use ($data) {
+                        $model->fill([
+                            'name' => $data['name'],
+                        ])->save(); // Triggers the 'updated' event
+                    });
+            });
             DB::commit();
             return response()->json([
                 'status_code' => 200,
