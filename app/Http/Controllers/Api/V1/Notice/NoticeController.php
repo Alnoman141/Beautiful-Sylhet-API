@@ -261,12 +261,10 @@ class NoticeController extends Controller
         }
         DB::beginTransaction();
         try {
-            $notice = NoticeParent::findOrFail($request->id);
+            $notice = NoticeParent::with(['notice'])->findOrFail($request->id);
             Fa::deleteImage($notice?->image);
             //$notice->notice()->delete();
-            collect($notice?->notice)->each(function ($item){
-                $item->delete();
-            });
+            $notice?->notice->each->delete();
             $notice->delete();
             DB::commit();
             return response()->json([

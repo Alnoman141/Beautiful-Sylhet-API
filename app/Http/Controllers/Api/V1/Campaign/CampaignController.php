@@ -197,9 +197,7 @@ class CampaignController extends Controller
             $campaign = CampaignParent::with('campaigns')->findOrFail($request->id);
             Fa::deleteImage($campaign?->image);
             //$campaign->campaigns()->delete();
-            collect($campaign?->campaigns)->each(function ($item){
-                $item->delete();
-            });
+            $campaign?->campaigns->each->delete();
             $campaign->delete();
 
             DB::commit();

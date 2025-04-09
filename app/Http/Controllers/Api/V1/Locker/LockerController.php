@@ -263,9 +263,7 @@ class LockerController extends Controller
                     $image->delete();
                 }
             }
-            collect($parent?->lockers)->each(function ($item) {
-                $item->delete();
-            });
+            $parent?->lockers->each->delete();
             $parent->delete();
             DB::commit();
             return response()->json([

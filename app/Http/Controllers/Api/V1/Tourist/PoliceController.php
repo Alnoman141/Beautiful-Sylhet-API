@@ -203,7 +203,10 @@ class PoliceController extends Controller
         DB::beginTransaction();
         try {
             $police = PoliceParent::findOrFail($request->id);
-            $police->police()->delete();
+            //$police->police()->delete();
+            collect($police?->police)->each(function ($item){
+                $item->delete();
+            });
             $police->delete();
             DB::commit();
             return response()->json([

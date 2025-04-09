@@ -205,8 +205,9 @@ class LifeGuardController extends Controller
         }
         DB::beginTransaction();
         try {
-            $lifeGuard = LifeGuardParent::findOrFail($request->id);
-            $lifeGuard->guards()->delete();
+            $lifeGuard = LifeGuardParent::with(['guards'])->findOrFail($request->id);
+            //$lifeGuard->guards()->delete();
+            $lifeGuard?->guards->each->delete();
             $lifeGuard->delete();
             DB::commit();
             return response()->json([

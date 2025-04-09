@@ -529,9 +529,7 @@ class HotelController extends Controller
             $hotel = HotelParent::with('hotels')->findOrFail($request->id);
             Fa::deleteImage($hotel?->image);
             //$hotel->hotels()->delete();
-            collect($hotel?->hotels)->each(function ($item){
-                $item->delete();
-            });
+            $hotel?->hotels->each->delete();
             $hotel->delete();
             DB::commit();
             return response()->json([

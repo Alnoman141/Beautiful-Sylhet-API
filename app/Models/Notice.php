@@ -20,7 +20,7 @@ class Notice extends Model
     {
         return LogOptions::defaults()
             ->useLogName('announcement')
-            ->logAll()
+            ->logOnly(['name'])
             ->logOnlyDirty()
             ->logExcept(['created_at', 'updated_at'])
             ->dontSubmitEmptyLogs()

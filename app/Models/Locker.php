@@ -27,7 +27,7 @@ class Locker extends Model
     {
         return LogOptions::defaults()
             ->useLogName('locker')
-            ->logAll()
+            ->logOnly(['address','phone','description'])
             ->logOnlyDirty()
             ->logExcept(['created_at', 'updated_at'])
             ->dontSubmitEmptyLogs()

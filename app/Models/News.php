@@ -27,7 +27,7 @@ class News extends Model
     {
         return LogOptions::defaults()
             ->useLogName('news')
-            ->logAll()
+            ->logOnly(['name'])
             ->logOnlyDirty()
             ->logExcept(['created_at', 'updated_at'])
             ->dontSubmitEmptyLogs()

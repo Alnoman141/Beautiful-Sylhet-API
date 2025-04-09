@@ -204,8 +204,9 @@ class BeachVolunteerController extends Controller
         }
         DB::beginTransaction();
         try {
-            $volunteer = BeachVolunteerParent::findOrFail($request->id);
-            $volunteer->volunteer()->delete();
+            $volunteer = BeachVolunteerParent::with(['volunteer'])->findOrFail($request->id);
+            //$volunteer->volunteer()->delete();
+            $volunteer?->volunteer->each->delete();
             $volunteer->delete();
             DB::commit();
             return response()->json([
