@@ -88,13 +88,22 @@ class TouristController extends Controller
                     ]);
                 }
             }else{
-                foreach ($request->data as $data) {
+                /*foreach ($request->data as $data) {
                     TouristGuideline::query()
                         ->where('language_id', $data['language_id'])
                         ->update([
                             'name' => $data['name'],
                         ]);
-                }
+                }*/
+                collect($request->data)->each(function ($data) {
+                    TouristGuideline::where('language_id', $data['language_id'])
+                        ->get()
+                        ->each(function ($model) use ($data) {
+                            $model->fill([
+                                'name' => $data['name'],
+                            ])->save(); // Triggers the 'updated' event
+                        });
+                });
             }
             DB::commit();
             return response()->json([
@@ -145,13 +154,23 @@ class TouristController extends Controller
         }
         DB::beginTransaction();
         try {
-            foreach ($request->data as $data) {
+            /*foreach ($request->data as $data) {
                 TouristGuideline::query()
                     ->where('id', $data['id'])
                     ->update([
                         'name' => $data['name'],
                     ]);
-            }
+            }*/
+            collect($request->data)->each(function ($data) {
+                TouristGuideline::query()
+                    ->where('id', $data['id'])
+                    ->get()
+                    ->each(function ($model) use ($data) {
+                        $model->fill([
+                            'name' => $data['name'],
+                        ])->save(); // Triggers the 'updated' event
+                    });
+            });
             DB::commit();
             return response()->json([
                 'status_code' => 200,
@@ -233,13 +252,22 @@ class TouristController extends Controller
                     ]);
                 }
             }else{
-                foreach ($request->data as $data) {
+                /*foreach ($request->data as $data) {
                     TouristAwareness::query()
                         ->where('language_id', $data['language_id'])
                         ->update([
                             'name' => $data['name'],
                         ]);
-                }
+                }*/
+                collect($request->data)->each(function ($data) {
+                    TouristAwareness::where('language_id', $data['language_id'])
+                        ->get()
+                        ->each(function ($model) use ($data) {
+                            $model->fill([
+                                'name' => $data['name'],
+                            ])->save(); // Triggers the 'updated' event
+                        });
+                });
             }
             DB::commit();
             return response()->json([
