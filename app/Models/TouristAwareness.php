@@ -18,7 +18,7 @@ class TouristAwareness extends Model
             ->logAll()
             ->logOnlyDirty()
             ->logExcept(['created_at', 'updated_at'])
-            ->dontSubmitEmptyLogs()
+            //->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(function (string $eventName) {
                 $userName = auth()->user() ? auth()->user()->name : 'Guest';
                 $awareness = "Awareness";
