@@ -25,7 +25,7 @@ class Doctor extends Model
     {
         return LogOptions::defaults()
             ->useLogName('doctor')
-            ->logAll()
+            ->logOnly(['name','phone','instruction'])
             ->logOnlyDirty()
             ->logExcept(['created_at', 'updated_at'])
             ->dontSubmitEmptyLogs()
