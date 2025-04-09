@@ -198,8 +198,9 @@ class DoctorController extends Controller
         }
         DB::beginTransaction();
         try {
-            $doctor = DoctorParent::findOrFail($request->id);
-            $doctor->doctor()->delete();
+            $doctor = DoctorParent::with(['doctor'])->findOrFail($request->id);
+            //$doctor->doctor()->delete();
+            $doctor?->doctor->each->delete();
             $doctor->delete();
             DB::commit();
             return response()->json([
