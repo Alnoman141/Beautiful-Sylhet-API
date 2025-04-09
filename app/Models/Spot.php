@@ -27,15 +27,15 @@ class Spot extends Model
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(function (string $eventName) {
                 $userName = auth()->user() ? auth()->user()->name : 'Guest';
-                $sportName = $this->name ?? 'Sport';
+                $sportName = $this->name ?? 'Spot';
                 if ($eventName === 'created') {
-                    return "{$userName} created a new sport: {$sportName}.";
+                    return "{$userName} created a new spot: {$sportName}.";
                 } elseif ($eventName === 'updated') {
-                    return "{$userName} updated the sport: {$sportName}.";
+                    return "{$userName} updated the spot: {$sportName}.";
                 } elseif ($eventName === 'deleted') {
-                    return "{$userName} deleted the sport: {$sportName}.";
+                    return "{$userName} deleted the spot: {$sportName}.";
                 }
-                return "{$userName} performed an action on the sport.";
+                return "{$userName} performed an action on the spot.";
             });
     }
 }
