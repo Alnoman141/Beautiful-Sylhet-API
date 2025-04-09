@@ -177,15 +177,6 @@ class UserController extends Controller
                     'avatar' => Fa::uploadImage($request->avatar, 'avatar')
                 ]);
             }
-            //TODO @fa 2024-12-08
-            $content = [
-                'data' => [
-                    'values' => '',
-                    'action' => 'create',
-                    'title'=>$user->name .' user register',
-                ],
-            ];
-            Fa::activity($content);
             DB::commit();
             return response()->json([
                 'status_code' => 200,
@@ -247,26 +238,6 @@ class UserController extends Controller
                     'avatar' => Fa::uploadImage($request->avatar, 'avatar')
                 ]);
             }
-            //which data update then log
-            //TODO @fa 2024-12-08 log
-            //which column value change get data
-            $data = collect($user->getChanges())
-                ->forget('updated_at')
-                ->map(function ($value, $key) use ($user) {
-                return [
-                    'column' => $key,
-                    'old' => $user->getOriginal($key),
-                    'new' => $value,
-                ];
-            });
-            $content = [
-                'data' => [
-                    'values' => $data,
-                    'action' => 'update',
-                    'title'=>$user->name .' information update',
-                ],
-            ];
-            Fa::activity($content);
             DB::commit();
             return response()->json([
                 'status_code' => 200,
@@ -302,14 +273,6 @@ class UserController extends Controller
             $user->save();
             Fa::deleteImage($user?->avatar);
             $user->delete();
-            $content = [
-                'data' => [
-                    'values' => '',
-                    'action' => 'delete',
-                    'title'=>$user->name .' user delete',
-                ],
-            ];
-            Fa::activity($content);
             DB::commit();
             return response()->json([
                 'status_code' => 200,

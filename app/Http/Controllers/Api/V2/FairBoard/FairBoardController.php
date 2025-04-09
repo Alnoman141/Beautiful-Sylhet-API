@@ -210,7 +210,10 @@ class FairBoardController extends Controller
         DB::beginTransaction();
         try {
             $board = FairBoardParent::findOrFail($request->id);
-            $board->fairBoards()->delete();
+            //$board->fairBoards()->delete();
+            collect($board?->fairBoards)->each(function ($item){
+                $item->delete();
+            });
             $board->delete();
             DB::commit();
             return response()->json([

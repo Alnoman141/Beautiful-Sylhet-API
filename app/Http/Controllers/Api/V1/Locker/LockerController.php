@@ -255,7 +255,7 @@ class LockerController extends Controller
         }
         DB::beginTransaction();
         try {
-            $parent = LockerParent::with(['images'])->findOrFail($request->id);
+            $parent = LockerParent::with(['images','lockers'])->findOrFail($request->id);
             //TODO @fa 02-Dec-24 delete images
             if ($parent->images && count($parent->images) > 0) {
                 foreach ($parent->images as $image) {
@@ -263,6 +263,9 @@ class LockerController extends Controller
                     $image->delete();
                 }
             }
+            collect($parent?->lockers)->each(function ($item) {
+                $item->delete();
+            });
             $parent->delete();
             DB::commit();
             return response()->json([

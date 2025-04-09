@@ -268,7 +268,10 @@ class SpotController extends Controller
                     $image->delete();
                 }
             }
-            $parent->spot()->delete();
+            //$parent->spot()->delete();
+            collect($parent?->spot)->each(function ($spot) {
+                $spot->delete();
+            });
             Fa::deleteImage($parent?->image);
             $parent->delete();
             return response()->json([

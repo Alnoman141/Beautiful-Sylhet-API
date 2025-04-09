@@ -247,7 +247,10 @@ class RestaurantController extends Controller
         try {
             $restaurant = RestaurantParent::with('restaurants')->findOrFail($request->id);
             Fa::deleteImage($restaurant->image);
-            $restaurant->restaurants()->delete();
+            //$restaurant->restaurants()->delete();
+            collect($restaurant?->restaurants)->each(function ($item){
+                $item->delete();
+            });
             $restaurant->delete();
             return response()->json([
                 'status_code' => 200,

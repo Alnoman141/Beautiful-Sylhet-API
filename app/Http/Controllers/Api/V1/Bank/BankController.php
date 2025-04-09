@@ -194,7 +194,10 @@ class BankController extends Controller
         DB::beginTransaction();
         try {
             $bank = BankParent::with(['banks'])->findOrFail($request->id);
-            $bank->banks()->delete();
+            //$bank->banks()->delete();
+            collect($bank?->banks)->each(function ($item){
+                $item->delete();
+            });
             $bank->delete();
             DB::commit();
             return response()->json([
@@ -423,7 +426,10 @@ class BankController extends Controller
         DB::beginTransaction();
         try {
             $parent = BankAtmParent::with(['atms'])->findOrFail($request->id);
-            $parent->atms()->delete();
+            //$parent->atms()->delete();
+            collect($parent?->atms)->each(function ($item){
+                $item->delete();
+            });
             $parent->delete();
             DB::commit();
             return response()->json([

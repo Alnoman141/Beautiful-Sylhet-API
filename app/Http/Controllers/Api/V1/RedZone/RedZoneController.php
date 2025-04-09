@@ -241,7 +241,10 @@ class RedZoneController extends Controller
         try {
             $parent = RedZoneParent::with('reds')->findOrFail($request->id);
             Fa::deleteImage($parent?->image);
-            $parent->reds()->delete();
+            //$parent->reds()->delete();
+            collect($parent?->reds)->each(function ($item){
+                $item->delete();
+            });
             $parent->delete();
             DB::commit();
             return response()->json([
