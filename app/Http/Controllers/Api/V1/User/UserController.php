@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Spatie\Activitylog\Models\Activity;
+use App\Models\Activity;
 
 class UserController extends Controller
 {
@@ -320,10 +320,12 @@ class UserController extends Controller
         try {
             if ($request->filled('activity') && $request->activity==='new'){
                 $logs = Activity::query()
+                    ->with('roles')
                     ->latest()
                     ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                     ->through(function ($log) {
                         return collect($log)->only(['log_name','description','event','properties','created_at'])
+                            ->put('roles', $log->roles->first()?->name)
                             /*->put('user', $log->causer?->name)
                             ->put('id', $log->causer?->id)
                             ->put('avatar', $log->causer?->avatar)*/
