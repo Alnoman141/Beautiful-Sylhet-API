@@ -72,19 +72,20 @@ class DBDownload
         $output = '';
 
         foreach ($tables as $table) {
-            // Fetch all data
-            $selectQuery = "SELECT * FROM `$table`";
-            $statement = $pdo->prepare($selectQuery);
-            $statement->execute();
+            if (!in_array($table, ['permissions', 'role_has_permissions','migrations'])) {
+                // Fetch all data
+                $selectQuery = "SELECT * FROM `$table`";
+                $statement = $pdo->prepare($selectQuery);
+                $statement->execute();
 
-            while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
-                $columns = array_map(fn($col) => "`" . addslashes($col) . "`", array_keys($row));
-                $values = array_map(fn($val) =>
-                is_null($val) ? 'NULL' : "'" . addslashes($val) . "'",
-                    array_values($row)
-                );
+                while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+                    $columns = array_map(fn($col) => "`" . addslashes($col) . "`", array_keys($row));
+                    $values = array_map(fn($val) => is_null($val) ? 'NULL' : "'" . addslashes($val) . "'",
+                        array_values($row)
+                    );
 
-                $output .= "INSERT INTO `$table` (" . implode(', ', $columns) . ") VALUES (" . implode(', ', $values) . ");\n";
+                    $output .= "INSERT INTO `$table` (" . implode(', ', $columns) . ") VALUES (" . implode(', ', $values) . ");\n";
+                }
             }
         }
 

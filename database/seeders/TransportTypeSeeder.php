@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\TransportTypeParent;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class TransportTypeSeeder extends Seeder
@@ -107,6 +108,8 @@ class TransportTypeSeeder extends Seeder
                 ]
             ],
         ];
+        Cache::forget('transport_types_1');
+        Cache::forget('transport_types_2');
         DB::beginTransaction();
         try {
             foreach ($types as $type) {
