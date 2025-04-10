@@ -51,7 +51,7 @@ class Info extends Model
             $data['present_upzila_name_bn'] = $present_upzilla?->bn;
         }
         return Attribute::make(
-            get: fn() => $data,
+            get: fn() => (object)$data,
         );
     }
 }
