@@ -72,7 +72,7 @@ class DBDownload
         $output = '';
 
         foreach ($tables as $table) {
-            if (!in_array($table, ['permissions', 'role_has_permissions','migrations'])) {
+            if (!in_array($table, ['permissions', 'role_has_permissions', 'roles','migrations','transport_type_parents','transport_types','languages','modules','news_types'])) {
                 // Fetch all data
                 $selectQuery = "SELECT * FROM `$table`";
                 $statement = $pdo->prepare($selectQuery);
