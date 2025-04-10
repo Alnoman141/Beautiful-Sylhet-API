@@ -19,7 +19,7 @@ class Info extends Model
 
     protected function data(): Attribute
     {
-        $data = json_decode($this->attributes['data'], true);
+        /*$data = json_decode($this->attributes['data'], true);
         $permanent_district = isset($data['permanent_district']) ? $data['permanent_district'] : '';
         $permanent_upzilla = isset($data['permanent_upzilla']) ? $data['permanent_upzilla'] : '';
         $present_district = isset($data['present_district']) ? $data['present_district'] : '';
@@ -52,6 +52,46 @@ class Info extends Model
         }
         return Attribute::make(
             get: fn() => (object)$data,
+        );*/
+        return Attribute::make(
+            get: function () {
+                $rawData = $this->attributes['data'] ?? '{}';
+                $data = json_decode($rawData, true);
+
+                $permanent_district = $data['permanent_district'] ?? '';
+                $permanent_upzilla = $data['permanent_upzilla'] ?? '';
+                $present_district = $data['present_district'] ?? '';
+                $present_upzilla = $data['present_upzilla'] ?? '';
+
+                $district = Cache::rememberForever('districts', fn() => District::all());
+                $upazila = Cache::rememberForever('upazilas', fn() => Upazila::all());
+
+                if ($permanent_district) {
+                    $permanentDistrict = $district->firstWhere('id', $permanent_district);
+                    $data['permanent_dist_name_en'] = $permanentDistrict?->en;
+                    $data['permanent_dist_name_bn'] = $permanentDistrict?->bn;
+                }
+
+                if ($present_district) {
+                    $presentDistrict = $district->firstWhere('id', $present_district);
+                    $data['present_dist_name_en'] = $presentDistrict?->en;
+                    $data['present_dist_name_bn'] = $presentDistrict?->bn;
+                }
+
+                if ($permanent_upzilla) {
+                    $permanentUpazila = $upazila->firstWhere('id', $permanent_upzilla);
+                    $data['permanent_upzila_name_en'] = $permanentUpazila?->en;
+                    $data['permanent_upzila_name_bn'] = $permanentUpazila?->bn;
+                }
+
+                if ($present_upzilla) {
+                    $presentUpazila = $upazila->firstWhere('id', $present_upzilla);
+                    $data['present_upzila_name_en'] = $presentUpazila?->en;
+                    $data['present_upzila_name_bn'] = $presentUpazila?->bn;
+                }
+
+                return (object)$data;
+            }
         );
     }
 }
