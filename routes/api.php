@@ -406,13 +406,13 @@ Route::group(['prefix' => 'v1'], function () {
                 Route::post('update', [App\Http\Controllers\Api\V2\Complain\ComplainController::class, 'update']);
                 Route::post('delete', [App\Http\Controllers\Api\V2\Complain\ComplainController::class, 'destroy']);
             });
+        });
 
-            //TODO @fa 2025-04-07 AI
-            Route::group(['prefix' => 'ai'], function () {
-                Route::post('tour-plan', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'tourPlanGenerate'])->middleware('throttle:tour-plan');
-                Route::post('list', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'list']);
-                Route::post('details', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'details']);
-            });
+        //TODO @fa 2025-04-07 AI
+        Route::group(['prefix' => 'ai'], function () {
+            Route::post('tour-plan', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'tourPlanGenerate'])->middleware('throttle:tour-plan');
+            Route::post('list', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'list']);
+            Route::post('details', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'details']);
         });
     });
 });
