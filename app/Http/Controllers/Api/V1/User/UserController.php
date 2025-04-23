@@ -336,7 +336,7 @@ class UserController extends Controller
                     ->when($request->filled('user_id'), fn($q) => $q->where('causer_id', $request->user_id))
                     ->when($request->filled('event'), fn($q) => $q->where('event', $request->event))
                     //today logs
-                    ->when($request->filled('today'), fn($q) => $q->whereDate('created_at', now()))
+                    ->when($request->filled('today'), fn($q) => $q->whereDate('created_at', now()->parse($request->today)->format('Y-m-d')))
                     //date range logs
                     ->when($request->filled('from') && $request->filled('to'), fn($q) => $q->whereBetween('created_at', [$request->from, $request->to]))
                     ->latest()
