@@ -336,7 +336,7 @@ class UserController extends Controller
             ->get()
             ->map(fn($log) => [
                 'key' => $log->log_name,
-                'value' => Str::title($log->log_name),
+                'value' => Str::title(Str::replace('_', ' ', $log->log_name)),
             ]);
         try {
             if ($request->filled('activity') && $request->activity==='new'){
