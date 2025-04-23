@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Models\Activity;
 
@@ -329,10 +330,19 @@ class UserController extends Controller
             'updated' => 'Updated',
             'deleted' => 'Deleted',
         ];
+        $logs_name = Activity::query()
+            ->select('log_name')
+            ->groupBy('log_name')
+            ->get()
+            ->map(fn($log) => [
+                'key' => $log->log_name,
+                'value' => Str::title($log->log_name),
+            ]);
         try {
             if ($request->filled('activity') && $request->activity==='new'){
                 $logs = Activity::query()
                     ->with(['roles','causer'])
+                    ->when($request->filled('module'), fn($q) => $q->where('log_name', $request->module))
                     ->when($request->filled('user_id'), fn($q) => $q->where('causer_id', $request->user_id))
                     ->when($request->filled('event'), fn($q) => $q->where('event', $request->event))
                     //today logs
@@ -374,6 +384,7 @@ class UserController extends Controller
                 'data' => $logs,
                 'users' => $users,
                 'events' => $events,
+                'modules'=>$logs_name
             ], 200);
         } catch (\Exception $exception) {
             return response()->json([
