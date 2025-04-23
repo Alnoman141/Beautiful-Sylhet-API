@@ -317,18 +317,37 @@ class UserController extends Controller
     //TODO @fa 2024-12-08 activity log
     public function activity(Request $request)
     {
+        $users = User::query()
+            ->whereHas('roles', fn($q) => $q->where('name', '!=', RoleEnum::tourist->value))
+            ->get()
+            ->map(fn($user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+            ]);
+        $events = [
+            'created' => 'Created',
+            'updated' => 'Updated',
+            'deleted' => 'Deleted',
+        ];
         try {
             if ($request->filled('activity') && $request->activity==='new'){
                 $logs = Activity::query()
-                    ->with('roles')
+                    ->with(['roles','causer'])
+                    ->when($request->filled('user_id'), fn($q) => $q->where('causer_id', $request->user_id))
+                    ->when($request->filled('event'), fn($q) => $q->where('event', $request->event))
+                    //today logs
+                    ->when($request->filled('today'), fn($q) => $q->whereDate('created_at', now()))
+                    //date range logs
+                    ->when($request->filled('from') && $request->filled('to'), fn($q) => $q->whereBetween('created_at', [$request->from, $request->to]))
                     ->latest()
                     ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                     ->through(function ($log) {
-                        return collect($log)->only(['log_name','description','event','properties','created_at'])
+                        return collect($log)
+                            ->only(['log_name','description','event','properties','created_at'])
                             ->put('roles', $log->roles->first()?->name)
-                            /*->put('user', $log->causer?->name)
-                            ->put('id', $log->causer?->id)
-                            ->put('avatar', $log->causer?->avatar)*/
+                            ->put('user', $log->causer?->name)
+                            ->put('user_id', $log->causer?->id)
+                            ->put('avatar', $log->causer?->avatar)
                             ;
                     });
             }else{
@@ -353,6 +372,8 @@ class UserController extends Controller
             return response()->json([
                 'status_code' => 200,
                 'data' => $logs,
+                'users' => $users,
+                'events' => $events,
             ], 200);
         } catch (\Exception $exception) {
             return response()->json([
