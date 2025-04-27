@@ -7,12 +7,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enum\RoleEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Content;
 use App\Models\HotelParent;
 use App\Models\LockerParent;
 use App\Models\SpotParent;
 use App\Models\TransportTypeParent;
+use App\Models\User;
 use App\Models\Visitor;
 use App\Services\Fa;
 use Illuminate\Http\Request;
@@ -56,6 +58,13 @@ class VisitorController extends Controller
                 ->where('date', now()->format('Y-m-d'))
                 ->count();
             $visitorAll = Visitor::query()->count('id');
+            $todayRegistered = User::query()
+                ->whereHas('roles',fn($q)=>$q->where('name',RoleEnum::tourist->value))
+               ->whereDate('created_at', now()->format('Y-m-d'))
+                ->count();
+            $allRegistered = User::query()
+                ->whereHas('roles',fn($q)=>$q->where('name',RoleEnum::tourist->value))
+                ->count();
             $transports =TransportTypeParent::query()
                 ->with(['translate'=>fn($a)=>$a->where('language_id',$this->lang)])
                 ->withCount('transport')
@@ -75,6 +84,8 @@ class VisitorController extends Controller
                     'transports' => $transports,
                     'visitor_today' => $visitorToday,
                     'visitor_all' => $visitorAll,
+                    'today_registered' => $todayRegistered,
+                    'all_registered' => $allRegistered,
                 ],
             ], 200);
         }catch (\Exception $e) {
