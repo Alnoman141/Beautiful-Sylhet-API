@@ -1,4 +1,5 @@
 <?php
+
 /**
  *Name: Alauddin F-a
  *Designation: Sr. Software Engineer
@@ -6,5 +7,5 @@
  */
 return [
     'api_key' => env('OPENAI_API_KEY', ''),
-    'daily_limit'=>env('OPENAI_DAILY_LIMIT', 3),
+    'daily_limit' => env('OPENAI_DAILY_LIMIT', 3),
 ];

@@ -1,6 +1,6 @@
 <?php
 /**
- *Name: Alauddin F-a
+ *Name: Abdullah Al Noman
  *Designation: Sr. Software Engineer
  *Date: 11/24/24 1:15 PM
  */
@@ -50,7 +50,7 @@ Route::group(['prefix' => 'v1'], function () {
         return response()->json([
             'status_code' => 200,
             'message' => 'Weather information',
-            'data' => \Illuminate\Support\Facades\Cache::get('weather') ?? \Illuminate\Support\Facades\Cache::get('tide-forecast'),
+            'data' => \Illuminate\Support\Facades\Cache::get('forecast') ?? \Illuminate\Support\Facades\Cache::get('tide-forecast'),
         ]);
     });
     Route::group(['prefix' => 'guideline'], function () {
@@ -163,6 +163,36 @@ Route::group(['prefix' => 'v1'], function () {
     Route::group(['prefix' => 'fair-board'], function () {
         Route::post('list', [App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class, 'index']);
         Route::post('details', [App\Http\Controllers\Api\V2\FairBoard\FairBoardController::class, 'show']);
+    });
+
+    //TODO @fa 2025-02-18 version V3 API
+    Route::group(['prefix' => 'tour-operator'], function () {
+        Route::post('get-list', [App\Http\Controllers\Api\V3\TourOperator\TourOperatorController::class, 'fetchTourOperator']);
+        Route::post('details', [App\Http\Controllers\Api\V3\TourOperator\TourOperatorController::class, 'fetchTourOperatorDetails']);
+    });
+
+    //TODO @fa 2025-02-18 version V3 API
+    Route::group(['prefix' => 'tour-guide'], function () {
+        Route::post('get-list', [App\Http\Controllers\Api\V3\TourGuide\TourGuideController::class, 'fetchTourGuide']);
+        Route::post('details', [App\Http\Controllers\Api\V3\TourGuide\TourGuideController::class, 'fetchTourGuideDetails']);
+    });
+
+    //TODO @fa 2025-02-18 version V3 API
+    Route::group(['prefix' => 'amusement-park'], function () {
+        Route::post('get-list', [App\Http\Controllers\Api\V3\AmusementPark\AmusementParkController::class, 'fetchAmusementPark']);
+        Route::post('details', [App\Http\Controllers\Api\V3\AmusementPark\AmusementParkController::class, 'fetchAmusementParkDetails']);
+    });
+
+    //TODO @fa 2025-02-18 version V3 API
+    Route::group(['prefix' => 'haor'], function () {
+        Route::post('get-list', [App\Http\Controllers\Api\V3\Haor\HaorController::class, 'fetchHaor']);
+        Route::post('details', [App\Http\Controllers\Api\V3\Haor\HaorController::class, 'fetchHaorDetails']);
+    });
+
+    //TODO @fa 2025-02-18 version V3 API
+    Route::group(['prefix' => 'tea-estate'], function () {
+        Route::post('get-list', [App\Http\Controllers\Api\V3\TeaEstate\TeaEstateController::class, 'fetchTeaEstate']);
+        Route::post('details', [App\Http\Controllers\Api\V3\TeaEstate\TeaEstateController::class, 'fetchTeaEstateDetails']);
     });
 
 
@@ -413,6 +443,53 @@ Route::group(['prefix' => 'v1'], function () {
             Route::post('tour-plan', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'tourPlanGenerate'])->middleware('throttle:tour-plan');
             Route::post('list', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'list']);
             Route::post('details', [App\Http\Controllers\Api\V2\AI\TourPlanGenerateController::class, 'details']);
+        });
+
+
+        // TODO @fa 2025-04-07 Tour Operator
+
+        Route::group(['prefix' => 'tour-operator'], function () {
+            Route::post('list', [App\Http\Controllers\Api\V3\TourOperator\TourOperatorController::class, 'index']);
+            Route::post('store', [App\Http\Controllers\Api\V3\TourOperator\TourOperatorController::class, 'store']);
+            Route::post('show', [App\Http\Controllers\Api\V3\TourOperator\TourOperatorController::class, 'show']);
+            Route::post('update', [App\Http\Controllers\Api\V3\TourOperator\TourOperatorController::class, 'update']);
+            Route::post('delete', [App\Http\Controllers\Api\V3\TourOperator\TourOperatorController::class, 'destroy']);
+        });
+
+        // TODO @fa 2025-04-07 Tour Guide
+        Route::group(['prefix' => 'tour-guide'], function () {
+            Route::post('list', [App\Http\Controllers\Api\V3\TourGuide\TourGuideController::class, 'index']);
+            Route::post('store', [App\Http\Controllers\Api\V3\TourGuide\TourGuideController::class, 'store']);
+            Route::post('show', [App\Http\Controllers\Api\V3\TourGuide\TourGuideController::class, 'show']);
+            Route::post('update', [App\Http\Controllers\Api\V3\TourGuide\TourGuideController::class, 'update']);
+            // Route::post('delete', [App\Http\Controllers\Api\V3\TourGuide\TourGuideController::class, 'destroy']);
+        });
+
+
+        // TODO @fa 2025-04-07 Amusement Park
+        Route::group(['prefix' => 'amusement-park'], function () {
+            Route::post('list', [App\Http\Controllers\Api\V3\AmusementPark\AmusementParkController::class, 'index']);
+            Route::post('store', [App\Http\Controllers\Api\V3\AmusementPark\AmusementParkController::class, 'store']);
+            Route::post('show', [App\Http\Controllers\Api\V3\AmusementPark\AmusementParkController::class, 'show']);
+            Route::post('update', [App\Http\Controllers\Api\V3\AmusementPark\AmusementParkController::class, 'update']);
+            // Route::post('delete', [App\Http\Controllers\Api\V3\AmusementPark\AmusementParkController::class, 'destroy']);
+        });
+
+
+        // TODO @fa 2025-04-07 Haor
+        Route::group(['prefix' => 'haor'], function () {
+            Route::post('list', [App\Http\Controllers\Api\V3\Haor\HaorController::class, 'index']);
+            Route::post('store', [App\Http\Controllers\Api\V3\Haor\HaorController::class, 'store']);
+            Route::post('show', [App\Http\Controllers\Api\V3\Haor\HaorController::class, 'show']);
+            Route::post('update', [App\Http\Controllers\Api\V3\Haor\HaorController::class, 'update']);
+        });
+
+        // TODO @fa 2025-04-07 Tea Estate
+        Route::group(['prefix' => 'tea-estate'], function () {
+            Route::post('list', [App\Http\Controllers\Api\V3\TeaEstate\TeaEstateController::class, 'index']);
+            Route::post('store', [App\Http\Controllers\Api\V3\TeaEstate\TeaEstateController::class, 'store']);
+            Route::post('show', [App\Http\Controllers\Api\V3\TeaEstate\TeaEstateController::class, 'show']);
+            Route::post('update', [App\Http\Controllers\Api\V3\TeaEstate\TeaEstateController::class, 'update']);
         });
     });
 });
