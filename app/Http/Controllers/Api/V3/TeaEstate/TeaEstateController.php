@@ -56,7 +56,7 @@ class TeaEstateController extends Controller
 
             return response()->json([
                 'status_code' => 500,
-                'message' => 'Something went wrong',
+                'message' => 'Something went wrong '. $e->getMessage(),
             ], 500);
         }
     }
