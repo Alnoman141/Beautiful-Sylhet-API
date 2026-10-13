@@ -34,7 +34,7 @@ class SpotController extends Controller
                         'tag_line' => $spot->tag_line,
                         'name_en' => collect($spot?->parent?->spot)->pluck('name')->first(),
                         'image' => $spot?->parent?->image,
-                        'ratings' => $spot?->ratings?->count() ? $spot?->parent->ratings : 0,
+                        'ratings' => $spot?->parent->ratings?->count() ? $spot?->parent->ratings : 0,
                     ];
                 })
             ;

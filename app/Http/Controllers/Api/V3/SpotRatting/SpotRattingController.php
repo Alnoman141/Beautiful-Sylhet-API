@@ -9,6 +9,29 @@ use Illuminate\Support\Facades\Validator;
 
 class SpotRattingController extends Controller
 {
+
+    // list of spot ratting
+    public function index(Request $request)
+    {
+        $spotRattings = SpotRatting::query()
+            ->with(['spot_parent', 'user'])
+            ->when($request->filled('spot_parent_id'), function ($query) use ($request) {
+                $query->where('spot_parent_id', $request->spot_parent_id);
+            })
+            ->when($request->filled('user_id'), function ($query) use ($request) {
+                $query->where('user_id', $request->user_id);
+            })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->get();
+
+        return response()->json([
+            'status_code' => 200,
+            'data' => $spotRattings
+        ], 200);
+    }
+
     // store spot ratting
     public function store(Request $request)
     {
@@ -47,8 +70,9 @@ class SpotRattingController extends Controller
     }
 
     // update spot ratting
-    public function update(Request $request, $id) {
-        
+    public function update(Request $request, $id)
+    {
+
         $validator = Validator::make($request->all(), [
             'rating' => 'required|integer|min:1|max:5',
             'review' => 'nullable|string|max:255',
@@ -83,7 +107,8 @@ class SpotRattingController extends Controller
     }
 
     // change status of spot ratting 
-    public function changeStatus(Request $request, $id) {
+    public function changeStatus(Request $request, $id)
+    {
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:0,1',
         ]);
