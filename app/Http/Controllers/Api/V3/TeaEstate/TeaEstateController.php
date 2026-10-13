@@ -426,6 +426,7 @@ class TeaEstateController extends Controller
             'distance' => $estate->distance,
             'contact_info' => $estate->contact_info,
             'map' => $estate->map,
+            'image' => $estate->parent?->image,
         ];
     }
 }
