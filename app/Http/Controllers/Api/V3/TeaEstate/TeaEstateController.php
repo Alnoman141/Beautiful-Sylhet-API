@@ -141,7 +141,7 @@ class TeaEstateController extends Controller
 
             $parent = TeaEstateParent::create([
                 'map' => $validated['map'] ?? null,
-                'image' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'spots') : null,
+                'image' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'tea-estate') : null,
             ]);
 
             foreach ($validated['data'] as $translation) {
@@ -217,7 +217,7 @@ class TeaEstateController extends Controller
 
         // Only touch the image if a new file was actually uploaded.
         if ($request->hasFile('image')) {
-            $newImage = $request->file('image')->store('tea_estates', 'public');
+            $newImage = $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'tea-estate') : null;
 
             $oldImage = $parent->image;
 
@@ -244,7 +244,7 @@ class TeaEstateController extends Controller
 
         // Delete the old file only after the transaction succeeded.
         if (!empty($oldImage)) {
-            Storage::disk('public')->delete($oldImage);
+            Storage::disk('s3')->delete($oldImage);
         }
 
         return response()->json([
@@ -257,7 +257,7 @@ class TeaEstateController extends Controller
 
         // Remove the newly uploaded file if the transaction failed.
         if (isset($newImage)) {
-            Storage::disk('public')->delete($newImage);
+            Storage::disk('s3')->delete($newImage);
         }
 
         return response()->json([
@@ -270,7 +270,7 @@ class TeaEstateController extends Controller
         DB::rollBack();
 
         if (isset($newImage)) {
-            Storage::disk('public')->delete($newImage);
+            Storage::disk('s3')->delete($newImage);
         }
 
         return response()->json([
