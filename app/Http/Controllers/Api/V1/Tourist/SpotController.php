@@ -20,12 +20,12 @@ class SpotController extends Controller
     public function index(Request $request)
     {
         try {
-            $spots = Spot::with(['parent'=>fn($a)=>$a->select('id','image')->with(['spot'=>fn($q) => $q->select(['spot_parent_id','name'], 'ratings')->where('language_id',$this->lang==1?2:1)])])
-                ->when($request->filled('name'),fn($q) => $q->where('name','like','%'.$request->name.'%'))
-                ->when($request->filled('id'),fn($q) => $q->where('id',$request->id))
+            $spots = Spot::with(['parent' => fn($a) => $a->select('id', 'image')->with(['spot' => fn($q) => $q->select(['spot_parent_id', 'name'], ['ratings' => fn($r) => $r->select('rating')])->where('language_id', $this->lang == 1 ? 2 : 1)])])
+                ->when($request->filled('name'), fn($q) => $q->where('name', 'like', '%' . $request->name . '%'))
+                ->when($request->filled('id'), fn($q) => $q->where('id', $request->id))
                 ->where('language_id', $this->lang)
-                ->select('id', 'name','spot_parent_id', 'tag_line')
-                ->paginate($request->integer('per_page',PaginationEnum::Max->value))
+                ->select('id', 'name', 'spot_parent_id', 'tag_line')
+                ->paginate($request->integer('per_page', PaginationEnum::Max->value))
                 ->through(function ($spot) {
                     return [
                         'id' => $spot->id,
@@ -34,10 +34,9 @@ class SpotController extends Controller
                         'tag_line' => $spot->tag_line,
                         'name_en' => collect($spot?->parent?->spot)->pluck('name')->first(),
                         'image' => $spot?->parent?->image,
-                        'ratings' => $spot?->parent->ratings?->count() ? $spot?->parent->ratings : 0,
+                        'ratings' => $spot?->parent->ratings?->count() ? $spot?->parent->ratings->avg('rating') : 0,
                     ];
-                })
-            ;
+                });
             return response()->json([
                 'status_code' => 200,
                 'data' => $spots
@@ -54,24 +53,36 @@ class SpotController extends Controller
     public function details(Request $request)
     {
         try {
-            $spot = Spot::with(['parent'=>['images','hotels'=>fn($q) => $q
-                ->where('language_id',$this->lang)
-                ->select(['hotels.id as id','hotel_parents.id as parent_id','name','phone'])
+            $spot = Spot::with(['parent' => [
+                'images',
+                'hotels' => fn($q) => $q
+                    ->where('language_id', $this->lang)
+                    ->select(['hotels.id as id', 'hotel_parents.id as parent_id', 'name', 'phone'])
             ]])->where('language_id', $this->lang)->findOrFail($request->id);
-            $spot->setRelations([
-                'parent'=> $spot->parent->setRelation('images',collect($spot?->parent?->images)->map(function ($image) {
-                    return [
-                        'link' => $image->name,
-                    ];
-                }))
+            // 1. Eager load parent images + parent ratings (runs the queries)
+            $spot->load([
+                'parent.images',
+                'parent.ratings' => fn($q) => $q
+                    ->select('id', 'spot_parent_id', 'user_id', 'rating', 'review') // spot_id here = parent's id
+                    ->with('user:id,first_name,last_name') // load user with only id, first_name, last_name, email
             ]);
+
+            // 2. Reshape the parent's images (only if a parent exists)
+            if ($spot->parent) {
+                $spot->parent->setRelation(
+                    'images',
+                    $spot->parent->images->map(fn($image) => [
+                        'link' => $image->name,
+                    ])
+                );
+            }
             $map = $spot?->parent?->map_link;
             $link = Str::between($map, 'place/', '/@');
-            $name = Str::lower(Str::replace('+',' ', $link));
+            $name = Str::lower(Str::replace('+', ' ', $link));
             return response()->json([
                 'status_code' => 200,
                 'data' => $spot,
-                'weather' => Weather::openWeather($name,$spot?->spot_parent_id),
+                'weather' => Weather::openWeather($name, $spot?->spot_parent_id),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -88,7 +99,7 @@ class SpotController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
             'link' => 'nullable',
             'map_link' => 'nullable',
-            'data'=> 'required|array',
+            'data' => 'required|array',
             'data.*.name' => 'required',
             /*'data.*.description' => 'nullable',
             'data.*.tag_line' => 'nullable',
@@ -110,10 +121,10 @@ class SpotController extends Controller
         ]);
         if ($validator->fails()) {
             return response()->json([
-                'status_code'=>422,
-                'message'=>'Validation Error',
-                'errors'=>$validator->errors(),
-            ],422);
+                'status_code' => 422,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors(),
+            ], 422);
         }
         DB::beginTransaction();
         try {
@@ -126,7 +137,7 @@ class SpotController extends Controller
                 $data['spot_parent_id'] = $spotParent->id;
                 Spot::create($data);
             }
-            if ($request->images && count($request->images)>0){
+            if ($request->images && count($request->images) > 0) {
                 foreach ($request->images as $image) {
                     $spotParent->images()->create([
                         'name' => Fa::uploadImage($image, 'spots-images'),
@@ -161,12 +172,12 @@ class SpotController extends Controller
             ], 422);
         }
         try {
-            $data = SpotParent::with(['images','spot'])->findOrFail($request->id);
+            $data = SpotParent::with(['images', 'spot'])->findOrFail($request->id);
             return response()->json([
                 'status_code' => 200,
                 'data' => $data
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',
@@ -217,14 +228,14 @@ class SpotController extends Controller
                 'link' => $request->link,
                 'map_link' => $request->map_link,
             ]);
-            if ($request->hasFile('image')){
+            if ($request->hasFile('image')) {
                 Fa::deleteImage($spotParent?->image);
                 $spotParent->update([
-                    'image'=>Fa::uploadImage($request->file('image'),'spots')
+                    'image' => Fa::uploadImage($request->file('image'), 'spots')
                 ]);
             }
             //$spotParent->images()->delete();
-            if ($request->images && count($request->images)>0){
+            if ($request->images && count($request->images) > 0) {
                 foreach ($request->images as $image) {
                     $spotParent->images()->create([
                         'name' => Fa::uploadImage($image, 'spots-images'),
@@ -263,8 +274,8 @@ class SpotController extends Controller
             ], 422);
         }
         try {
-            $parent = SpotParent::with(['images','spot'])->findOrFail($request->id);
-            if ($parent->images->isNotEmpty()){
+            $parent = SpotParent::with(['images', 'spot'])->findOrFail($request->id);
+            if ($parent->images->isNotEmpty()) {
                 foreach ($parent->images as $image) {
                     Fa::deleteImage($image?->name);
                     $image->delete();
@@ -291,7 +302,7 @@ class SpotController extends Controller
     {
         try {
             $spots = SpotParent::query()
-                ->withWhereHas('translate',fn($q) => $q->where('language_id', $this->lang))
+                ->withWhereHas('translate', fn($q) => $q->where('language_id', $this->lang))
                 ->get()
                 ->map(function ($spot) {
                     return [
