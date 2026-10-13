@@ -24,11 +24,11 @@ class TeaEstateParent extends Model
     }
 
     protected function image(): Attribute
-{
-    return Attribute::make(
-        get: fn ($value) => $value
-            ? Storage::disk('public')->url($value)
-            : null,
-    );
-}
+    {
+        return Attribute::make(
+            get: fn($value) => $value
+                ? Storage::disk('s3')->url($value)
+                : null,
+        );
+    }
 }
