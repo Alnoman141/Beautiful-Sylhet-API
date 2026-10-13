@@ -33,7 +33,7 @@ class SpotRattingController extends Controller
             $spotRatting = SpotRatting::create($data);
 
             return response()->json([
-                'status_code' => 201,
+                'status_code' => 200,
                 'message' => 'Spot ratting created successfully',
                 'data' => $spotRatting,
             ], 200);

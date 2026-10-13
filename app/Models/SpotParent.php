@@ -52,4 +52,10 @@ class SpotParent extends Model
     {
         return $this->hasOneThrough(Hotel::class, HotelParent::class, 'spot_parent_id', 'hotel_parent_id');
     }
+
+    // has many ratings
+    public function ratings(): HasMany 
+    {
+        return $this->hasMany(SpotRatting::class,'spot_parent_id');
+    }
 }
