@@ -9,7 +9,7 @@ class SpotRatting extends Model
     protected $guarded = [];
 
     protected $fillable = [
-        'sport_parent_id',
+        'spot_parent_id',
         'user_id',
         'rating',
         'review',
@@ -21,7 +21,7 @@ class SpotRatting extends Model
 
     public function spotParent()
     {
-        return $this->belongsTo(Spot::class, 'sport_parent_id');
+        return $this->belongsTo(SpotParent::class, 'spot_parent_id');
     }
 
     public function user()
