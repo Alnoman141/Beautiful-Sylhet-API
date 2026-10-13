@@ -1,0 +1,118 @@
+<?php
+
+namespace App\Http\Controllers\Api\V3\SpotRatting;
+
+use App\Http\Controllers\Controller;
+use App\Models\SpotRatting;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class SpotRattingController extends Controller
+{
+    // store spot ratting
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'spot_parent_id' => 'required|exists:spot_parents,id',
+            'user_id' => 'required|exists:users,id',
+            'rating' => 'required|integer|min:1|max:5',
+            'review' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        try {
+            $spotRatting = SpotRatting::create($data);
+
+            return response()->json([
+                'status_code' => 201,
+                'message' => 'Spot ratting created successfully',
+                'data' => $spotRatting,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Failed to create spot ratting',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // update spot ratting
+    public function update(Request $request, $id) {
+        
+        $validator = Validator::make($request->all(), [
+            'rating' => 'required|integer|min:1|max:5',
+            'review' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        try {
+            $spotRatting = SpotRatting::findOrFail($id);
+            $spotRatting->update($data);
+
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Spot ratting updated successfully',
+                'data' => $spotRatting,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Failed to update spot ratting',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // change status of spot ratting 
+    public function changeStatus(Request $request, $id) {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:0,1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        try {
+            $spotRatting = SpotRatting::findOrFail($id);
+            $spotRatting->update($data);
+
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Spot ratting status updated successfully',
+                'data' => $spotRatting,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Failed to update spot ratting status',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
+}

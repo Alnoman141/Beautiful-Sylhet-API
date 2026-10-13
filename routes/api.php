@@ -491,5 +491,14 @@ Route::group(['prefix' => 'v1'], function () {
             Route::post('show', [App\Http\Controllers\Api\V3\TeaEstate\TeaEstateController::class, 'show']);
             Route::post('update', [App\Http\Controllers\Api\V3\TeaEstate\TeaEstateController::class, 'update']);
         });
+
+        // TODO @fa 2025-04-07 Tourist Spot Ratting
+        Route::group(['prefix' => 'tourist-spot-rating'], function () {
+            Route::post('store', [App\Http\Controllers\Api\V3\SpotRatting\SpotRattingController::class, 'store']);
+            Route::post('list', [App\Http\Controllers\Api\V3\SpotRatting\SpotRattingController::class, 'index']);
+            Route::post('details', [App\Http\Controllers\Api\V3\SpotRatting\SpotRattingController::class, 'show']);
+            Route::post('update', [App\Http\Controllers\Api\V3\SpotRatting\SpotRattingController::class, 'update']);
+            Route::post('change-status', [App\Http\Controllers\Api\V3\SpotRatting\SpotRattingController::class, 'changeStatus']);
+        });
     });
 });
