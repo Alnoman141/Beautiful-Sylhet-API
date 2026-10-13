@@ -1,6 +1,6 @@
 <?php
 /**
- *Name: Alauddin F-a
+ *Name: Abdullah Al Noman
  *Designation: Sr. Software Engineer
  *Date: 11/24/24 12:01 PM
  */
@@ -35,7 +35,7 @@ class Fa
         try {
             $extension = $file->extension();
             $name = $file->hashName();
-            $path = 'coxbazaar/'.$string.'/' . $extension . '/';
+            $path = 'SylhetApp/'.$string.'/' . $extension . '/';
             $data = File::get($file);
             $photo =  ImageManager::gd()->read($data)->toJpeg(30);
             if (config('filesystems.default') == 's3') {

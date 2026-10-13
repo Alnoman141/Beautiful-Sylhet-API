@@ -1,6 +1,6 @@
 <?php
 /**
- *Name: Alauddin F-a
+ *Name: Abdullah Al Noman
  *Designation: Sr. Software Engineer
  *Date: 2024-12-10 18:18
  */
@@ -122,8 +122,8 @@ class Weather
             $other = Http::withHeaders([
                 'Authorization'=>config('fa.weather.glass')
             ])->get("https://api.stormglass.io/v2/tide/extremes/point",[
-                'lat'=>21.4417,
-                'lng'=>91.9896,
+                'lat'=>24.8864,
+                'lng'=>91.8807,
                 'start'=>$start,
                 'end'=>$end
             ]);
@@ -207,8 +207,8 @@ class Weather
             $other = Http::withHeaders([
                 'Authorization'=>config('fa.weather.glass')
             ])->get("https://api.stormglass.io/v2/tide/extremes/point",[
-                'lat'=>21.4417,
-                'lng'=>91.9896,
+                'lat'=>24.8864,
+                'lng'=>91.8807,
                 'start'=>$start,
                 'end'=>$end
             ]);
