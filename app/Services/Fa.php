@@ -1,4 +1,5 @@
 <?php
+
 /**
  *Name: Abdullah Al Noman
  *Designation: Sr. Software Engineer
@@ -35,35 +36,39 @@ class Fa
         try {
             $extension = $file->extension();
             $name = $file->hashName();
-            $path = 'SylhetApp/'.$string.'/' . $extension . '/';
+            $path = 'SylhetApp/' . $string . '/' . $extension . '/';
             $data = File::get($file);
             $photo =  ImageManager::gd()->read($data)->toJpeg(30);
             if (config('filesystems.default') == 's3') {
                 //Storage::disk('s3')->put($path . $name, $data, 'public');
                 Storage::disk('s3')->put($path . $name, $photo, 'public'); //TODO @fa 2024-12-27 original image to adjust resolution
-              //return  $temporaryUrl = Storage::disk('s3')->temporaryUrl($path . $name, now()->addMinutes(1));
-                return $path.$name;
+                //return  $temporaryUrl = Storage::disk('s3')->temporaryUrl($path . $name, now()->addMinutes(1));
+                return $path . $name;
             } else {
                 $disk = Storage::build([
                     'driver' => 'local',
-                    'root' => public_path('storage/'.$path),
+                    'root' => public_path('storage/' . $path),
                 ]);
                 $disk->put($name, $photo); //TODO @fa 2024-12-27 original image to adjust resolution
-                return 'storage/' . $path.$name;
+                return 'storage/' . $path . $name;
             }
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
+            Log::error('Image upload failed', [
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ]);
             return '';
         }
     }
 
     public static function deleteImage($image)
     {
-        if ($image){
-            if (config('filesystems.default')=='s3') {
-                $image = Str::after($image, config('filesystems.disks.s3.url').'/');
+        if ($image) {
+            if (config('filesystems.default') == 's3') {
+                $image = Str::after($image, config('filesystems.disks.s3.url') . '/');
                 Storage::disk('s3')->delete($image);
-            }
-            else{
+            } else {
                 $filePath =  Str::afterLast($image, 'storage/');
                 if (Storage::disk('public')->exists($filePath)) {
                     Storage::disk('public')->delete($filePath);
@@ -79,8 +84,7 @@ class Fa
             $name = $file->hashName();
             $path = 'coxbazaar/' . $string . '/' . $extension . '/';
             $data = File::get($file);
-            if (in_array($extension,['jpg','jpeg','png','JPG','JPEG','PNG']))
-            {
+            if (in_array($extension, ['jpg', 'jpeg', 'png', 'JPG', 'JPEG', 'PNG'])) {
                 $data =  ImageManager::gd()->read($data)->toJpeg(30);
             }
             if (config('filesystems.default') == 's3') {
@@ -108,7 +112,7 @@ class Fa
     //TODO @fa 2025-02-18 app downloads
     public static function appDownloadAndroid()
     {
-        return Cache::remember('app_download_android', 60*60*24, function () {
+        return Cache::remember('app_download_android', 60 * 60 * 24, function () {
             $packageName = 'com.inflack.coxs_bazar_app'; // Your app's package ID
             $google = new GPlayApps();
             $app = $google->getAppInfo($packageName);
@@ -117,17 +121,17 @@ class Fa
                 'androidDownloads' => self::counting($app->getInstalls()),
                 'installText' => $app->getInstallsText(),
                 'appleDownloads' => self::appDownloadIos(),
-                'androidReviews'=>collect($google->getReviews($packageName))
+                'androidReviews' => collect($google->getReviews($packageName))
                     ->map(function ($review) {
                         $data = collect($review)->toArray();
                         return [
-                            'avatar'=>$data['avatar'],
-                            'name'=>$data['userName'],
-                            'text'=>$data['text'],
-                            'score'=>$data['score'],
-                            'date'=>$data['date']
+                            'avatar' => $data['avatar'],
+                            'name' => $data['userName'],
+                            'text' => $data['text'],
+                            'score' => $data['score'],
+                            'date' => $data['date']
                         ];
-                    })->filter(fn($a)=>$a['score']>4)->values()
+                    })->filter(fn($a) => $a['score'] > 4)->values()
             ];
             return $data;
         });
@@ -140,7 +144,7 @@ class Fa
         preg_match('/<dt[^>]*>\s*Age Rating\s*<\/dt>\s*<dd[^>]*>\s*(.*?)\s*</', $html, $matches);
         return @$matches[1] ?? '0';
     }
-    public static function counting($n=0,$precision=1)
+    public static function counting($n = 0, $precision = 1)
     {
         if ($n < 900) {
             $n_format = number_format($n, $precision);
@@ -158,9 +162,9 @@ class Fa
             $n_format = number_format($n / 1000000000000, $precision);
             $suffix = 'T';
         }
-        if ( $precision > 0 ) {
-            $dotZero = '.' . str_repeat( '0', $precision );
-            $n_format = str_replace( $dotZero, '', $n_format );
+        if ($precision > 0) {
+            $dotZero = '.' . str_repeat('0', $precision);
+            $n_format = str_replace($dotZero, '', $n_format);
         }
         return $n_format . $suffix;
     }

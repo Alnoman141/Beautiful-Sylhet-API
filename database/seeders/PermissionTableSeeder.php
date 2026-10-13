@@ -927,6 +927,32 @@ class PermissionTableSeeder extends Seeder
                         ]
                     ],
                 ],
+
+                [
+                    'name' => 'Tea Estate',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
             ];
         DB::beginTransaction();
         try {

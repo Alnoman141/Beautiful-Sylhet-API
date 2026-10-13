@@ -9,6 +9,10 @@ class TeaEstateParent extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'image' => 'string',
+    ];
+
     public function teaEstates(): HasMany
     {
         return $this->hasMany(

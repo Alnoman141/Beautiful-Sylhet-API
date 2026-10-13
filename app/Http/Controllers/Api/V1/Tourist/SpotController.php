@@ -31,6 +31,7 @@ class SpotController extends Controller
                         'id' => $spot->id,
                         'parent_id' => $spot->spot_parent_id,
                         'name' => $spot->name,
+                        'tag_line' => $spot->tag_line,
                         'name_en' => collect($spot?->parent?->spot)->pluck('name')->first(),
                         'image' => $spot?->parent?->image
                     ];
