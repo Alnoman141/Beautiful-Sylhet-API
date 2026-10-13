@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Services\Fa;
+use App\Enum\PaginationEnum;
+use Illuminate\Support\Facades\Storage;
 
 class TeaEstateController extends Controller
 {
@@ -18,39 +20,38 @@ class TeaEstateController extends Controller
     public function index(Request $request)
     {
         try {
-            $teaEstates = TeaEstateParent::query()
-                ->with('teaEstates')
-                ->when(
-                    $request->filled('name'),
-                    fn($query) => $query->whereHas(
-                        'teaEstates',
-                        fn($estate) => $estate->where(
-                            'name',
-                            'like',
-                            '%' . $request->input('name') . '%'
-                        )
-                    )
-                )
-                ->when(
-                    $request->filled('location'),
-                    fn($query) => $query->whereHas(
-                        'teaEstates',
-                        fn($estate) => $estate->where(
-                            'location',
-                            'like',
-                            '%' . $request->input('location') . '%'
-                        )
-                    )
-                )
-                ->get()
-                ->map(fn($parent) => $this->formatParent($parent))
-                ->values();
+            $estates = TeaEstate::with([
+                'parent' => fn($a) => $a->select('id', 'image')
+                    ->with([
+                        'teaEstates' => fn($q) => $q
+                            ->select(['tea_estate_parent_id', 'name'])
+                            ->where('language_id', $this->lang == 1 ? 2 : 1)
+                    ])
+            ])
+                ->when($request->filled('name'), fn($q) => $q->where('name', 'like', '%' . $request->name . '%'))
+                ->when($request->filled('location'), fn($q) => $q->where('location', 'like', '%' . $request->location . '%'))
+                ->when($request->filled('id'), fn($q) => $q->where('id', $request->id))
+                ->where('language_id', $this->lang)
+                ->select('id', 'name', 'tea_estate_parent_id', 'location', 'contact_info', 'distance')
+                ->paginate($request->integer('per_page', PaginationEnum::Max->value))
+                ->through(function ($estate) {
+                    return [
+                        'id'        => $estate->id,
+                        'parent_id' => $estate->tea_estate_parent_id,
+                        'name'      => $estate->name,
+                        'location'  => $estate->location,
+                        'distance'    => $estate->distance,
+                        'contact_info' => $estate->contact_info,
+                        'name_en'   => collect($estate?->parent?->teaEstates)->pluck('name')->first(),
+                        'image'     => $estate?->parent?->image,
+                    ];
+                });
 
             return response()->json([
                 'status_code' => 200,
-                'data' => $teaEstates,
+                'data' => $estates,
             ], 200);
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             report($e);
 
             return response()->json([
@@ -67,7 +68,11 @@ class TeaEstateController extends Controller
     public function show(Request $request)
     {
         try {
-            $parent = TeaEstateParent::with('teaEstates')->find($request->input('id'));
+            $validated = $request->validate([
+                'id' => ['required', 'integer', 'exists:tea_estate_parents,id'],
+            ]);
+
+            $parent = TeaEstateParent::with('teaEstates')->find($validated['id']);
 
             if (!$parent || $parent->teaEstates->isEmpty()) {
                 return response()->json([
@@ -80,6 +85,12 @@ class TeaEstateController extends Controller
                 'status_code' => 200,
                 'data' => $this->formatParent($parent),
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Throwable $e) {
             report($e);
 
@@ -112,6 +123,7 @@ class TeaEstateController extends Controller
             'data.*.contact_info' => ['nullable', 'string', 'max:255'],
             'data.*.map' => ['nullable', 'string', 'max:255'],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
+            'map' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -128,6 +140,7 @@ class TeaEstateController extends Controller
             DB::beginTransaction();
 
             $parent = TeaEstateParent::create([
+                'map' => $validated['map'] ?? null,
                 'image' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'spots') : null,
             ]);
 
@@ -139,7 +152,6 @@ class TeaEstateController extends Controller
                     'description' => $translation['description'] ?? null,
                     'distance' => $translation['distance'] ?? null,
                     'contact_info' => $translation['contact_info'] ?? null,
-                    'map' => $translation['map'] ?? null,
                 ]);
             }
             DB::commit();
@@ -170,102 +182,103 @@ class TeaEstateController extends Controller
      * data.*.id = tea_estates.id
      */
     public function update(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'id' => [
-                'required',
-                'integer',
-                'exists:tea_estate_parents,id',
-            ],
+{
+    $validator = Validator::make($request->all(), [
+        'id' => ['required', 'integer', 'exists:tea_estate_parents,id'],
 
-            'data' => ['required', 'array', 'min:1'],
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
+        'map' => 'nullable|string|max:255',
 
-            'data.*.id' => [
-                'required',
-                'integer',
-                'distinct',
-                'exists:tea_estates,id',
-            ],
+        'data' => ['required', 'array', 'min:1'],
 
-            'data.*.language_id' => [
-                'required',
-                'integer',
-                'distinct',
-                'exists:languages,id',
-            ],
+        'data.*.id' => ['required', 'integer', 'distinct', 'exists:tea_estates,id'],
+        'data.*.language_id' => ['required', 'integer', 'distinct', 'exists:languages,id'],
+        'data.*.name' => ['required', 'string', 'max:255'],
+        'data.*.location' => ['required', 'string', 'max:255'],
+        'data.*.description' => ['nullable', 'string'],
+        'data.*.distance' => ['nullable', 'string', 'max:255'],
+        'data.*.contact_info' => ['nullable', 'string', 'max:255'],
+    ]);
 
-            'data.*.name' => ['required', 'string', 'max:255'],
-            'data.*.location' => ['required', 'string', 'max:255'],
-            'data.*.description' => ['nullable', 'string'],
-            'data.*.distance' => ['nullable', 'string', 'max:255'],
-            'data.*.contact_info' => ['nullable', 'string', 'max:255'],
-            'data.*.map' => ['nullable', 'string', 'max:255'],
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status_code' => 422,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        try {
-            $validated = $validator->validated();
-
-            DB::beginTransaction();
-
-            if ($validated['image']) {
-                $image = $validated['image']->store('tea_estates', 'public');
-            }
-
-            $parent = TeaEstateParent::findOrFail($validated['id']);
-
-            $parent->update([
-                'image' => $validated['image'] ? $image : $parent->image,
-            ]);
-
-            foreach ($validated['data'] as $translation) {
-                // Only update translations belonging to this parent.
-                $estate = $parent->teaEstates()
-                    ->where('id', $translation['id'])
-                    ->firstOrFail();
-
-                $estate->update([
-                    'language_id' => $translation['language_id'],
-                    'name' => $translation['name'],
-                    'location' => $translation['location'],
-                    'description' => $translation['description'] ?? null,
-                    'distance' => $translation['distance'] ?? null,
-                    'contact_info' => $translation['contact_info'] ?? null,
-                    'map' => $translation['map'] ?? null,
-                ]);
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'status_code' => 200,
-                'message' => 'Tea estate updated successfully',
-                'data' => $this->formatParent($parent),
-            ], 200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'status_code' => 404,
-                'message' => 'Tea estate or translation not found',
-            ], 404);
-        } catch (\Throwable $e) {
-            report($e);
-
-            DB::rollBack();
-
-            return response()->json([
-                'status_code' => 500,
-                'message' => 'Something went wrong',
-            ], 500);
-        }
+    if ($validator->fails()) {
+        return response()->json([
+            'status_code' => 422,
+            'message' => 'Validation failed',
+            'errors' => $validator->errors(),
+        ], 422);
     }
+
+    try {
+        $validated = $validator->validated();
+
+        DB::beginTransaction();
+
+        $parent = TeaEstateParent::findOrFail($validated['id']);
+
+        // Only touch the image if a new file was actually uploaded.
+        if ($request->hasFile('image')) {
+            $newImage = $request->file('image')->store('tea_estates', 'public');
+
+            $oldImage = $parent->image;
+
+            $parent->update(['image' => $newImage], ['map' => $validated['map'] ?? null]);
+        }
+
+        foreach ($validated['data'] as $translation) {
+            // Only update translations belonging to this parent.
+            $estate = $parent->teaEstates()
+                ->where('id', $translation['id'])
+                ->firstOrFail();
+
+            $estate->update([
+                'language_id' => $translation['language_id'],
+                'name' => $translation['name'],
+                'location' => $translation['location'],
+                'description' => $translation['description'] ?? null,
+                'distance' => $translation['distance'] ?? null,
+                'contact_info' => $translation['contact_info'] ?? null,
+            ]);
+        }
+
+        DB::commit();
+
+        // Delete the old file only after the transaction succeeded.
+        if (!empty($oldImage)) {
+            Storage::disk('public')->delete($oldImage);
+        }
+
+        return response()->json([
+            'status_code' => 200,
+            'message' => 'Tea estate updated successfully',
+            'data' => $this->formatParent($parent->fresh()),
+        ], 200);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        DB::rollBack();
+
+        // Remove the newly uploaded file if the transaction failed.
+        if (isset($newImage)) {
+            Storage::disk('public')->delete($newImage);
+        }
+
+        return response()->json([
+            'status_code' => 404,
+            'message' => 'Tea estate or translation not found',
+        ], 404);
+    } catch (\Throwable $e) {
+        report($e);
+
+        DB::rollBack();
+
+        if (isset($newImage)) {
+            Storage::disk('public')->delete($newImage);
+        }
+
+        return response()->json([
+            'status_code' => 500,
+            'message' => 'Something went wrong ' . $e->getMessage(),
+        ], 500);
+    }
+}
 
     /**
      * Public mobile API: List tea estates in a selected language.
@@ -378,20 +391,23 @@ class TeaEstateController extends Controller
     private function formatParent(TeaEstateParent $parent): array
     {
         return [
-            'id' => $parent->id,
-
-            'translations' => $parent->teaEstates->map(function ($estate) {
-                return [
-                    'id' => $estate->id,
-                    'language_id' => $estate->language_id,
-                    'name' => $estate->name,
-                    'location' => $estate->location,
-                    'description' => $estate->description,
-                    'distance' => $estate->distance,
-                    'contact_info' => $estate->contact_info,
-                    'map' => $estate->map,
-                ];
-            })->values(),
+            'id'         => $parent->id,
+            'image'      => $parent->image,
+            'map'   => $parent->map,
+            'data' => $parent->teaEstates
+                ->map(fn($t) => [
+                    'id'                    => $t->id,
+                    'tea_estate_parent_id'  => $t->tea_estate_parent_id,
+                    'language_id'           => $t->language_id,
+                    'name'                  => $t->name,
+                    'location'              => $t->location,
+                    'description'           => $t->description,
+                    'distance'              => $t->distance,
+                    'contact_info'          => $t->contact_info,
+                    'created_at'            => $t->created_at,
+                    'updated_at'            => $t->updated_at,
+                ])
+                ->values(),
         ];
     }
 
