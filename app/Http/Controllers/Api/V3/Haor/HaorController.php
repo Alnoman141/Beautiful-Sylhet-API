@@ -8,6 +8,8 @@ use App\Models\HaorParent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Services\Fa;
+use Illuminate\Support\Facades\Storage;
 
 class HaorController extends Controller
 {
@@ -21,9 +23,9 @@ class HaorController extends Controller
                 ->with('haors')
                 ->when(
                     $request->filled('name'),
-                    fn ($query) => $query->whereHas(
+                    fn($query) => $query->whereHas(
                         'haors',
-                        fn ($haor) => $haor->where(
+                        fn($haor) => $haor->where(
                             'name',
                             'like',
                             '%' . $request->input('name') . '%'
@@ -32,9 +34,9 @@ class HaorController extends Controller
                 )
                 ->when(
                     $request->filled('location'),
-                    fn ($query) => $query->whereHas(
+                    fn($query) => $query->whereHas(
                         'haors',
-                        fn ($haor) => $haor->where(
+                        fn($haor) => $haor->where(
                             'location',
                             'like',
                             '%' . $request->input('location') . '%'
@@ -42,14 +44,13 @@ class HaorController extends Controller
                     )
                 )
                 ->get()
-                ->map(fn ($parent) => $this->formatParent($parent))
+                ->map(fn($parent) => $this->formatParent($parent))
                 ->values();
 
             return response()->json([
                 'status_code' => 200,
                 'data' => $haors,
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -80,7 +81,6 @@ class HaorController extends Controller
                 'status_code' => 200,
                 'data' => $this->formatParent($parent),
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -115,6 +115,8 @@ class HaorController extends Controller
                 'string',
                 'max:255',
             ],
+
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
         ]);
 
         if ($validator->fails()) {
@@ -128,36 +130,37 @@ class HaorController extends Controller
         try {
             $validated = $validator->validated();
 
-            $parent = DB::transaction(function () use ($validated) {
-                $parent = HaorParent::create([]);
 
-                foreach ($validated['data'] as $translation) {
-                    $parent->haors()->create([
-                        'language_id' => $translation['language_id'],
-                        'name' => $translation['name'],
-                        'location' => $translation['location'],
-                        'description' => $translation['description'] ?? null,
-                        'distance' => $translation['distance'] ?? null,
-                        'suitable_visiting_time' =>
-                            $translation['suitable_visiting_time'] ?? null,
-                    ]);
-                }
+            DB::beginTransaction();
+            $parent = HaorParent::create([
+                'image' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'haor') : null,
+            ]);
 
-                return $parent->load('haors');
-            });
+            foreach ($validated['data'] as $translation) {
+                $parent->haors()->create([
+                    'language_id' => $translation['language_id'],
+                    'name' => $translation['name'],
+                    'location' => $translation['location'],
+                    'description' => $translation['description'] ?? null,
+                    'distance' => $translation['distance'] ?? null,
+                    'suitable_visiting_time' =>
+                    $translation['suitable_visiting_time'] ?? null,
+                ]);
+            }
 
+
+            DB::commit();
             return response()->json([
                 'status_code' => 201,
                 'message' => 'Haor created successfully',
                 'data' => $this->formatParent($parent),
             ], 201);
-
         } catch (\Throwable $e) {
             report($e);
-
+            DB::rollBack();
             return response()->json([
                 'status_code' => 500,
-                'message' => 'Something went wrong',
+                'message' => 'Something went wrong ' . $e->getMessage() . ' ' . $e->getLine(),
             ], 500);
         }
     }
@@ -201,6 +204,7 @@ class HaorController extends Controller
                 'string',
                 'max:255',
             ],
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
         ]);
 
         if ($validator->fails()) {
@@ -214,44 +218,57 @@ class HaorController extends Controller
         try {
             $validated = $validator->validated();
 
-            $parent = DB::transaction(function () use ($validated) {
-                $parent = HaorParent::findOrFail($validated['id']);
+            DB::beginTransaction();
 
-                foreach ($validated['data'] as $translation) {
-                    // Ensure the translation belongs to this parent.
-                    $haor = $parent->haors()
-                        ->where('id', $translation['id'])
-                        ->firstOrFail();
+            $parent = HaorParent::findOrFail($validated['id']);
 
-                    $haor->update([
-                        'language_id' => $translation['language_id'],
-                        'name' => $translation['name'],
-                        'location' => $translation['location'],
-                        'description' => $translation['description'] ?? null,
-                        'distance' => $translation['distance'] ?? null,
-                        'suitable_visiting_time' =>
-                            $translation['suitable_visiting_time'] ?? null,
-                    ]);
-                }
+            // Only touch the image if a new file was actually uploaded.
+            if ($request->hasFile('image')) {
+                $newImage = $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'tea-estate') : null;
 
-                return $parent->load('haors');
-            });
+                $oldImage = $parent->image;
+
+                $parent->update(['image' => $newImage], ['map' => $validated['map'] ?? null]);
+            }
+
+            foreach ($validated['data'] as $translation) {
+                // Ensure the translation belongs to this parent.
+                $haor = $parent->haors()
+                    ->where('id', $translation['id'])
+                    ->firstOrFail();
+
+                $haor->update([
+                    'language_id' => $translation['language_id'],
+                    'name' => $translation['name'],
+                    'location' => $translation['location'],
+                    'description' => $translation['description'] ?? null,
+                    'distance' => $translation['distance'] ?? null,
+                    'suitable_visiting_time' =>
+                    $translation['suitable_visiting_time'] ?? null,
+                ]);
+            }
+
+            // Delete the old file only after the transaction succeeded.
+            if (!empty($oldImage)) {
+                Storage::disk('s3')->delete($oldImage);
+            }
+
+            DB::commit();
 
             return response()->json([
                 'status_code' => 200,
                 'message' => 'Haor updated successfully',
                 'data' => $this->formatParent($parent),
             ], 200);
-
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
             return response()->json([
                 'status_code' => 404,
                 'message' => 'Haor or translation not found',
             ], 404);
-
         } catch (\Throwable $e) {
             report($e);
-
+            DB::rollBack();
             return response()->json([
                 'status_code' => 500,
                 'message' => 'Something went wrong',
@@ -287,7 +304,7 @@ class HaorController extends Controller
             $haors = Haor::query()
                 ->where('language_id', $languageId)
                 ->get()
-                ->map(fn ($haor) => $this->formatPublicHaor($haor))
+                ->map(fn($haor) => $this->formatPublicHaor($haor))
                 ->values();
 
             return response()->json([
@@ -295,7 +312,6 @@ class HaorController extends Controller
                 'message' => 'Haors fetched successfully',
                 'data' => $haors,
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -354,7 +370,6 @@ class HaorController extends Controller
                 'message' => 'Haor details fetched successfully',
                 'data' => $this->formatPublicHaor($haor),
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -381,8 +396,7 @@ class HaorController extends Controller
                     'location' => $haor->location,
                     'description' => $haor->description,
                     'distance' => $haor->distance,
-                    'suitable_visiting_time' =>
-                        $haor->suitable_visiting_time,
+                    'suitable_visiting_time' => $haor->suitable_visiting_time,
                 ];
             })->values(),
         ];
@@ -402,6 +416,7 @@ class HaorController extends Controller
             'description' => $haor->description,
             'distance' => $haor->distance,
             'suitable_visiting_time' => $haor->suitable_visiting_time,
+            'image' => $haor->haorParent->image ?? null,
         ];
     }
 }

@@ -240,12 +240,12 @@ class TeaEstateController extends Controller
             ]);
         }
 
-        DB::commit();
-
         // Delete the old file only after the transaction succeeded.
         if (!empty($oldImage)) {
             Storage::disk('s3')->delete($oldImage);
         }
+
+        DB::commit();
 
         return response()->json([
             'status_code' => 200,
