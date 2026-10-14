@@ -387,7 +387,7 @@ class HaorController extends Controller
     {
         return [
             'id' => $parent->id,
-
+            'image' => $parent->image ?? null,
             'translations' => $parent->haors->map(function ($haor) {
                 return [
                     'id' => $haor->id,
@@ -416,7 +416,7 @@ class HaorController extends Controller
             'description' => $haor->description,
             'distance' => $haor->distance,
             'suitable_visiting_time' => $haor->suitable_visiting_time,
-            'image' => $haor->haorParent->image ?? null,
+            'image' => $haor->parent->image ?? null,
         ];
     }
 }
