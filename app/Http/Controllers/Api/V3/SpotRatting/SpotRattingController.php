@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SpotRatting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Enum\PaginationEnum;
 
 class SpotRattingController extends Controller
 {
@@ -14,7 +15,7 @@ class SpotRattingController extends Controller
     public function index(Request $request)
     {
         $spotRattings = SpotRatting::query()
-            ->with(['spot_parent', 'user'])
+            ->with(['spotParent.spot', 'user'])
             ->when($request->filled('spot_parent_id'), function ($query) use ($request) {
                 $query->where('spot_parent_id', $request->spot_parent_id);
             })
@@ -24,7 +25,7 @@ class SpotRattingController extends Controller
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
             })
-            ->get();
+            ->paginate($request->integer('per_page', PaginationEnum::Max->value));
 
         return response()->json([
             'status_code' => 200,
@@ -107,10 +108,11 @@ class SpotRattingController extends Controller
     }
 
     // change status of spot ratting 
-    public function changeStatus(Request $request, $id)
+    public function changeStatus(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:0,1',
+            'id' => 'required|exists:spot_rattings,id',
         ]);
 
         if ($validator->fails()) {
@@ -124,7 +126,8 @@ class SpotRattingController extends Controller
         $data = $validator->validated();
 
         try {
-            $spotRatting = SpotRatting::findOrFail($id);
+            $spotRatting = SpotRatting::findOrFail($data['id']);
+            
             $spotRatting->update($data);
 
             return response()->json([

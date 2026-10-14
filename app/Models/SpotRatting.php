@@ -13,10 +13,12 @@ class SpotRatting extends Model
         'user_id',
         'rating',
         'review',
+        'status',
     ];
     protected $casts = [
         'rating' => 'integer',
         'review' => 'string',
+        'status' => 'boolean',
     ];
 
     public function spotParent()

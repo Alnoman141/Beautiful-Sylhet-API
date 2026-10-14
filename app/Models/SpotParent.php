@@ -56,6 +56,6 @@ class SpotParent extends Model
     // has many ratings
     public function ratings(): HasMany 
     {
-        return $this->hasMany(SpotRatting::class,'spot_parent_id');
+        return $this->hasMany(SpotRatting::class,'spot_parent_id')->where('status', 1);
     }
 }

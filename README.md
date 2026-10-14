@@ -1,7 +1,7 @@
 # Cox's Bazaar Travel Guide
 
 ## Authors
-- [@Alauddin F-a](https://www.github.com/alauddin020)
+- [@Abdullah Al Noman](https://www.github.com/alauddin020)
 
 
 ## Installation
