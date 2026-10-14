@@ -8,6 +8,9 @@ use App\Models\AmusementParkParent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Services\Fa;
+use App\Enum\PaginationEnum;
+use Illuminate\Support\Facades\Storage;
 
 class AmusementParkController extends Controller
 {
@@ -21,9 +24,9 @@ class AmusementParkController extends Controller
                 ->with('amusementParks')
                 ->when(
                     $request->filled('name'),
-                    fn ($query) => $query->whereHas(
+                    fn($query) => $query->whereHas(
                         'amusementParks',
-                        fn ($park) => $park->where(
+                        fn($park) => $park->where(
                             'name',
                             'like',
                             '%' . $request->input('name') . '%'
@@ -32,9 +35,9 @@ class AmusementParkController extends Controller
                 )
                 ->when(
                     $request->filled('location'),
-                    fn ($query) => $query->whereHas(
+                    fn($query) => $query->whereHas(
                         'amusementParks',
-                        fn ($park) => $park->where(
+                        fn($park) => $park->where(
                             'location',
                             'like',
                             '%' . $request->input('location') . '%'
@@ -42,14 +45,13 @@ class AmusementParkController extends Controller
                     )
                 )
                 ->get()
-                ->map(fn ($parent) => $this->formatParent($parent))
+                ->map(fn($parent) => $this->formatParent($parent))
                 ->values();
 
             return response()->json([
                 'status_code' => 200,
                 'data' => $parks,
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -81,7 +83,6 @@ class AmusementParkController extends Controller
                 'status_code' => 200,
                 'data' => $this->formatParent($parent),
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -114,6 +115,7 @@ class AmusementParkController extends Controller
             'data.*.ticket_price' => ['nullable', 'string', 'max:255'],
             'data.*.opening_hours' => ['nullable', 'string', 'max:255'],
             'data.*.map' => ['nullable', 'string', 'max:255'],
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
         ]);
 
         if ($validator->fails()) {
@@ -127,31 +129,32 @@ class AmusementParkController extends Controller
         try {
             $validated = $validator->validated();
 
-            $parent = DB::transaction(function () use ($validated) {
-                $parent = AmusementParkParent::create([]);
+            DB::beginTransaction();
 
-                foreach ($validated['data'] as $translation) {
-                    $parent->amusementParks()->create([
-                        'language_id' => $translation['language_id'],
-                        'name' => $translation['name'],
-                        'location' => $translation['location'],
-                        'description' => $translation['description'] ?? null,
-                        'distance' => $translation['distance'] ?? null,
-                        'ticket_price' => $translation['ticket_price'] ?? null,
-                        'opening_hours' => $translation['opening_hours'] ?? null,
-                        'map' => $translation['map'] ?? null,
-                    ]);
-                }
+            $parent = AmusementParkParent::create([
+                'image' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'park') : null,
+            ]);
 
-                return $parent->load('amusementParks');
-            });
+            foreach ($validated['data'] as $translation) {
+                $parent->amusementParks()->create([
+                    'language_id' => $translation['language_id'],
+                    'name' => $translation['name'],
+                    'location' => $translation['location'],
+                    'description' => $translation['description'] ?? null,
+                    'distance' => $translation['distance'] ?? null,
+                    'ticket_price' => $translation['ticket_price'] ?? null,
+                    'opening_hours' => $translation['opening_hours'] ?? null,
+                    'map' => $translation['map'] ?? null,
+                ]);
+            }
+
+            DB::commit();
 
             return response()->json([
                 'status_code' => 201,
                 'message' => 'Amusement park created successfully',
                 'data' => $this->formatParent($parent),
             ], 201);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -199,6 +202,7 @@ class AmusementParkController extends Controller
             'data.*.ticket_price' => ['nullable', 'string', 'max:255'],
             'data.*.opening_hours' => ['nullable', 'string', 'max:255'],
             'data.*.map' => ['nullable', 'string', 'max:255'],
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
         ]);
 
         if ($validator->fails()) {
@@ -212,46 +216,62 @@ class AmusementParkController extends Controller
         try {
             $validated = $validator->validated();
 
-            $parent = DB::transaction(function () use ($validated) {
-                $parent = AmusementParkParent::findOrFail(
-                    $validated['id']
-                );
 
-                foreach ($validated['data'] as $translation) {
-                    // Ensure the translation belongs to this parent.
-                    $park = $parent->amusementParks()
-                        ->where('id', $translation['id'])
-                        ->firstOrFail();
+            DB::beginTransaction();
 
-                    $park->update([
-                        'language_id' => $translation['language_id'],
-                        'name' => $translation['name'],
-                        'location' => $translation['location'],
-                        'description' => $translation['description'] ?? null,
-                        'distance' => $translation['distance'] ?? null,
-                        'ticket_price' => $translation['ticket_price'] ?? null,
-                        'opening_hours' => $translation['opening_hours'] ?? null,
-                        'map' => $translation['map'] ?? null,
-                    ]);
-                }
+            $parent = AmusementParkParent::findOrFail(
+                $validated['id']
+            );
 
-                return $parent->load('amusementParks');
-            });
+            // Only touch the image if a new file was actually uploaded.
+            if ($request->hasFile('image')) {
+                $newImage = $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'park') : null;
+
+                $oldImage = $parent->image;
+
+                $parent->update(['image' => $newImage]);
+            }
+
+            foreach ($validated['data'] as $translation) {
+                // Ensure the translation belongs to this parent.
+                $park = $parent->amusementParks()
+                    ->where('id', $translation['id'])
+                    ->firstOrFail();
+
+                $park->update([
+                    'language_id' => $translation['language_id'],
+                    'name' => $translation['name'],
+                    'location' => $translation['location'],
+                    'description' => $translation['description'] ?? null,
+                    'distance' => $translation['distance'] ?? null,
+                    'ticket_price' => $translation['ticket_price'] ?? null,
+                    'opening_hours' => $translation['opening_hours'] ?? null,
+                    'map' => $translation['map'] ?? null,
+                ]);
+            }
+
+            // Delete the old file only after the transaction succeeded.
+            if (!empty($oldImage)) {
+                Storage::disk('s3')->delete($oldImage);
+            }
+
+            DB::commit();
 
             return response()->json([
                 'status_code' => 200,
                 'message' => 'Amusement park updated successfully',
                 'data' => $this->formatParent($parent),
             ], 200);
-
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
             return response()->json([
                 'status_code' => 404,
                 'message' => 'Amusement park or translation not found',
             ], 404);
-
         } catch (\Throwable $e) {
             report($e);
+
+            DB::rollBack();
 
             return response()->json([
                 'status_code' => 500,
@@ -288,7 +308,7 @@ class AmusementParkController extends Controller
             $parks = AmusementPark::query()
                 ->where('language_id', $languageId)
                 ->get()
-                ->map(fn ($park) => $this->formatPublicPark($park))
+                ->map(fn($park) => $this->formatPublicPark($park))
                 ->values();
 
             return response()->json([
@@ -296,7 +316,6 @@ class AmusementParkController extends Controller
                 'message' => 'Amusement parks fetched successfully',
                 'data' => $parks,
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -355,7 +374,6 @@ class AmusementParkController extends Controller
                 'message' => 'Amusement park details fetched successfully',
                 'data' => $this->formatPublicPark($park),
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -373,6 +391,7 @@ class AmusementParkController extends Controller
     {
         return [
             'id' => $parent->id,
+            'image' => $parent->image ?? null,
             'translations' => $parent->amusementParks
                 ->map(function ($park) {
                     return [
@@ -407,6 +426,7 @@ class AmusementParkController extends Controller
             'ticket_price' => $park->ticket_price,
             'opening_hours' => $park->opening_hours,
             'map' => $park->map,
+            'image' => $park->parent->image ?? null,
         ];
     }
 }

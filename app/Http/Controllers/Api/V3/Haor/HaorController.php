@@ -224,11 +224,11 @@ class HaorController extends Controller
 
             // Only touch the image if a new file was actually uploaded.
             if ($request->hasFile('image')) {
-                $newImage = $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'tea-estate') : null;
+                $newImage = $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'haor') : null;
 
                 $oldImage = $parent->image;
 
-                $parent->update(['image' => $newImage], ['map' => $validated['map'] ?? null]);
+                $parent->update(['image' => $newImage]);
             }
 
             foreach ($validated['data'] as $translation) {
