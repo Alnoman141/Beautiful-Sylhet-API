@@ -22,4 +22,10 @@ class HotelParent extends Model
     {
         return $this->hasMany(Hotel::class, 'hotel_parent_id');
     }
+
+    // TODO @fa 2025-04-08 rating relation
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(HotelRating::class, 'hotel_parent_id')->where('status', 1);
+    }
 }

@@ -1,9 +1,11 @@
 <?php
+
 /**
  *Name: Abdullah Al Noman
  *Designation: Sr. Software Engineer
  *Date: 2025-02-17 12:40 p.m.
  */
+
 namespace App\Http\Controllers\Api\V2\Restaurant;
 
 use App\Enum\PaginationEnum;
@@ -22,22 +24,48 @@ class RestaurantController extends Controller
     public function index(Request $request)
     {
         try {
+            $otherLang = $this->lang == 1 ? 2 : 1;
+
             $restaurants = Restaurant::query()
-                ->with(['parent','spot'=>fn($a)=>$a->where('language_id',$this->lang)->select('spots.spot_parent_id as id', 'name'),'category'=>fn($a)=>$a->where('language_id',$this->lang)->select('restaurant_categories.restaurant_category_parent_id as id', 'name')])
-                ->where('language_id',$this->lang)
-                ->when($request->filled('category_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('restaurant_category_parent_id',$request->category_id)))
-                ->when($request->filled('spot_parent_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('spot_parent_id',$request->spot_parent_id)))
-                ->when($request->filled('open_time'),fn($a)=>$a->where('open_time','>=',now()->parse($request->open_time)->format('H:i:s')))
-                ->when($request->filled('close_time'),fn($a)=>$a->where('close_time','<=',$request->close_time))
-                ->paginate($request->per_page ?? PaginationEnum::Default->value);
+                ->with([
+                    'parent' => fn($a) => $a->withAvg('ratings', 'rating')
+                        ->with(['restaurants' => fn($b) => $b->where('language_id', $otherLang)->select('restaurant_parent_id', 'name')]),
+                    'spot' => fn($a) => $a->where('language_id', $this->lang)->select('spots.spot_parent_id as id', 'name'),
+                    'category' => fn($a) => $a->where('language_id', $this->lang)->select('restaurant_categories.restaurant_category_parent_id as id', 'name'),
+                ])
+                ->where('language_id', $this->lang)
+                ->when($request->filled('category_id'), fn($a) => $a->whereHas('parent', fn($b) => $b->where('restaurant_category_parent_id', $request->category_id)))
+                ->when($request->filled('spot_parent_id'), fn($a) => $a->whereHas('parent', fn($b) => $b->where('spot_parent_id', $request->spot_parent_id)))
+                ->when($request->filled('open_time'), fn($a) => $a->where('open_time', '>=', now()->parse($request->open_time)->format('H:i:s')))
+                ->when($request->filled('close_time'), fn($a) => $a->where('close_time', '<=', $request->close_time))
+                ->paginate($request->per_page ?? PaginationEnum::Default->value)
+                ->through(fn($r) => [
+                    'id'            => $r->id,
+                    'parent_id'     => $r->restaurant_parent_id,
+                    'name'          => $r->name,
+                    'name_en'       => $r->parent?->restaurants->first()?->name ?? '',
+                    'phone'         => $r->phone ?? '',
+                    'address'       => $r->address ?? '',
+                    'description'   => $r->description ?? '',
+                    'open_time'     => $r->open_time ?? '',
+                    'close_time'    => $r->close_time ?? '',
+                    'website_link'  => $r->parent?->website_link ?? '',
+                    'map_link'      => $r->parent?->map_link ?? '',
+                    'image'         => $r->parent?->image,
+                    'spot_id'       => $r->parent?->spot_parent_id,
+                    'spot_name'     => $r->spot ?? '',
+                    'category_name' => $r->category ?? '',
+                    'ratings'       => (float) ($r->parent?->ratings_avg_rating ?? 0),
+                ]);
+
             return response()->json([
                 'status_code' => 200,
                 'data' => $restaurants,
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
-                'message'=> 'Something went wrong',
+                'message' => 'Something went wrong',
                 'errors' => $e->getMessage(),
             ], 403);
         }
@@ -56,17 +84,22 @@ class RestaurantController extends Controller
         }
         try {
             $restaurant = Restaurant::query()
-                ->with(['parent','spot'=>fn($a)=>$a->where('language_id',$this->lang)->select('spots.spot_parent_id as id', 'name'),'category'=>fn($a)=>$a->where('language_id',$this->lang)->select('restaurant_categories.restaurant_category_parent_id as id', 'name')])
-                ->where('language_id',$this->lang)
+                ->with(['parent', 'spot' => fn($a) => $a->where('language_id', $this->lang)->select('spots.spot_parent_id as id', 'name'), 'category' => fn($a) => $a->where('language_id', $this->lang)->select('restaurant_categories.restaurant_category_parent_id as id', 'name')])
+                ->where('language_id', $this->lang)
                 ->findOrFail($request->id);
+            $restaurant->load([
+                'parent.ratings' => fn($q) => $q
+                    ->select('id', 'restaurant_parent_id', 'user_id', 'rating', 'review') // 
+                    ->with('user:id,first_name,last_name') // load user with only id, first_name, last_name, email
+            ]);
             return response()->json([
                 'status_code' => 200,
                 'data' => $restaurant,
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
-                'message'=> 'Something went wrong',
+                'message' => 'Something went wrong',
                 'errors' => $e->getMessage(),
             ], 403);
         }
@@ -108,9 +141,9 @@ class RestaurantController extends Controller
                 'restaurant_category_parent_id' => $request->restaurant_category_parent_id,
                 'map_link' => $request->map_link,
                 'website_link' => $request->website_link,
-                'image' => $request->hasFile('image') ? Fa::uploadImage($request->image,'restaurant') : null,
+                'image' => $request->hasFile('image') ? Fa::uploadImage($request->image, 'restaurant') : null,
             ]);
-            foreach ($request->data as $data){
+            foreach ($request->data as $data) {
                 Restaurant::create([
                     'restaurant_parent_id' => $parent->id,
                     'language_id' => $data['language_id'],
@@ -129,7 +162,7 @@ class RestaurantController extends Controller
                 'status_code' => 200,
                 'message' => 'Restaurant created successfully',
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
@@ -182,7 +215,7 @@ class RestaurantController extends Controller
                     'image' => Fa::uploadImage($request->image, 'restaurant'),
                 ]);
             }
-            foreach ($request->data as $data){
+            foreach ($request->data as $data) {
                 $restaurant = Restaurant::findOrFail($data['id']);
                 $restaurant->update([
                     'language_id' => $data['language_id'],
@@ -200,7 +233,7 @@ class RestaurantController extends Controller
                 'status_code' => 200,
                 'message' => 'Restaurant updated successfully',
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'errors' => $e->getMessage(),
@@ -225,7 +258,7 @@ class RestaurantController extends Controller
                 'status_code' => 200,
                 'data' => $restaurant,
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'errors' => $e->getMessage(),
@@ -248,7 +281,7 @@ class RestaurantController extends Controller
             $restaurant = RestaurantParent::with('restaurants')->findOrFail($request->id);
             Fa::deleteImage($restaurant->image);
             //$restaurant->restaurants()->delete();
-            collect($restaurant?->restaurants)->each(function ($item){
+            collect($restaurant?->restaurants)->each(function ($item) {
                 $item->delete();
             });
             $restaurant->delete();
@@ -256,7 +289,7 @@ class RestaurantController extends Controller
                 'status_code' => 200,
                 'message' => 'Restaurant deleted successfully',
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'errors' => $e->getMessage(),
@@ -268,7 +301,7 @@ class RestaurantController extends Controller
     {
         try {
             $restaurants = RestaurantCategory::query()
-                ->where('language_id',$this->lang)
+                ->where('language_id', $this->lang)
                 ->get()
                 ->map(fn($a) => [
                     //'id' => $a->id,
@@ -280,10 +313,10 @@ class RestaurantController extends Controller
                 'status_code' => 200,
                 'data' => $restaurants,
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
-                'message'=> 'Something went wrong',
+                'message' => 'Something went wrong',
                 'errors' => $e->getMessage(),
             ], 403);
         }
@@ -306,7 +339,7 @@ class RestaurantController extends Controller
         DB::beginTransaction();
         try {
             $parent = RestaurantCategoryParent::create();
-            foreach ($request->data as $data){
+            foreach ($request->data as $data) {
                 RestaurantCategory::create([
                     'restaurant_category_parent_id' => $parent->id,
                     'name' => $data['name'],
@@ -318,7 +351,7 @@ class RestaurantController extends Controller
                 'status_code' => 200,
                 'message' => 'Restaurant category created successfully',
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
@@ -344,7 +377,7 @@ class RestaurantController extends Controller
         }
         try {
             //$parent = RestaurantCategoryParent::findOrFail($request->id);
-            foreach ($request->data as $data){
+            foreach ($request->data as $data) {
                 $category = RestaurantCategory::findOrFail($data['id']);
                 $category->update([
                     'name' => $data['name'],
@@ -355,7 +388,7 @@ class RestaurantController extends Controller
                 'status_code' => 200,
                 'message' => 'Restaurant category updated successfully',
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'errors' => $e->getMessage(),
@@ -380,7 +413,7 @@ class RestaurantController extends Controller
                 'status_code' => 200,
                 'data' => $category,
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'errors' => $e->getMessage(),
@@ -407,7 +440,7 @@ class RestaurantController extends Controller
                 'status_code' => 200,
                 'message' => 'Restaurant category deleted successfully',
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'errors' => $e->getMessage(),

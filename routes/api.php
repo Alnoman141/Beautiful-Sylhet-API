@@ -195,6 +195,9 @@ Route::group(['prefix' => 'v1'], function () {
         Route::post('details', [App\Http\Controllers\Api\V3\TeaEstate\TeaEstateController::class, 'fetchTeaEstateDetails']);
     });
 
+    //TODO @fa 2025-02-18 version V3 API
+    Route::post('ai/get-dropdown', [App\Http\Controllers\Api\V3\Ai\AiController::class, 'getDropdown']);
+        
 
     //TODO @fa 2024-11-27 authentication
     Route::group(['middleware' => 'auth:sanctum'], function () {
@@ -494,11 +497,52 @@ Route::group(['prefix' => 'v1'], function () {
 
         // TODO @fa 2025-04-07 Tourist Spot Ratting
         Route::group(['prefix' => 'tourist-spot-rating'], function () {
-            Route::post('store', [App\Http\Controllers\Api\V3\SpotRatting\SpotRattingController::class, 'store']);
-            Route::post('list', [App\Http\Controllers\Api\V3\SpotRatting\SpotRattingController::class, 'index']);
-            Route::post('details', [App\Http\Controllers\Api\V3\SpotRatting\SpotRattingController::class, 'show']);
-            Route::post('update', [App\Http\Controllers\Api\V3\SpotRatting\SpotRattingController::class, 'update']);
-            Route::post('change-status', [App\Http\Controllers\Api\V3\SpotRatting\SpotRattingController::class, 'changeStatus']);
+            Route::post('store', [App\Http\Controllers\Api\V3\Rating\SpotRattingController::class, 'store']);
+            Route::post('list', [App\Http\Controllers\Api\V3\Rating\SpotRattingController::class, 'index']);
+            Route::post('change-status', [App\Http\Controllers\Api\V3\Rating\SpotRattingController::class, 'changeStatus']);
+        });
+
+        // TODO @fa 2025-04-07 Tourist Spot Type
+        Route::group(['prefix' => 'spot-type'], function () {
+            Route::post('store', [App\Http\Controllers\Api\V3\SpotType\SpotTypeController::class, 'store']);
+            Route::post('list', [App\Http\Controllers\Api\V3\SpotType\SpotTypeController::class, 'index']);
+            Route::post('show', [App\Http\Controllers\Api\V3\SpotType\SpotTypeController::class, 'show']);
+            Route::post('update', [App\Http\Controllers\Api\V3\SpotType\SpotTypeController::class, 'update']);
+        });
+
+        // TODO @fa 2025-04-07 AI Limit
+        Route::group(['prefix' => 'ai'], function () {
+            Route::post('set-limit', [App\Http\Controllers\Api\V3\Ai\AiController::class, 'store']);
+            Route::post('get-limit', [App\Http\Controllers\Api\V3\Ai\AiController::class, 'index']);
+        });
+
+
+        // TODO @fa 2025-04-07 Restaurant Rating
+        Route::group(['prefix' => 'restaurant-rating'], function () {
+            Route::post('store', [App\Http\Controllers\Api\V3\Rating\RestaurantRatingController::class, 'store']);
+            Route::post('list', [App\Http\Controllers\Api\V3\Rating\RestaurantRatingController::class, 'index']);
+            Route::post('change-status', [App\Http\Controllers\Api\V3\Rating\RestaurantRatingController::class, 'changeStatus']);
+        });
+
+        // TODO @fa 2025-04-07 Hotel Rating
+        Route::group(['prefix' => 'hotel-rating'], function () {
+            Route::post('store', [App\Http\Controllers\Api\V3\Rating\HotelRatingController::class, 'store']);
+            Route::post('list', [App\Http\Controllers\Api\V3\Rating\HotelRatingController::class, 'index']);
+            Route::post('change-status', [App\Http\Controllers\Api\V3\Rating\HotelRatingController::class, 'changeStatus']);
+        });
+
+        // TODO @fa 2025-04-07 Tour Guide Rating
+        Route::group(['prefix' => 'tour-guide-rating'], function () {
+            Route::post('store', [App\Http\Controllers\Api\V3\Rating\TourGuideRatingController::class, 'store']);
+            Route::post('list', [App\Http\Controllers\Api\V3\Rating\TourGuideRatingController::class, 'index']);
+            Route::post('change-status', [App\Http\Controllers\Api\V3\Rating\TourGuideRatingController::class, 'changeStatus']);
+        });
+
+        // TODO @fa 2025-04-07 Tour Operator Rating
+        Route::group(['prefix' => 'tour-operator-rating'], function () {
+            Route::post('store', [App\Http\Controllers\Api\V3\Rating\TourOperatorRatingController::class, 'store']);
+            Route::post('list', [App\Http\Controllers\Api\V3\Rating\TourOperatorRatingController::class, 'index']);
+            Route::post('change-status', [App\Http\Controllers\Api\V3\Rating\TourOperatorRatingController::class, 'changeStatus']);
         });
     });
 });

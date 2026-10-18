@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Api\V3\SpotRatting;
+namespace App\Http\Controllers\Api\V3\Rating;
 
 use App\Http\Controllers\Controller;
 use App\Models\SpotRatting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Enum\PaginationEnum;
+use Illuminate\Support\Facades\Auth;
 
 class SpotRattingController extends Controller
 {
@@ -15,7 +16,9 @@ class SpotRattingController extends Controller
     public function index(Request $request)
     {
         $spotRattings = SpotRatting::query()
-            ->with(['spotParent.spot', 'user'])
+            ->with(['spotParent.spot' => function ($query) use ($request) {
+                $query->select('id', 'name', 'spot_parent_id', 'language_id')->where('language_id', $request->input('language_id', 1));
+            }, 'user'])
             ->when($request->filled('spot_parent_id'), function ($query) use ($request) {
                 $query->where('spot_parent_id', $request->spot_parent_id);
             })
@@ -38,7 +41,6 @@ class SpotRattingController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'spot_parent_id' => 'required|exists:spot_parents,id',
-            'user_id' => 'required|exists:users,id',
             'rating' => 'required|integer|min:1|max:5',
             'review' => 'nullable|string|max:255',
         ]);
@@ -52,6 +54,8 @@ class SpotRattingController extends Controller
         }
 
         $data = $validator->validated();
+
+        $data['user_id'] = Auth::id(); // Add the authenticated user's ID to the data
 
         try {
             $spotRatting = SpotRatting::create($data);

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use App\Enum\PaginationEnum;
 
 class TourGuideController extends Controller
 {
@@ -19,58 +20,37 @@ class TourGuideController extends Controller
     public function index(Request $request)
     {
         try {
-            $tourGuides = TourGuideParent::query()
-                ->with('guides')
-                ->when(
-                    $request->filled('name'),
-                    fn ($query) => $query->whereHas(
-                        'guides',
-                        fn ($guide) => $guide->where(
-                            'name',
-                            'like',
-                            '%' . $request->input('name') . '%'
-                        )
-                    )
-                )
-                ->when(
-                    $request->filled('email'),
-                    fn ($query) => $query->where(
-                        'email',
-                        'like',
-                        '%' . $request->input('email') . '%'
-                    )
-                )
-                ->when(
-                    $request->filled('phone_number'),
-                    fn ($query) => $query->where(
-                        'phone_number',
-                        'like',
-                        '%' . $request->input('phone_number') . '%'
-                    )
-                )
-                ->when(
-                    $request->filled('license_number'),
-                    fn ($query) => $query->where(
-                        'license_number',
-                        'like',
-                        '%' . $request->input('license_number') . '%'
-                    )
-                )
-                ->when(
-                    $request->filled('service_location'),
-                    fn ($query) => $query->whereJsonContains(
-                        'service_locations',
-                        $request->input('service_location')
-                    )
-                )
-                ->get()
-                ->map(fn ($parent) => $this->formatParent($parent));
+            $otherLang = $this->lang == 1 ? 2 : 1;
+
+            $tourGuides = TourGuide::query()
+                ->with(['parent' => fn($a) => $a->withAvg('ratings', 'rating')
+                    ->with(['guides' => fn($b) => $b->where('language_id', $otherLang)->select('tour_guide_parent_id', 'name')])])
+                ->where('language_id', $this->lang)
+                ->when($request->filled('name'), fn($q) => $q->where('name', 'like', '%' . $request->name . '%'))
+                ->when($request->filled('email'), fn($q) => $q->whereHas('parent', fn($p) => $p->where('email', 'like', '%' . $request->email . '%')))
+                ->when($request->filled('phone_number'), fn($q) => $q->whereHas('parent', fn($p) => $p->where('phone_number', 'like', '%' . $request->phone_number . '%')))
+                ->when($request->filled('license_number'), fn($q) => $q->whereHas('parent', fn($p) => $p->where('license_number', 'like', '%' . $request->license_number . '%')))
+                ->when($request->filled('service_location'), fn($q) => $q->whereHas('parent', fn($p) => $p->whereJsonContains('service_locations', $request->service_location)))
+                ->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                ->through(fn($g) => [
+                    'id'               => $g->id,
+                    'parent_id'        => $g->tour_guide_parent_id,
+                    'name'             => $g->name,
+                    'name_en'          => $g->parent?->guides->first()?->name ?? '',
+                    'phone'            => $g->parent?->phone_number ?? '',
+                    'email'            => $g->parent?->email ?? '',
+                    'license_number'   => $g->parent?->license_number ?? '',
+                    'address'          => $g->address ?? '',
+                    'description'      => $g->description ?? '',
+                    'service_locations' => $g->parent?->service_locations ?? [],
+                    'image'            => $g->parent?->image,
+                    'ratings'          => (float) ($g->parent?->ratings_avg_rating ?? 0),
+                ]);
 
             return response()->json([
                 'status_code' => 200,
                 'data' => $tourGuides,
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -100,7 +80,6 @@ class TourGuideController extends Controller
                 'status_code' => 200,
                 'data' => $this->formatParent($parent),
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -188,7 +167,6 @@ class TourGuideController extends Controller
                 'message' => 'Tour guide created successfully',
                 'data' => $this->formatParent($parent),
             ], 201);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -317,7 +295,6 @@ class TourGuideController extends Controller
                 'message' => 'Tour guide updated successfully',
                 'data' => $this->formatParent($parent),
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -335,11 +312,7 @@ class TourGuideController extends Controller
     public function fetchTourGuide(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'language_id' => [
-                'nullable',
-                'integer',
-                'exists:languages,id',
-            ],
+            'language_id' => ['nullable', 'integer', 'exists:languages,id'],
         ]);
 
         if ($validator->fails()) {
@@ -352,39 +325,36 @@ class TourGuideController extends Controller
 
         try {
             $languageId = $request->input('language_id') ?: 1;
+            $otherLang = $languageId == 1 ? 2 : 1;
 
             $tourGuides = TourGuide::query()
-                ->with('parent')
+                ->with(['parent' => fn($a) => $a->withAvg('ratings', 'rating')
+                    ->with(['guides' => fn($b) => $b->where('language_id', $otherLang)->select('tour_guide_parent_id', 'name')])])
                 ->where('language_id', $languageId)
-                ->get()
-                ->map(function ($guide) {
-                    $parent = $guide->parent;
-
-                    return [
-                        'id' => $parent->id,
-                        'translation_id' => $guide->id,
-                        'language_id' => $guide->language_id,
-                        'name' => $guide->name,
-                        'description' => $guide->description,
-
-                        'email' => $parent->email,
-                        'phone_number' => $parent->phone_number,
-                        'website' => $parent->website,
-                        'logo' => $parent->logo,
-                        'license_number' => $parent->license_number,
-                        'license_document' => $parent->license_document,
-                        'service_locations' => $parent->service_locations,
-                        'rate_per_day' => $parent->rate_per_day,
-                    ];
-                })
-                ->values();
+                ->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                ->through(fn($g) => [
+                    'id'               => $g->id,
+                    'parent_id'        => $g->tour_guide_parent_id,
+                    'language_id'      => $g->language_id,
+                    'name'             => $g->name,
+                    'name_en'          => $g->parent?->guides->first()?->name ?? '',
+                    'description'      => $g->description ?? '',
+                    'email'            => $g->parent?->email ?? '',
+                    'phone'            => $g->parent?->phone_number ?? '',
+                    'website'          => $g->parent?->website ?? '',
+                    'logo'             => $g->parent?->logo,
+                    'license_number'   => $g->parent?->license_number ?? '',
+                    'license_document' => $g->parent?->license_document,
+                    'service_locations' => $g->parent?->service_locations ?? [],
+                    'rate_per_day'     => $g->parent?->rate_per_day ?? 0,
+                    'ratings'          => (float) ($g->parent?->ratings_avg_rating ?? 0),
+                ]);
 
             return response()->json([
                 'status_code' => 200,
                 'message' => 'Tour guides fetched successfully',
                 'data' => $tourGuides,
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 
@@ -434,6 +404,10 @@ class TourGuideController extends Controller
                     'guides' => function ($query) use ($languageId) {
                         $query->where('language_id', $languageId);
                     },
+                    'ratings' => function ($query) {
+                        $query->select('id', 'tour_guide_parent_id', 'user_id', 'rating', 'review')
+                            ->with('user:id,first_name,last_name');
+                    },
                 ])
                 ->find($request->input('id'));
 
@@ -464,9 +438,9 @@ class TourGuideController extends Controller
                     'license_document' => $parent->license_document,
                     'service_locations' => $parent->service_locations,
                     'rate_per_day' => $parent->rate_per_day,
+                    'ratings' => $parent->ratings ?? [],
                 ],
             ], 200);
-
         } catch (\Throwable $e) {
             report($e);
 

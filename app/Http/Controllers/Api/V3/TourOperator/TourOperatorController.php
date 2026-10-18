@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V3\TourOperator;
 
+use App\Enum\PaginationEnum;
 use App\Http\Controllers\Controller;
 use App\Models\TourOperator;
 use App\Models\TourOperatorParent;
@@ -14,104 +15,44 @@ class TourOperatorController extends Controller
 {
     // get all tour operators
 
-
     public function index(Request $request)
     {
         try {
-            $tourOperators = TourOperatorParent::query()
-                ->with(['operators'])
-                ->when(
-                    $request->filled('organization_name'),
-                    fn($query) => $query->whereHas(
-                        'operators',
-                        fn($operator) => $operator->where(
-                            'organization_name',
-                            'like',
-                            '%' . $request->input('organization_name') . '%'
-                        )
-                    )
-                )
-                ->when(
-                    $request->filled('name'),
-                    fn($query) => $query->whereHas(
-                        'operators',
-                        fn($operator) => $operator->where(
-                            'name',
-                            'like',
-                            '%' . $request->input('name') . '%'
-                        )
-                    )
-                )
-                ->when(
-                    $request->filled('service_location'),
-                    fn($query) => $query->whereJsonContains(
-                        'service_locations',
-                        $request->input('service_location')
-                    )
-                )
-                ->when(
-                    $request->filled('email'),
-                    fn($query) => $query->where(
-                        'email',
-                        'like',
-                        '%' . $request->input('email') . '%'
-                    )
-                )
-                ->when(
-                    $request->filled('phone_number'),
-                    fn($query) => $query->where(
-                        'phone_number',
-                        'like',
-                        '%' . $request->input('phone_number') . '%'
-                    )
-                )
-                ->when(
-                    $request->filled('license_number'),
-                    fn($query) => $query->where(
-                        'license_number',
-                        'like',
-                        '%' . $request->input('license_number') . '%'
-                    )
-                )
-                ->when(
-                    $request->filled('tin_number'),
-                    fn($query) => $query->where(
-                        'tin_number',
-                        'like',
-                        '%' . $request->input('tin_number') . '%'
-                    )
-                )
-                ->get()
-                ->map(function ($parent) {
-                    return [
-                        'id' => $parent->id,
 
-                        // Shared parent fields
-                        'email' => $parent->email,
-                        'phone_number' => $parent->phone_number,
-                        'website' => $parent->website,
-                        'logo' => $parent->logo,
-                        'license_number' => $parent->license_number,
-                        'license_document' => $parent->license_document,
-                        'tin_number' => $parent->tin_number,
-                        'tin_document' => $parent->tin_document,
-                        'service_locations' => $parent->service_locations,
+            $otherLang = $this->lang == 1 ? 2 : 1;
 
-                        // All translated fields
-                        'translations' => $parent->operators->map(
-                            function ($operator) {
-                                return [
-                                    'id' => $operator->id,
-                                    'language_id' => $operator->language_id,
-                                    'organization_name' => $operator->organization_name,
-                                    'name' => $operator->name,
-                                    'address' => $operator->address,
-                                    'description' => $operator->description,
-                                ];
-                            }
-                        )->values(),
-                    ];
-                });
+            $tourOperators = TourOperator::query()
+                ->with(['parent' => fn($a) => $a->withAvg('ratings', 'rating')
+                    ->with(['operators' => fn($b) => $b->where('language_id', $otherLang)->select('tour_operator_parent_id', 'organization_name', 'name')])])
+                ->where('language_id', $this->lang)
+                ->when($request->filled('organization_name'), fn($q) => $q->where('organization_name', 'like', '%' . $request->organization_name . '%'))
+                ->when($request->filled('name'), fn($q) => $q->where('name', 'like', '%' . $request->name . '%'))
+                ->when($request->filled('email'), fn($q) => $q->whereHas('parent', fn($p) => $p->where('email', 'like', '%' . $request->email . '%')))
+                ->when($request->filled('phone_number'), fn($q) => $q->whereHas('parent', fn($p) => $p->where('phone_number', 'like', '%' . $request->phone_number . '%')))
+                ->when($request->filled('license_number'), fn($q) => $q->whereHas('parent', fn($p) => $p->where('license_number', 'like', '%' . $request->license_number . '%')))
+                ->when($request->filled('tin_number'), fn($q) => $q->whereHas('parent', fn($p) => $p->where('tin_number', 'like', '%' . $request->tin_number . '%')))
+                ->when($request->filled('service_location'), fn($q) => $q->whereHas('parent', fn($p) => $p->whereJsonContains('service_locations', $request->service_location)))
+                ->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                ->through(fn($o) => [
+                    'id'                    => $o->id,
+                    'parent_id'             => $o->tour_operator_parent_id,
+                    'organization_name'     => $o->organization_name,
+                    'organization_name_en'  => $o->parent?->operators->first()?->organization_name ?? '',
+                    'name'                  => $o->name,
+                    'name_en'               => $o->parent?->operators->first()?->name ?? '',
+                    'address'               => $o->address ?? '',
+                    'description'           => $o->description ?? '',
+                    'email'                 => $o->parent?->email ?? '',
+                    'phone'                 => $o->parent?->phone_number ?? '',
+                    'website'               => $o->parent?->website ?? '',
+                    'logo'                  => $o->parent?->logo,
+                    'license_number'        => $o->parent?->license_number ?? '',
+                    'license_document'      => $o->parent?->license_document,
+                    'tin_number'            => $o->parent?->tin_number ?? '',
+                    'tin_document'          => $o->parent?->tin_document,
+                    'service_locations'     => $o->parent?->service_locations ?? [],
+                    'ratings'               => (float) ($o->parent?->ratings_avg_rating ?? 0),
+                ]);
 
             return response()->json([
                 'status_code' => 200,
@@ -334,11 +275,7 @@ class TourOperatorController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'language_id' => [
-                    'nullable',
-                    'integer',
-                    'exists:languages,id',
-                ],
+                'language_id' => ['nullable', 'integer', 'exists:languages,id'],
             ]);
 
             if ($validator->fails()) {
@@ -349,36 +286,35 @@ class TourOperatorController extends Controller
                 ], 422);
             }
 
-            // Default language ID is 1
-            $languageId = $request->input('language_id', 1);
+            $languageId = $request->input('language_id') ?: 1;
+            $otherLang = $languageId == 1 ? 2 : 1;
 
             $tourOperators = TourOperator::query()
-                ->with('parent')
+                ->with(['parent' => fn($a) => $a->withAvg('ratings', 'rating')
+                    ->with(['operators' => fn($b) => $b->where('language_id', $otherLang)->select('tour_operator_parent_id', 'organization_name', 'name')])])
                 ->where('language_id', $languageId)
-                ->get()
-                ->map(function ($operator) {
-                    $parent = $operator->parent;
-
-                    return [
-                        'id' => $parent->id,
-                        'translation_id' => $operator->id,
-                        'language_id' => $operator->language_id,
-                        'organization_name' => $operator->organization_name,
-                        'name' => $operator->name,
-                        'address' => $operator->address,
-                        'description' => $operator->description,
-                        'email' => $parent->email,
-                        'phone_number' => $parent->phone_number,
-                        'website' => $parent->website,
-                        'logo' => $parent->logo,
-                        'license_number' => $parent->license_number,
-                        'license_document' => $parent->license_document,
-                        'tin_number' => $parent->tin_number,
-                        'tin_document' => $parent->tin_document,
-                        'service_locations' => $parent->service_locations,
-                    ];
-                })
-                ->values();
+                ->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                ->through(fn($o) => [
+                    'id'                   => $o->id,
+                    'parent_id'            => $o->tour_operator_parent_id,
+                    'language_id'          => $o->language_id,
+                    'organization_name'    => $o->organization_name,
+                    'organization_name_en' => $o->parent?->operators->first()?->organization_name ?? '',
+                    'name'                 => $o->name,
+                    'name_en'              => $o->parent?->operators->first()?->name ?? '',
+                    'address'              => $o->address ?? '',
+                    'description'          => $o->description ?? '',
+                    'email'                => $o->parent?->email ?? '',
+                    'phone'                => $o->parent?->phone_number ?? '',
+                    'website'              => $o->parent?->website ?? '',
+                    'logo'                 => $o->parent?->logo,
+                    'license_number'       => $o->parent?->license_number ?? '',
+                    'license_document'     => $o->parent?->license_document,
+                    'tin_number'           => $o->parent?->tin_number ?? '',
+                    'tin_document'         => $o->parent?->tin_document,
+                    'service_locations'    => $o->parent?->service_locations ?? [],
+                    'ratings'              => (float) ($o->parent?->ratings_avg_rating ?? 0),
+                ]);
 
             return response()->json([
                 'status_code' => 200,
@@ -432,6 +368,10 @@ class TourOperatorController extends Controller
                     'operators' => function ($query) use ($languageId) {
                         $query->where('language_id', $languageId);
                     },
+                    'ratings' => function ($query) {
+                        $query->select('id', 'tour_operator_parent_id', 'user_id', 'rating', 'review')
+                            ->with('user:id,first_name,last_name');
+                    },
                 ])
                 ->find($id);
 
@@ -465,6 +405,7 @@ class TourOperatorController extends Controller
                     'tin_number' => $parent->tin_number,
                     'tin_document' => $parent->tin_document,
                     'service_locations' => $parent->service_locations,
+                    'ratings' => $parent->ratings ?? [],
                 ],
             ], 200);
         } catch (\Throwable $e) {
@@ -472,7 +413,7 @@ class TourOperatorController extends Controller
 
             return response()->json([
                 'status_code' => 500,
-                'message' => 'Something went wrong'. $e->getMessage(),
+                'message' => 'Something went wrong' . $e->getMessage(),
             ], 500);
         }
     }

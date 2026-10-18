@@ -44,6 +44,42 @@ class HotelController extends Controller
             ], 403);
         }
     }
+
+    // TODO @fa 2024-11-25 hotel details
+    public function details(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|integer|exists:hotel_parents,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+        try {
+            $hotel = Hotel::with(['parent','categoryParent'=>fn($a)=>$a->with(['translate'=>fn($b)=>$b->where('language_id',$this->lang)]),'typeParent'=>fn($a)=>$a->with(['translate'=>fn($b)=>$b->where('language_id',$this->lang)])])->findOrFail($request->id);
+            $hotel->load([
+                'parent.ratings' => fn($q) => $q
+                    ->select('id', 'hotel_parent_id', 'user_id', 'rating', 'review') // 
+                    ->with('user:id,first_name,last_name') // load user with only id, first_name, last_name, email
+            ]);
+
+            return response()->json([
+                'status_code' => 200,
+                'data' => $hotel
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Something went wrong',
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
+
+
     //TODO @fa 2024-11-25 hotel type store
     public function hotelTypeStore(Request $request)
     {
@@ -325,38 +361,76 @@ class HotelController extends Controller
     public function hotelList(Request $request)
     {
         try {
-            $hotels = Hotel::query()
-                ->with(['parent',
-                    'spotParent'=>fn($a)=>$a->with(['translate'=>fn($b)=>$b->where('language_id',$this->lang)]),
-                    'categoryParent'=>fn($a)=>$a->with(['translate'=>fn($b)=>$b->where('language_id',$this->lang)]),
-                    'typeParent'=>fn($a)=>$a->with(['translate'=>fn($b)=>$b->where('language_id',$this->lang)]),
-                ])
-                ->when($request->filled('spot_parent_id'),fn($a)=>$a->whereHas('parent',fn($b)=>$b->where('spot_parent_id',$request->spot_parent_id)))
+            $otherLang = $this->lang == 1 ? 2 : 1;
+
+            $hotels = Hotel::with([
+                'parent' => fn($a) => $a
+                    ->select('id', 'image', 'website_link', 'map_link', 'spot_parent_id', 'hotel_category_parent_id', 'hotel_type_parent_id')
+                    ->with([
+                        // name in the other language (English/other)
+                        'hotels' => fn($q) => $q
+                            ->select('hotel_parent_id', 'name')
+                            ->where('language_id', $otherLang),
+
+                        // eager load ratings (avoids N+1)
+                        'ratings' => fn($r) => $r->select('hotel_parent_id', 'rating'),
+                    ]),
+
+                // names in the current language
+                'spotParent' => fn($a) => $a
+                    ->select('spot_parents.id')
+                    ->with(['translate' => fn($b) => $b
+                        ->select('id', 'spot_parent_id', 'name')
+                        ->where('language_id', $this->lang)]),
+
+                'categoryParent' => fn($a) => $a
+                    ->select('hotel_category_parents.id')
+                    ->with(['translate' => fn($b) => $b
+                        ->select('id', 'hotel_category_parent_id', 'name')
+                        ->where('language_id', $this->lang)]),
+
+                'typeParent' => fn($a) => $a
+                    ->select('hotel_type_parents.id')
+                    ->with(['translate' => fn($b) => $b
+                        ->select('id', 'hotel_type_parent_id', 'name')
+                        ->where('language_id', $this->lang)]),
+            ])
+                ->when($request->filled('name'), fn($q) => $q->where('name', 'like', '%' . $request->name . '%'))
+                ->when($request->filled('id'), fn($q) => $q->where('id', $request->id))
+                ->when($request->filled('spot_parent_id'), fn($q) => $q->whereHas(
+                    'parent',
+                    fn($p) => $p->where('spot_parent_id', $request->spot_parent_id)
+                ))
                 ->where('language_id', $this->lang)
+                ->select('id', 'name', 'hotel_parent_id', 'phone', 'address', 'description')
                 ->paginate($request->integer('per_page', PaginationEnum::Max->value))
-                ->through(function ($hotel){
+                ->through(function ($hotel) {
+                    $parent = $hotel->parent;
+
                     return [
-                        'id' => $hotel->id,
-                        'parent_id' => $hotel->hotel_parent_id,
-                        'name' => $hotel->name,
-                        'phone' => $hotel->phone ?? '',
-                        'address' => $hotel->address ?? '',
-                        'description' => $hotel->description ?? '',
-                        'website_link' => $hotel?->parent?->website_link ?? '',
-                        'map_link' => $hotel?->parent?->map_link ?? '',
-                        'image' => $hotel?->parent?->image ?? '',
-                        'spot_id' => $hotel?->parent?->spot_parent_id ?? '',
-                        'spot_name'=>$hotel?->spotParent?->translate?->name ?? '',
-                        'category_name'=>$hotel?->categoryParent?->translate?->name ?? '',
-                        'type_name'=>$hotel?->typeParent?->translate?->name ?? '',
+                        'id'            => $hotel->id,
+                        'parent_id'     => $hotel->hotel_parent_id,
+                        'name'          => $hotel->name,
+                        'name_en'       => $parent?->hotel?->pluck('name')->first(),
+                        'phone'         => $hotel->phone ?? '',
+                        'address'       => $hotel->address ?? '',
+                        'description'   => $hotel->description ?? '',
+                        'website_link'  => $parent?->website_link ?? '',
+                        'map_link'      => $parent?->map_link ?? '',
+                        'image'         => $parent?->image,
+                        'spot_id'       => $parent?->spot_parent_id,
+                        'spot_name'     => $hotel->spotParent?->translate?->name ?? '',
+                        'category_name' => $hotel->categoryParent?->translate?->name ?? '',
+                        'type_name'     => $hotel->typeParent?->translate?->name ?? '',
+                        'ratings'       => $parent?->ratings?->count() ? $parent->ratings->avg('rating') : 0,
                     ];
-                })
-            ;
+                });
+
             return response()->json([
                 'status_code' => 200,
                 'data' => $hotels
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',

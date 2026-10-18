@@ -22,4 +22,9 @@ class RestaurantParent extends Model
             get: fn($value) => $this->disk($value),
         );
     }
+
+    public function ratings(): HasMany
+{
+    return $this->hasMany(RestaurantRating::class, 'restaurant_parent_id')->where('status', 1);
+}
 }

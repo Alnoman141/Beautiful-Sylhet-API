@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class SpotParent extends Model
 {
@@ -30,17 +31,17 @@ class SpotParent extends Model
     }
     public function images(): HasMany
     {
-        return $this->hasMany(SpotImage::class,'spot_parent_id');
+        return $this->hasMany(SpotImage::class, 'spot_parent_id');
     }
 
     public function spot(): HasMany
     {
-        return $this->hasMany(Spot::class,'spot_parent_id');
+        return $this->hasMany(Spot::class, 'spot_parent_id');
     }
     //TODO @fa 2024-11-25 has one translate
     public function translate(): HasOne
     {
-        return $this->hasOne(Spot::class,'spot_parent_id');
+        return $this->hasOne(Spot::class, 'spot_parent_id');
     }
 
     public function hotels(): HasManyThrough
@@ -54,8 +55,14 @@ class SpotParent extends Model
     }
 
     // has many ratings
-    public function ratings(): HasMany 
+    public function ratings(): HasMany
     {
-        return $this->hasMany(SpotRatting::class,'spot_parent_id')->where('status', 1);
+        return $this->hasMany(SpotRatting::class, 'spot_parent_id')->where('status', 1);
+    }
+
+    // has many spot types
+    public function spotTypeParents()
+    {
+        return $this->belongsTo(SpotTypeParent::class, 'spot_type_parent_id');
     }
 }

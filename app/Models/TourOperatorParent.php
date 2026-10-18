@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TourOperatorParent extends Model
 {
@@ -25,5 +26,10 @@ class TourOperatorParent extends Model
     public function operators()
     {
         return $this->hasMany(TourOperator::class, 'tour_operator_parent_id');
+    }
+
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(TourOperatorRating::class, 'tour_operator_parent_id')->where('status', 1);
     }
 }

@@ -20,23 +20,52 @@ class SpotController extends Controller
     public function index(Request $request)
     {
         try {
-            $spots = Spot::with(['parent' => fn($a) => $a->select('id', 'image')->with(['spot' => fn($q) => $q->select(['spot_parent_id', 'name'], ['ratings' => fn($r) => $r->select('rating')])->where('language_id', $this->lang == 1 ? 2 : 1)])])
+            $spots = Spot::with([
+                'parent' => fn($a) => $a
+                    ->select('id', 'image', 'spot_type_parent_id') // spot_type_parent_id is required for the relation
+                    ->with([
+                        // English/other-language name
+                        'spot' => fn($q) => $q
+                            ->select('spot_parent_id', 'name')
+                            ->where('language_id', $this->lang == 1 ? 2 : 1),
+
+                        // eager load ratings (avoids N+1)
+                        'ratings' => fn($r) => $r->select('spot_parent_id', 'rating'),
+
+                        // spot type name in the current language
+                        'spotTypeParents' => fn($t) => $t
+                            ->select('id')
+                            ->with([
+                                'translate' => fn($tr) => $tr
+                                    ->select('id', 'spot_type_parent_id', 'name')
+                                    ->where('language_id', $this->lang == 1 ? 2 : 1),
+                            ]),
+                    ]),
+            ])
                 ->when($request->filled('name'), fn($q) => $q->where('name', 'like', '%' . $request->name . '%'))
                 ->when($request->filled('id'), fn($q) => $q->where('id', $request->id))
+                ->when($request->filled('spot_type_parent_id'), fn($q) => $q->whereHas(
+                'parent',
+                fn($p) => $p->where('spot_type_parent_id', $request->spot_type_parent_id)
+            ))
                 ->where('language_id', $this->lang)
                 ->select('id', 'name', 'spot_parent_id', 'tag_line')
                 ->paginate($request->integer('per_page', PaginationEnum::Max->value))
                 ->through(function ($spot) {
+                    $parent = $spot->parent;
+
                     return [
-                        'id' => $spot->id,
-                        'parent_id' => $spot->spot_parent_id,
-                        'name' => $spot->name,
-                        'tag_line' => $spot->tag_line,
-                        'name_en' => collect($spot?->parent?->spot)->pluck('name')->first(),
-                        'image' => $spot?->parent?->image,
-                        'ratings' => $spot?->parent->ratings?->count() ? $spot?->parent->ratings->avg('rating') : 0,
+                        'id'             => $spot->id,
+                        'parent_id'      => $spot->spot_parent_id,
+                        'name'           => $spot->name,
+                        'tag_line'       => $spot->tag_line,
+                        'name_en'        => $parent?->spot?->pluck('name')->first(),
+                        'image'          => $parent?->image,
+                        'spot_type' => $parent?->spotTypeParents?->translate,
+                        'ratings'        => $parent?->ratings?->count() ? $parent->ratings->avg('rating') : 0,
                     ];
                 });
+
             return response()->json([
                 'status_code' => 200,
                 'data' => $spots
@@ -76,6 +105,15 @@ class SpotController extends Controller
                     ])
                 );
             }
+
+            // 3. Reshape the parent's spot type (only if a parent exists)
+            if ($spot->parent) {
+                $spot->parent->setRelation(
+                    'spot_type',
+                    $spot->parent?->spotTypeParents?->translate
+                );
+            }
+
             $map = $spot?->parent?->map_link;
             $link = Str::between($map, 'place/', '/@');
             $name = Str::lower(Str::replace('+', ' ', $link));
@@ -99,6 +137,7 @@ class SpotController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
             'link' => 'nullable',
             'map_link' => 'nullable',
+            'spot_type_parent_id' => 'required|exists:spot_type_parents,id',
             'data' => 'required|array',
             'data.*.name' => 'required',
             /*'data.*.description' => 'nullable',
@@ -132,6 +171,7 @@ class SpotController extends Controller
                 'image' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'spots') : null,
                 'link' => $request->link,
                 'map_link' => $request->map_link,
+                'spot_type_parent_id' => $request->spot_type_parent_id,
             ]);
             foreach ($request->data as $data) {
                 $data['spot_parent_id'] = $spotParent->id;
@@ -192,6 +232,7 @@ class SpotController extends Controller
             'id' => 'required|exists:spot_parents,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
             'link' => 'nullable',
+            'spot_type_parent_id' => 'required|exists:spot_type_parents,id',
             'map_link' => 'nullable',
             'data' => 'required|array',
             'data.*.id' => 'required|exists:spots,id',
@@ -227,6 +268,7 @@ class SpotController extends Controller
             $spotParent->update([
                 'link' => $request->link,
                 'map_link' => $request->map_link,
+                'spot_type_parent_id' => $request->spot_type_parent_id,
             ]);
             if ($request->hasFile('image')) {
                 Fa::deleteImage($spotParent?->image);
