@@ -24,4 +24,10 @@ class PoliceParent extends Model
     {
         return $this->belongsTo(SpotParent::class,'spot_parent_id');
     }
+
+    // updazila relation
+    public function upazila(): BelongsTo 
+    {
+        return $this->belongsTo(Upazila::class,'upazila_id');
+    }
 }

@@ -16,34 +16,43 @@ class PoliceController extends Controller
     //TODO @fa 2024-11-28 list of police
     public function index(Request $request)
     {
+        $upazilaColumn = $this->lang == 1 ? 'bn' : 'en';
         try {
             $polices = Police::query()
-                ->with(['spot'=>fn($a)=>$a
-                    ->where('language_id',$this->lang)
-                    ->select('spots.id as id','name','spots.spot_parent_id as spot_parent_id')
+                ->with([
+                    'spot' => fn($q) => $q
+                        ->where('language_id', $this->lang)
+                        ->select('spots.id as id', 'name', 'spots.spot_parent_id as spot_parent_id'),
+
+                    'parent',
+
+                    'parent.upazila' => fn($q) => $q
+                        ->select('id', 'district_id', $upazilaColumn),
                 ])
-                ->when($request->filled('spot_parent_id'),fn($q) => $q->whereHas('parent',fn($q) => $q->where('spot_parent_id',$request->spot_parent_id)))
-                ->where('language_id',$this->lang)
-                ->paginate($request->integer('per_page',PaginationEnum::Default->value))
-                ->through(function ($police){
+                ->when($request->filled('spot_parent_id'), fn($q) => $q->whereHas('parent', fn($q) => $q->where('spot_parent_id', $request->spot_parent_id)))
+                ->where('language_id', $this->lang)
+                ->paginate($request->integer('per_page', PaginationEnum::Default->value))
+                ->through(function ($police) {
                     return [
                         'id' => $police->id,
-                        'parent_id'=> $police->police_parent_id,
+                        'parent_id' => $police->police_parent_id,
                         'name' => $police->name,
                         'phone' => $police->phone,
                         'spot_id' => $police?->spot?->id,
                         'spot_parent_id' => $police?->spot?->spot_parent_id,
                         'spot_name' => $police?->spot?->name,
+                        'type' => $police?->parent?->type,
+                        'upazila_id' => $police?->parent?->upazila?->id,
+                        'upazila' => $police?->parent?->upazila,
                     ];
-                })
-            ;
+                });
             return response()->json([
-                'status_code'=> 200,
+                'status_code' => 200,
                 'data' => $polices
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'status_code'=> 403,
+                'status_code' => 403,
                 'errors' => $e->getMessage()
             ], 403);
         }
@@ -52,18 +61,21 @@ class PoliceController extends Controller
     public function show(Request $request)
     {
         try {
-            $police = Police::with(['spot'=>fn($a)=>$a
-                    ->where('language_id',$this->lang)
-                    ->select('spots.id as id','name')
-            ])->where('language_id',$this->lang)
+            $police = Police::with([
+                'spot' => fn($a) => $a
+                    ->where('language_id', $this->lang)
+                    ->select('spots.id as id', 'name'),
+                'parent.upazila' => fn($q) => $q
+                    ->select('id', 'district_id', $this->lang == 1 ? 'bn' : 'en'),
+            ])->where('language_id', $this->lang)
                 ->findOrFail($request->id);
             return response()->json([
-                'status_code'=> 200,
+                'status_code' => 200,
                 'data' => $police
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'status_code'=> 403,
+                'status_code' => 403,
                 'errors' => $e->getMessage()
             ], 403);
         }
@@ -73,7 +85,9 @@ class PoliceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'spot_parent_id' => 'nullable|exists:spot_parents,id',
-            'data'=> 'required|array',
+            'upazila_id' => 'nullable|exists:upazilas,id',
+            'type' => 'nullable|in:local_thana,tourist_police',
+            'data' => 'required|array',
             'data.*.name' => 'required|string|max:255',
             'data.*.language_id' => 'required|integer|not_in:0|exists:languages,id',
             'data.*.phone' => 'nullable|max:20',
@@ -81,33 +95,35 @@ class PoliceController extends Controller
         ]);
         if ($validator->fails()) {
             return response()->json([
-                'status_code'=> 403,
+                'status_code' => 403,
                 'message' => 'Validation error',
                 'errors' => $validator->errors()
             ], 403);
         }
         try {
             $parent = PoliceParent::create([
-                'spot_parent_id' => $request->spot_parent_id
+                'spot_parent_id' => $request->spot_parent_id,
+                'upazila_id' => $request->upazila_id,
+                'type' => $request->type,
             ]);
             foreach ($request->data as $data) {
                 Police::create([
-                    'police_parent_id'=> $parent->id,
-                    'language_id'=> $data['language_id'],
-                    'name'=> $data['name'],
-                    'phone'=> @$data['phone'],
-                    'instruction'=> @$data['instruction'],
+                    'police_parent_id' => $parent->id,
+                    'language_id' => $data['language_id'],
+                    'name' => $data['name'],
+                    'phone' => @$data['phone'],
+                    'instruction' => @$data['instruction'],
                 ]);
             }
             DB::commit();
             return response()->json([
-                'status_code'=> 200,
+                'status_code' => 200,
                 'message' => 'Tourist police created successfully'
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'status_code'=> 403,
+                'status_code' => 403,
                 'errors' => $e->getMessage()
             ], 403);
         }
@@ -116,11 +132,11 @@ class PoliceController extends Controller
     public function edit(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id'=> 'required|exists:police_parents,id',
+            'id' => 'required|exists:police_parents,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
-                'status_code'=> 403,
+                'status_code' => 403,
                 'message' => 'Validation error',
                 'errors' => $validator->errors()
             ], 403);
@@ -129,12 +145,12 @@ class PoliceController extends Controller
             $police = PoliceParent::with('police')
                 ->findOrFail($request->id);
             return response()->json([
-                'status_code'=> 200,
+                'status_code' => 200,
                 'data' => $police
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
-                'status_code'=> 403,
+                'status_code' => 403,
                 'errors' => $e->getMessage()
             ], 403);
         }
@@ -143,9 +159,11 @@ class PoliceController extends Controller
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id'=> 'required|exists:police_parents,id',
+            'id' => 'required|exists:police_parents,id',
             'spot_parent_id' => 'nullable|exists:spot_parents,id',
-            'data'=> 'required|array',
+            'upazila_id' => 'nullable|exists:upazilas,id',
+            'type' => 'nullable|in:local_thana,tourist_police',
+            'data' => 'required|array',
             'data.*.id' => 'required|exists:police,id',
             'data.*.name' => 'required|string|max:255',
             'data.*.language_id' => 'required|integer|not_in:0|exists:languages,id',
@@ -154,7 +172,7 @@ class PoliceController extends Controller
         ]);
         if ($validator->fails()) {
             return response()->json([
-                'status_code'=> 403,
+                'status_code' => 403,
                 'message' => 'Validation error',
                 'errors' => $validator->errors()
             ], 403);
@@ -163,26 +181,28 @@ class PoliceController extends Controller
         try {
             $parent = PoliceParent::findOrFail($request->id);
             $parent->update([
-                'spot_parent_id' => $request->spot_parent_id
+                'spot_parent_id' => $request->spot_parent_id,
+                'upazila_id' => $request->upazila_id,
+                'type' => $request->type,
             ]);
             foreach ($request->data as $data) {
                 $police = Police::findOrFail($data['id']);
                 $police->update([
-                    'language_id'=> $data['language_id'],
-                    'name'=> $data['name'],
-                    'phone'=> @$data['phone'],
-                    'instruction'=> @$data['instruction'],
+                    'language_id' => $data['language_id'],
+                    'name' => $data['name'],
+                    'phone' => @$data['phone'],
+                    'instruction' => @$data['instruction'],
                 ]);
             }
             DB::commit();
             return response()->json([
-                'status_code'=> 200,
+                'status_code' => 200,
                 'message' => 'Tourist police updated successfully'
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'status_code'=> 403,
+                'status_code' => 403,
                 'errors' => $e->getMessage(),
             ], 403);
         }
@@ -191,11 +211,11 @@ class PoliceController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id'=> 'required|exists:police_parents,id',
+            'id' => 'required|exists:police_parents,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
-                'status_code'=> 403,
+                'status_code' => 403,
                 'message' => 'Validation error',
                 'errors' => $validator->errors()
             ], 403);
@@ -204,19 +224,19 @@ class PoliceController extends Controller
         try {
             $police = PoliceParent::findOrFail($request->id);
             //$police->police()->delete();
-            collect($police?->police)->each(function ($item){
+            collect($police?->police)->each(function ($item) {
                 $item->delete();
             });
             $police->delete();
             DB::commit();
             return response()->json([
-                'status_code'=> 200,
+                'status_code' => 200,
                 'message' => 'Tourist police deleted successfully'
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'status_code'=> 403,
+                'status_code' => 403,
                 'errors' => $e->getMessage()
             ], 403);
         }

@@ -119,4 +119,39 @@ class HotelRatingController extends Controller
             ], 500);
         }
     }
+
+    public function getRating(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'hotel_parent_id' => 'required|exists:hotels,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        try {
+            $ratings = HotelRating::where('hotel_parent_id', $data['hotel_parent_id'])
+                ->select('id', 'hotel_parent_id', 'user_id', 'rating', 'review', 'created_at')
+                ->with(['user:id,first_name']) // Eager load user with selected fields
+                ->paginate($request->integer('per_page', PaginationEnum::Max->value));
+
+            return response()->json([
+                'status_code' => 200,
+                'data' => $ratings
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'An error occurred while fetching hotel ratings.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

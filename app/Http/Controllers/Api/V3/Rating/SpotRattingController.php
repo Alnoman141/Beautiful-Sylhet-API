@@ -147,4 +147,40 @@ class SpotRattingController extends Controller
             ], 500);
         }
     }
+
+    public function getRating(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'spot_parent_id' => 'required|exists:spot_parents,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        try {
+            $ratings = SpotRatting::where('spot_parent_id', $data['spot_parent_id'])
+            ->select('id', 'spot_parent_id', 'user_id', 'rating', 'review', 'created_at')
+            ->with(['user:id,first_name'])
+            ->paginate($request->integer('per_page', PaginationEnum::Max->value));
+
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Spot ratings retrieved successfully',
+                'data' => $ratings,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Failed to retrieve spot ratings',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

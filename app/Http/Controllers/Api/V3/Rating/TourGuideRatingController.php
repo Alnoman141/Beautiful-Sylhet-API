@@ -117,4 +117,40 @@ class TourGuideRatingController extends Controller
             ], 500);
         }
     }
+
+    public function getRating(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'tour_guide_parent_id' => 'required|exists:tour_guides,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        try {
+            $ratings = TourGuideRating::where('tour_guide_parent_id', $data['tour_guide_parent_id'])
+            ->select('id', 'tour_guide_parent_id', 'user_id', 'rating', 'review', 'created_at')
+            ->with(['user:id,first_name']) // Eager load the user relationship with selected fields
+            ->paginate($request->integer('per_page', PaginationEnum::Max->value));
+
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Tour guide ratings fetched successfully',
+                'data' => $ratings,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Failed to fetch tour guide ratings',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

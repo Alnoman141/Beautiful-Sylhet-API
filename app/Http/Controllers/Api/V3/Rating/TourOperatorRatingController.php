@@ -117,4 +117,40 @@ class TourOperatorRatingController extends Controller
             ], 500);
         }
     }
+
+    public function getRating(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'tour_operator_parent_id' => 'required|exists:tour_operators,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        try {
+            $ratings = TourOperatorRating::where('tour_operator_parent_id', $data['tour_operator_parent_id'])
+                ->select('id', 'tour_operator_parent_id', 'user_id', 'rating', 'review', 'created_at')
+                ->with(['user:id,first_name']) // Eager load user with selected fields
+                ->paginate($request->integer('per_page', PaginationEnum::Max->value));
+
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Tour operator ratings fetched successfully',
+                'data' => $ratings,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Failed to fetch tour operator ratings',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

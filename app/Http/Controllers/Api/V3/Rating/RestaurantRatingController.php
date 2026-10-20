@@ -117,4 +117,40 @@ class RestaurantRatingController extends Controller
             ], 500);
         }
     }
+
+    public function getRating(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'restaurant_parent_id' => 'required|exists:restaurants,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status_code' => 422,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        try {
+            $ratings = RestaurantRating::where('restaurant_parent_id', $data['restaurant_parent_id'])
+            ->select('id', 'restaurant_parent_id', 'user_id', 'rating', 'review', 'created_at')
+            ->with(['user:id,first_name']) // Eager load user with only id, name, and email
+            ->paginate($request->integer('per_page', PaginationEnum::Max->value));
+
+            return response()->json([
+                'status_code' => 200,
+                'message' => 'Restaurant ratings fetched successfully',
+                'data' => $ratings,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Failed to fetch restaurant ratings',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
