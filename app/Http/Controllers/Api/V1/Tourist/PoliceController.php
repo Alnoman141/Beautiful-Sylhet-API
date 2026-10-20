@@ -29,7 +29,16 @@ class PoliceController extends Controller
                     'parent.upazila' => fn($q) => $q
                         ->select('id', 'district_id', $upazilaColumn),
                 ])
-                ->when($request->filled('spot_parent_id'), fn($q) => $q->whereHas('parent', fn($q) => $q->where('spot_parent_id', $request->spot_parent_id)))
+                ->when(
+                    $request->filled('spot_parent_id'),
+                    fn($q) =>
+                    $q->whereHas('parent', fn($q) => $q->where('spot_parent_id', $request->spot_parent_id))
+                )
+                ->when(
+                    $request->filled('type'),
+                    fn($q) =>
+                    $q->whereHas('parent', fn($q) => $q->where('type', $request->type))
+                )
                 ->where('language_id', $this->lang)
                 ->paginate($request->integer('per_page', PaginationEnum::Default->value))
                 ->through(function ($police) {
