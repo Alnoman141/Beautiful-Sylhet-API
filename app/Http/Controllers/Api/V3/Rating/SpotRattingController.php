@@ -28,6 +28,7 @@ class SpotRattingController extends Controller
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
             })
+            ->orderBy('created_at', 'desc')
             ->paginate($request->integer('per_page', PaginationEnum::Max->value));
 
         return response()->json([
@@ -168,6 +169,7 @@ class SpotRattingController extends Controller
             $ratings = SpotRatting::where('spot_parent_id', $data['spot_parent_id'])
             ->select('id', 'spot_parent_id', 'user_id', 'rating', 'review', 'created_at')
             ->with(['user:id,first_name'])
+            ->orderBy('created_at', 'desc')
             ->paginate($request->integer('per_page', PaginationEnum::Max->value));
 
             return response()->json([

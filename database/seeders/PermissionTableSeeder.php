@@ -929,7 +929,7 @@ class PermissionTableSeeder extends Seeder
                 ],
 
                 [
-                    'name' => 'Tea Estate',
+                    'name' => 'Top Spot',
                     'permissions' => [
                         [
                             'name' => 'show menu',

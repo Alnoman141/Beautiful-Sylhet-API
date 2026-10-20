@@ -520,7 +520,7 @@ Route::group(['prefix' => 'v1'], function () {
 
         // TODO @fa 2025-04-07 Tourist Spot Ratting
         Route::group(['prefix' => 'tourist-spot-rating'], function () {
-            Route::post('list', [App\Http\Controllers\Api\V3\Rating\TourOperatorRatingController::class, 'index']);
+            Route::post('list', [App\Http\Controllers\Api\V3\Rating\SpotRattingController::class, 'index']);
             Route::post('store', [App\Http\Controllers\Api\V3\Rating\SpotRattingController::class, 'store']);
             Route::post('change-status', [App\Http\Controllers\Api\V3\Rating\SpotRattingController::class, 'changeStatus']);
         });
