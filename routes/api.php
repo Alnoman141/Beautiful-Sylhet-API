@@ -76,6 +76,7 @@ Route::group(['prefix' => 'v1'], function () {
     //TODO @fa 2024-11-25 hotel
     Route::group(['prefix' => 'hotel'], function () {
         Route::post('list', [App\Http\Controllers\Api\V1\Hotel\HotelController::class, 'hotelList']);
+        Route::post('dropdown', [App\Http\Controllers\Api\V1\Hotel\HotelController::class, 'getDropdown']);
         Route::post('details', [App\Http\Controllers\Api\V1\Hotel\HotelController::class, 'details']);
 
         //TODO @fa 2024-11-25 hotel type list
@@ -93,8 +94,8 @@ Route::group(['prefix' => 'v1'], function () {
         Route::post('list', [App\Http\Controllers\Api\V1\Campaign\CampaignController::class, 'index']);
         Route::post('details', [App\Http\Controllers\Api\V1\Campaign\CampaignController::class, 'show']);
     });
-    Route::group(['prefix' => 'cox-bazaar'], function () {
-        Route::post('details', [App\Http\Controllers\Api\V1\Campaign\CampaignController::class, 'coxBazaar']);
+    Route::group(['prefix' => 'sylhet'], function () {
+        Route::post('details', [App\Http\Controllers\Api\V1\Campaign\CampaignController::class, 'sylhet']);
     });
 
     //TODO @fa 2024-11-28 bank
@@ -153,6 +154,7 @@ Route::group(['prefix' => 'v1'], function () {
     });
     Route::group(['prefix' => 'restaurant'], function () {
         Route::post('list', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'index']);
+        Route::post('dropdown', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'getDropdown']);
         Route::post('details', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'show']);
         Route::group(['prefix' => 'category'], function () {
             Route::post('list', [App\Http\Controllers\Api\V2\Restaurant\RestaurantController::class, 'categoryList']);
@@ -169,12 +171,14 @@ Route::group(['prefix' => 'v1'], function () {
     Route::group(['prefix' => 'tour-operator'], function () {
         Route::post('get-list', [App\Http\Controllers\Api\V3\TourOperator\TourOperatorController::class, 'fetchTourOperator']);
         Route::post('details', [App\Http\Controllers\Api\V3\TourOperator\TourOperatorController::class, 'fetchTourOperatorDetails']);
+        Route::post('dropdown', [App\Http\Controllers\Api\V3\TourOperator\TourOperatorController::class, 'getDropdown']);
     });
 
     //TODO @fa 2025-02-18 version V3 API
     Route::group(['prefix' => 'tour-guide'], function () {
         Route::post('get-list', [App\Http\Controllers\Api\V3\TourGuide\TourGuideController::class, 'fetchTourGuide']);
         Route::post('details', [App\Http\Controllers\Api\V3\TourGuide\TourGuideController::class, 'fetchTourGuideDetails']);
+        Route::post('dropdown', [App\Http\Controllers\Api\V3\TourGuide\TourGuideController::class, 'getDropdown']);
     });
 
     //TODO @fa 2025-02-18 version V3 API
@@ -327,9 +331,9 @@ Route::group(['prefix' => 'v1'], function () {
             Route::post('delete', [App\Http\Controllers\Api\V1\Campaign\CampaignController::class, 'destroy']);
         });
         //TODO @fa 2024-11-28 cox bazaar
-        Route::group(['prefix' => 'cox-bazaar'], function () {
-            Route::post('store', [App\Http\Controllers\Api\V1\Campaign\CampaignController::class, 'coxBazaarStore']);
-            Route::post('edit', [App\Http\Controllers\Api\V1\Campaign\CampaignController::class, 'coxBazaarEdit']);
+        Route::group(['prefix' => 'sylhet'], function () {
+            Route::post('store', [App\Http\Controllers\Api\V1\Campaign\CampaignController::class, 'sylhetStore']);
+            Route::post('edit', [App\Http\Controllers\Api\V1\Campaign\CampaignController::class, 'sylhetEdit']);
         });
 
         //TODO @fa 2024-11-28 bank
@@ -563,7 +567,7 @@ Route::group(['prefix' => 'v1'], function () {
 
         // TODO @fa 2025-04-07 Tour Operator Rating
         Route::group(['prefix' => 'tour-operator-rating'], function () {
-            Route::post('list', [App\Http\Controllers\Api\V3\Rating\TourGuideRatingController::class, 'index']);
+            Route::post('list', [App\Http\Controllers\Api\V3\Rating\TourOperatorRatingController::class, 'index']);
             Route::post('store', [App\Http\Controllers\Api\V3\Rating\TourOperatorRatingController::class, 'store']);
             Route::post('change-status', [App\Http\Controllers\Api\V3\Rating\TourOperatorRatingController::class, 'changeStatus']);
         });

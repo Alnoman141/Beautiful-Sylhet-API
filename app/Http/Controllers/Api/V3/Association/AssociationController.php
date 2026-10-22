@@ -301,6 +301,7 @@ class AssociationController extends Controller
                     ]);
             }
 
+
             DB::commit();
 
             return response()->json([

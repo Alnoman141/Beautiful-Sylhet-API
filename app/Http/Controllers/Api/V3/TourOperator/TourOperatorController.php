@@ -6,10 +6,12 @@ use App\Enum\PaginationEnum;
 use App\Http\Controllers\Controller;
 use App\Models\TourOperator;
 use App\Models\TourOperatorParent;
+use App\Services\Fa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 class TourOperatorController extends Controller
 {
@@ -121,6 +123,8 @@ class TourOperatorController extends Controller
                 'license_number' => $validated['license_number'] ?? null,
                 'tin_number' => $validated['tin_number'] ?? null,
                 'service_locations' => $validated['service_locations'] ?? [],
+                'logo' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'tour-operators') : null,
+                'license_document' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'tour-operators/licenses') : null,
             ]);
 
             foreach ($validated['data'] as $data) {
@@ -220,6 +224,15 @@ class TourOperatorController extends Controller
 
             $parent = TourOperatorParent::findOrFail($validated['id']);
 
+            // Only touch the image if a new file was actually uploaded.
+            if ($request->hasFile('logo')) {
+                $newImage = $request->hasFile('logo') ? Fa::uploadImage($request->file('logo'), 'tour-operators') : null;
+
+                $oldImage = $parent->logo;
+
+                $parent->update(['logo' => $newImage], ['map' => $validated['map'] ?? null]);
+            }
+
             // Update shared information
             $parent->update([
                 'email' => $validated['email'],
@@ -230,19 +243,9 @@ class TourOperatorController extends Controller
                 'service_locations' => $validated['service_locations'] ?? [],
             ]);
 
-            // Update translated records belonging to this parent only
-            foreach ($validated['data'] as $data) {
-                $operator = $parent->operators()
-                    ->where('id', $data['id'])
-                    ->firstOrFail();
-
-                $operator->update([
-                    'language_id' => $data['language_id'],
-                    'organization_name' => $data['organization_name'],
-                    'name' => $data['name'],
-                    'address' => $data['address'],
-                    'description' => $data['description'] ?? null,
-                ]);
+            // Delete the old file only after the transaction succeeded.
+            if (!empty($oldImage)) {
+                Storage::disk('s3')->delete($oldImage);
             }
 
             DB::commit();
@@ -414,6 +417,38 @@ class TourOperatorController extends Controller
             return response()->json([
                 'status_code' => 500,
                 'message' => 'Something went wrong' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getDropdown(Request $request)
+    {
+        try {
+            $languageId = $request->input('language_id', 1);
+
+            $tourOperators = TourOperator::query()
+                ->where('language_id', $languageId)
+                ->with('parent:id,logo')
+                ->get()
+                ->map(function ($operator) {
+                    return [
+                        'id' => $operator->id,
+                        'name' => $operator->name,
+                        'organization_name' => $operator->organization_name,
+                        'parent_id' => $operator->tour_operator_parent_id,
+                    ];
+                });
+
+            return response()->json([
+                'status_code' => 200,
+                'data' => $tourOperators,
+            ], 200);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Something went wrong',
             ], 500);
         }
     }

@@ -15,10 +15,15 @@ class HotelRatingController extends Controller
     public function index(Request $request)
     {
         try {
-            $hotelRattings = HotelRating::query()
-                ->with(['hotelParent.hotels' => function ($query) use ($request) {
-                    $query->select('id', 'name', 'hotel_parent_id', 'language_id')->where('language_id', $request->input('language_id', 1));
-                }, 'user'])
+            $ratings = HotelRating::query()
+                ->with([
+                    'hotelParent:id',
+                    'hotelParent.hotels' => function ($query) use ($request) {
+                        $query->select('id', 'name', 'hotel_parent_id', 'language_id')
+                            ->where('language_id', $request->input('language_id', 1));
+                    },
+                    'user:id,first_name,last_name,avatar',
+                ])
                 ->when($request->filled('hotel_parent_id'), function ($query) use ($request) {
                     $query->where('hotel_parent_id', $request->hotel_parent_id);
                 })
@@ -28,17 +33,38 @@ class HotelRatingController extends Controller
                 ->when($request->filled('status'), function ($query) use ($request) {
                     $query->where('status', $request->status);
                 })
-                ->paginate($request->integer('per_page', PaginationEnum::Max->value));
+                ->orderBy('created_at', 'desc')
+                ->paginate($request->integer('per_page', PaginationEnum::Max->value))
+                ->through(function ($rating) {
+                    $parent = $rating->hotelParent;
+
+                    return [
+                        'id'         => $rating->id,
+                        'rating'     => $rating->rating,
+                        'review'     => $rating->review,
+                        'status'     => (bool) $rating->status,
+                        'created_at' => $rating->created_at,
+                        'hotel' => $parent ? [
+                            'id'   => $parent->id,
+                            'name' => $parent->hotels->first()?->name,
+                        ] : null,
+                        'user' => $rating->user ? [
+                            'id'     => $rating->user->id,
+                            'name'   => $rating->user->name,
+                            'avatar' => $rating->user->avatar,
+                        ] : null,
+                    ];
+                });
 
             return response()->json([
                 'status_code' => 200,
-                'data' => $hotelRattings
+                'data'        => $ratings,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 500,
-                'message' => 'An error occurred while fetching hotel ratings.',
-                'error' => $e->getMessage(),
+                'message'     => 'An error occurred while fetching hotel ratings.',
+                'error'       => $e->getMessage(),
             ], 500);
         }
     }
@@ -62,7 +88,7 @@ class HotelRatingController extends Controller
 
         $data = $validator->validated();
 
-        $data['user_id'] = Auth::id(); 
+        $data['user_id'] = Auth::id();
 
         try {
             $hotelRatting = HotelRating::create($data);
@@ -103,7 +129,7 @@ class HotelRatingController extends Controller
             $hotelRatting = HotelRating::findOrFail($data['id']);
 
             $data['status'] = $hotelRatting->status == 1 ? 0 : 1; // Toggle the status
-            
+
             $hotelRatting->update($data);
 
             return response()->json([
@@ -140,6 +166,7 @@ class HotelRatingController extends Controller
             $ratings = HotelRating::where('hotel_parent_id', $data['hotel_parent_id'])
                 ->select('id', 'hotel_parent_id', 'user_id', 'rating', 'review', 'created_at')
                 ->with(['user:id,first_name']) // Eager load user with selected fields
+                ->orderBy('created_at', 'desc')
                 ->paginate($request->integer('per_page', PaginationEnum::Max->value));
 
             return response()->json([

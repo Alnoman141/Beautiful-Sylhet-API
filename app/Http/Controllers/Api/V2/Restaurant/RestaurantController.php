@@ -53,7 +53,7 @@ class RestaurantController extends Controller
                     'map_link'      => $r->parent?->map_link ?? '',
                     'image'         => $r->parent?->image,
                     'spot_id'       => $r->parent?->spot_parent_id,
-                    'spot_name'     => $r->spot ?? '',
+                    'spot'     => $r->spot ?? '',
                     'category_name' => $r->category ?? '',
                     'ratings'       => (float) ($r->parent?->ratings_avg_rating ?? 0),
                 ]);
@@ -82,6 +82,7 @@ class RestaurantController extends Controller
                 'errors' => $validator->errors(),
             ], 403);
         }
+        // return 'I am working on it' . $request->id;
         try {
             $restaurant = Restaurant::query()
                 ->with(['parent', 'spot' => fn($a) => $a->where('language_id', $this->lang)->select('spots.spot_parent_id as id', 'name'), 'category' => fn($a) => $a->where('language_id', $this->lang)->select('restaurant_categories.restaurant_category_parent_id as id', 'name')])
@@ -443,6 +444,29 @@ class RestaurantController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
+
+    // restaurant dropdown
+    public function getDropdown(Request $request)
+    {
+        try {
+            $restaurants = Restaurant::query()
+                ->where('language_id', $this->lang)
+                ->select('id', 'name', 'restaurant_parent_id')
+                ->get();
+
+
+            return response()->json([
+                'status_code' => 200,
+                'data' => $restaurants,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Something went wrong',
                 'errors' => $e->getMessage(),
             ], 403);
         }

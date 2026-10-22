@@ -6,7 +6,7 @@ use App\Enum\PaginationEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\CampaignParent;
-use App\Models\CoxBazaar;
+use App\Models\Sylhet;
 use App\Services\Fa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -214,17 +214,17 @@ class CampaignController extends Controller
             ],403);
         }
     }
-    //TODO @fa 2024-11-28 cox bazar list
-    public function coxBazaar(Request $request)
+    //TODO @fa 2024-11-28 sylhet list
+    public function sylhet(Request $request)
     {
         try {
-            $cox = CoxBazaar::query()
+            $sylhet = Sylhet::query()
                 ->where('language_id', $this->lang)
                 ->latest()
                 ->first();
             return response()->json([
                 'status_code' => 200,
-                'data' => $cox
+                'data' => $sylhet
             ], 200);
         }catch (\Exception $exception){
             return response()->json([
@@ -233,8 +233,8 @@ class CampaignController extends Controller
             ],403);
         }
     }
-    //TODO @fa 2024-11-28 cox bazar store or update
-    public function coxBazaarStore(Request $request)
+    //TODO @fa 2024-11-28 sylhet store or update
+    public function sylhetStore(Request $request)
     {
         $validation = Validator::make($request->all(),[
             'data'=>'required|array',
@@ -251,7 +251,7 @@ class CampaignController extends Controller
         DB::beginTransaction();
         try {
             foreach ($request->data as $data){
-                CoxBazaar::updateOrCreate(
+                Sylhet::updateOrCreate(
                     ['language_id'=>$data['language_id']],
                     ['description'=>$data['description']]
                 );
@@ -269,14 +269,14 @@ class CampaignController extends Controller
             ],403);
         }
     }
-    //TODO @fa 2024-11-28 edit cox bazar
-    public function coxBazaarEdit(Request $request)
+    //TODO @fa 2024-11-28 edit sylhet
+    public function sylhetEdit(Request $request)
     {
         try {
-            $cox = CoxBazaar::query()->get();
+            $sylhet = Sylhet::query()->get();
             return response()->json([
                 'status_code'=>200,
-                'data'=>$cox
+                'data'=>$sylhet
             ],200);
         }catch (\Exception $exception){
             return response()->json([

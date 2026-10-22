@@ -15,10 +15,15 @@ class RestaurantRatingController extends Controller
     public function index(Request $request)
     {
         try {
-            $spotRattings = RestaurantRating::query()
-                ->with(['restaurantParent.restaurants' => function ($query) use ($request) {
-                    $query->select('id', 'name', 'restaurant_parent_id', 'language_id')->where('language_id', $request->input('language_id', 1));
-                }, 'user'])
+            $ratings = RestaurantRating::query()
+                ->with([
+                    'restaurantParent:id',
+                    'restaurantParent.restaurants' => function ($query) use ($request) {
+                        $query->select('id', 'name', 'restaurant_parent_id', 'language_id')
+                            ->where('language_id', $request->input('language_id', 1));
+                    },
+                    'user:id,first_name,last_name,avatar',
+                ])
                 ->when($request->filled('restaurant_parent_id'), function ($query) use ($request) {
                     $query->where('restaurant_parent_id', $request->restaurant_parent_id);
                 })
@@ -28,17 +33,38 @@ class RestaurantRatingController extends Controller
                 ->when($request->filled('status'), function ($query) use ($request) {
                     $query->where('status', $request->status);
                 })
-                ->paginate($request->integer('per_page', PaginationEnum::Max->value));
+                ->orderBy('created_at', 'desc')
+                ->paginate($request->integer('per_page', PaginationEnum::Max->value))
+                ->through(function ($rating) {
+                    $parent = $rating->restaurantParent;
+
+                    return [
+                        'id'         => $rating->id,
+                        'rating'     => $rating->rating,
+                        'review'     => $rating->review,
+                        'status'     => (bool) $rating->status,
+                        'created_at' => $rating->created_at,
+                        'restaurant' => $parent ? [
+                            'id'   => $parent->id,
+                            'name' => $parent->restaurants->first()?->name,
+                        ] : null,
+                        'user' => $rating->user ? [
+                            'id'     => $rating->user->id,
+                            'name'   => $rating->user->name,
+                            'avatar' => $rating->user->avatar,
+                        ] : null,
+                    ];
+                });
 
             return response()->json([
                 'status_code' => 200,
-                'data' => $spotRattings
+                'data'        => $ratings,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 500,
-                'message' => 'An error occurred while fetching restaurant ratings.',
-                'error' => $e->getMessage(),
+                'message'     => 'An error occurred while fetching restaurant ratings.',
+                'error'       => $e->getMessage(),
             ], 500);
         }
     }
@@ -62,7 +88,7 @@ class RestaurantRatingController extends Controller
 
         $data = $validator->validated();
 
-        $data['user_id'] = Auth::id(); 
+        $data['user_id'] = Auth::id();
 
         try {
             $spotRatting = RestaurantRating::create($data);
@@ -101,7 +127,7 @@ class RestaurantRatingController extends Controller
 
         try {
             $spotRatting = RestaurantRating::findOrFail($data['id']);
-            
+
             $spotRatting->update($data);
 
             return response()->json([
@@ -136,9 +162,10 @@ class RestaurantRatingController extends Controller
 
         try {
             $ratings = RestaurantRating::where('restaurant_parent_id', $data['restaurant_parent_id'])
-            ->select('id', 'restaurant_parent_id', 'user_id', 'rating', 'review', 'created_at')
-            ->with(['user:id,first_name']) // Eager load user with only id, name, and email
-            ->paginate($request->integer('per_page', PaginationEnum::Max->value));
+                ->select('id', 'restaurant_parent_id', 'user_id', 'rating', 'review', 'created_at')
+                ->with(['user:id,first_name']) // Eager load user with only id, name, and email
+                ->orderBy('created_at', 'desc')
+                ->paginate($request->integer('per_page', PaginationEnum::Max->value));
 
             return response()->json([
                 'status_code' => 200,

@@ -15,10 +15,15 @@ class TourOperatorRatingController extends Controller
     public function index(Request $request)
     {
         try {
-            $tourOperatorRattings = TourOperatorRating::query()
-                ->with(['tour_operatorParent.tour_operators' => function ($query) use ($request) {
-                    $query->select('id', 'name', 'tour_operator_parent_id', 'language_id')->where('language_id', $request->input('language_id', 1));
-                }, 'user'])
+            $ratings = TourOperatorRating::query()
+                ->with([
+                    'tour_operatorParent:id,logo',
+                    'tour_operatorParent.operators' => function ($query) use ($request) {
+                        $query->select('id', 'name', 'organization_name', 'tour_operator_parent_id', 'language_id')
+                            ->where('language_id', $request->input('language_id', 1));
+                    },
+                    'user:id,first_name,last_name,avatar',
+                ])
                 ->when($request->filled('tour_operator_parent_id'), function ($query) use ($request) {
                     $query->where('tour_operator_parent_id', $request->tour_operator_parent_id);
                 })
@@ -28,17 +33,40 @@ class TourOperatorRatingController extends Controller
                 ->when($request->filled('status'), function ($query) use ($request) {
                     $query->where('status', $request->status);
                 })
-                ->paginate($request->integer('per_page', PaginationEnum::Max->value));
+                ->orderBy('created_at', 'desc')
+                ->paginate($request->integer('per_page', PaginationEnum::Max->value))
+                ->through(function ($rating) {
+                    $parent = $rating->tour_operatorParent;
+
+                    return [
+                        'id'         => $rating->id,
+                        'rating'     => $rating->rating,
+                        'review'     => $rating->review,
+                        'status'     => (bool) $rating->status,
+                        'created_at' => $rating->created_at,
+                        'tour_operator' => $parent ? [
+                            'id'   => $parent->id,
+                            'name' => $parent->operators->first()?->name,
+                            'organization_name' => $parent->operators->first()?->organization_name,
+                            'logo' => $parent->logo,
+                        ] : null,
+                        'user' => $rating->user ? [
+                            'id'     => $rating->user->id,
+                            'name'   => $rating->user->name,
+                            'avatar' => $rating->user->avatar,
+                        ] : null,
+                    ];
+                });
 
             return response()->json([
                 'status_code' => 200,
-                'data' => $tourOperatorRattings
+                'data'        => $ratings,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 500,
-                'message' => 'An error occurred while fetching tour_operator ratings.',
-                'error' => $e->getMessage(),
+                'message'     => 'An error occurred while fetching tour operator ratings.',
+                'error'       => $e->getMessage(),
             ], 500);
         }
     }
@@ -62,7 +90,7 @@ class TourOperatorRatingController extends Controller
 
         $data = $validator->validated();
 
-        $data['user_id'] = Auth::id(); 
+        $data['user_id'] = Auth::id();
 
         try {
             $tourOperatorRatting = TourOperatorRating::create($data);
@@ -101,7 +129,7 @@ class TourOperatorRatingController extends Controller
 
         try {
             $tourOperatorRatting = TourOperatorRating::findOrFail($data['id']);
-            
+
             $tourOperatorRatting->update($data);
 
             return response()->json([
@@ -138,6 +166,7 @@ class TourOperatorRatingController extends Controller
             $ratings = TourOperatorRating::where('tour_operator_parent_id', $data['tour_operator_parent_id'])
                 ->select('id', 'tour_operator_parent_id', 'user_id', 'rating', 'review', 'created_at')
                 ->with(['user:id,first_name']) // Eager load user with selected fields
+                ->orderBy('created_at', 'desc')
                 ->paginate($request->integer('per_page', PaginationEnum::Max->value));
 
             return response()->json([

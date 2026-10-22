@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Enum\PaginationEnum;
+use App\Services\Fa;
 
 class TourGuideController extends Controller
 {
@@ -43,7 +44,7 @@ class TourGuideController extends Controller
                     'address'          => $g->address ?? '',
                     'description'      => $g->description ?? '',
                     'service_locations' => $g->parent?->service_locations ?? [],
-                    'image'            => $g->parent?->image,
+                    'image'            => $g->parent?->logo,
                     'ratings'          => (float) ($g->parent?->ratings_avg_rating ?? 0),
                 ]);
 
@@ -118,7 +119,7 @@ class TourGuideController extends Controller
                 'exists:languages,id',
             ],
             'data.*.name' => ['required', 'string', 'max:255'],
-            'data.*.description' => ['nullable', 'string'],
+            'data.*.description' => ['nullable'],
         ]);
 
         if ($validator->fails()) {
@@ -140,13 +141,9 @@ class TourGuideController extends Controller
                     'email' => $validated['email'] ?? null,
                     'phone_number' => $validated['phone_number'],
                     'website' => $validated['website'] ?? null,
-                    'logo' => $request->hasFile('logo')
-                        ? $request->file('logo')->store('tour-guides/logos', 'public')
-                        : null,
+                    'logo' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'tour-guides') : null,
                     'license_number' => $validated['license_number'] ?? null,
-                    'license_document' => $request->hasFile('license_document')
-                        ? $request->file('license_document')->store('tour-guides/licenses', 'public')
-                        : null,
+                    'license_document' => $request->hasFile('image') ? Fa::uploadImage($request->file('image'), 'tour-guides/licenses') : null,
                     'service_locations' => $validated['service_locations'] ?? null,
                     'rate_per_day' => $validated['rate_per_day'] ?? null,
                 ]);
@@ -163,7 +160,7 @@ class TourGuideController extends Controller
             });
 
             return response()->json([
-                'status_code' => 201,
+                'status_code' => 200,
                 'message' => 'Tour guide created successfully',
                 'data' => $this->formatParent($parent),
             ], 201);
@@ -240,6 +237,15 @@ class TourGuideController extends Controller
             ) {
                 $parent = TourGuideParent::findOrFail($validated['id']);
 
+                // Only touch the image if a new file was actually uploaded.
+                if ($request->hasFile('logo')) {
+                    $newImage = $request->hasFile('logo') ? Fa::uploadImage($request->file('logo'), 'tour-guides') : null;
+
+                    $oldImage = $parent->logo;
+
+                    $parent->update(['logo' => $newImage], ['map' => $validated['map'] ?? null]);
+                }
+
                 $parentData = [
                     'email' => $validated['email'] ?? null,
                     'phone_number' => $validated['phone_number'],
@@ -249,31 +255,13 @@ class TourGuideController extends Controller
                     'rate_per_day' => $validated['rate_per_day'] ?? null,
                 ];
 
-                if ($request->hasFile('logo')) {
-                    $newLogo = $request->file('logo')
-                        ->store('tour-guides/logos', 'public');
-
-                    if ($parent->logo) {
-                        Storage::disk('public')->delete($parent->logo);
-                    }
-
-                    $parentData['logo'] = $newLogo;
-                }
-
-                if ($request->hasFile('license_document')) {
-                    $newDocument = $request->file('license_document')
-                        ->store('tour-guides/licenses', 'public');
-
-                    if ($parent->license_document) {
-                        Storage::disk('public')->delete(
-                            $parent->license_document
-                        );
-                    }
-
-                    $parentData['license_document'] = $newDocument;
-                }
 
                 $parent->update($parentData);
+
+                // Delete the old file only after the transaction succeeded.
+                if (!empty($oldImage)) {
+                    Storage::disk('s3')->delete($oldImage);
+                }
 
                 foreach ($validated['data'] as $translation) {
                     $guide = $parent->guides()
@@ -476,5 +464,36 @@ class TourGuideController extends Controller
                 ];
             })->values(),
         ];
+    }
+
+    public function getDropdown(Request $request)
+    {
+        try {
+            $languageId = $request->input('language_id', 1);
+
+            $tourGuides = TourGuide::query()
+                ->where('language_id', $languageId)
+                ->with('parent:id,logo')
+                ->get()
+                ->map(function ($guide) {
+                    return [
+                        'id' => $guide->id,
+                        'name' => $guide->name,
+                        'parent_id' => $guide->tour_guide_parent_id,
+                    ];
+                });
+
+            return response()->json([
+                'status_code' => 200,
+                'data' => $tourGuides,
+            ], 200);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'status_code' => 500,
+                'message' => 'Something went wrong',
+            ], 500);
+        }
     }
 }

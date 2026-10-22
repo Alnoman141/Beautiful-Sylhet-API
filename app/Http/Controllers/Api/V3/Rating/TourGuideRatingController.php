@@ -15,10 +15,15 @@ class TourGuideRatingController extends Controller
     public function index(Request $request)
     {
         try {
-            $tourGuideRattings = TourGuideRating::query()
-                ->with(['tour_guideParent.tour_guides' => function ($query) use ($request) {
-                    $query->select('id', 'name', 'tour_guide_parent_id', 'language_id')->where('language_id', $request->input('language_id', 1));
-                }, 'user'])
+            $ratings = TourGuideRating::query()
+                ->with([
+                    'tour_guideParent:id,logo',
+                    'tour_guideParent.guides' => function ($query) use ($request) {
+                        $query->select('id', 'name', 'tour_guide_parent_id', 'language_id')
+                            ->where('language_id', $request->input('language_id', 1));
+                    },
+                    'user:id,first_name,last_name,avatar',
+                ])
                 ->when($request->filled('tour_guide_parent_id'), function ($query) use ($request) {
                     $query->where('tour_guide_parent_id', $request->tour_guide_parent_id);
                 })
@@ -28,17 +33,39 @@ class TourGuideRatingController extends Controller
                 ->when($request->filled('status'), function ($query) use ($request) {
                     $query->where('status', $request->status);
                 })
-                ->paginate($request->integer('per_page', PaginationEnum::Max->value));
+                ->orderBy('created_at', 'desc')
+                ->paginate($request->integer('per_page', PaginationEnum::Max->value))
+                ->through(function ($rating) {
+                    $parent = $rating->tour_guideParent;
+
+                    return [
+                        'id'         => $rating->id,
+                        'rating'     => $rating->rating,
+                        'review'     => $rating->review,
+                        'status'     => (bool) $rating->status,
+                        'created_at' => $rating->created_at,
+                        'tour_guide' => $parent ? [
+                            'id'   => $parent->id,
+                            'name' => $parent->guides->first()?->name,
+                            'logo' => $parent->logo,
+                        ] : null,
+                        'user' => $rating->user ? [
+                            'id'     => $rating->user->id,
+                            'name'   => $rating->user->name,
+                            'avatar' => $rating->user->avatar,
+                        ] : null,
+                    ];
+                });
 
             return response()->json([
                 'status_code' => 200,
-                'data' => $tourGuideRattings
+                'data'        => $ratings,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 500,
-                'message' => 'An error occurred while fetching tour_guide ratings.',
-                'error' => $e->getMessage(),
+                'message'     => 'An error occurred while fetching tour guide ratings.',
+                'error'       => $e->getMessage(),
             ], 500);
         }
     }
@@ -62,7 +89,7 @@ class TourGuideRatingController extends Controller
 
         $data = $validator->validated();
 
-        $data['user_id'] = Auth::id(); 
+        $data['user_id'] = Auth::id();
 
         try {
             $tourGuideRatting = TourGuideRating::create($data);
@@ -101,7 +128,7 @@ class TourGuideRatingController extends Controller
 
         try {
             $tourGuideRatting = TourGuideRating::findOrFail($data['id']);
-            
+
             $tourGuideRatting->update($data);
 
             return response()->json([
@@ -136,9 +163,10 @@ class TourGuideRatingController extends Controller
 
         try {
             $ratings = TourGuideRating::where('tour_guide_parent_id', $data['tour_guide_parent_id'])
-            ->select('id', 'tour_guide_parent_id', 'user_id', 'rating', 'review', 'created_at')
-            ->with(['user:id,first_name']) // Eager load the user relationship with selected fields
-            ->paginate($request->integer('per_page', PaginationEnum::Max->value));
+                ->select('id', 'tour_guide_parent_id', 'user_id', 'rating', 'review', 'created_at')
+                ->with(['user:id,first_name']) // Eager load the user relationship with selected fields
+                ->orderBy('created_at', 'desc')
+                ->paginate($request->integer('per_page', PaginationEnum::Max->value));
 
             return response()->json([
                 'status_code' => 200,

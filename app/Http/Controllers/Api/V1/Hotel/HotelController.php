@@ -23,12 +23,12 @@ class HotelController extends Controller
     {
         try {
             $types = HotelType::query()
-                ->with(['parent'=>fn($a)=>$a->with(['translate'=>fn($b)=>$b->where('language_id',$this->lang==1?2:1)])])
+                ->with(['parent' => fn($a) => $a->with(['translate' => fn($b) => $b->where('language_id', $this->lang == 1 ? 2 : 1)])])
                 ->where('language_id', $this->lang)
                 ->get()
-                ->map(function ($type){
-                    $type['parent_id']=$type->hotel_type_parent_id;
-                    $type['name_en']=$type?->parent?->translate?->name;
+                ->map(function ($type) {
+                    $type['parent_id'] = $type->hotel_type_parent_id;
+                    $type['name_en'] = $type?->parent?->translate?->name;
                     unset($type['parent']);
                     return $type;
                 });
@@ -36,7 +36,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'data' => $types
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',
@@ -59,7 +59,7 @@ class HotelController extends Controller
             ], 422);
         }
         try {
-            $hotel = Hotel::with(['parent','categoryParent'=>fn($a)=>$a->with(['translate'=>fn($b)=>$b->where('language_id',$this->lang)]),'typeParent'=>fn($a)=>$a->with(['translate'=>fn($b)=>$b->where('language_id',$this->lang)])])->findOrFail($request->id);
+            $hotel = Hotel::with(['parent', 'categoryParent' => fn($a) => $a->with(['translate' => fn($b) => $b->where('language_id', $this->lang)]), 'typeParent' => fn($a) => $a->with(['translate' => fn($b) => $b->where('language_id', $this->lang)])])->findOrFail($request->id);
             $hotel->load([
                 'parent.ratings' => fn($q) => $q
                     ->select('id', 'hotel_parent_id', 'user_id', 'rating', 'review') // 
@@ -70,7 +70,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'data' => $hotel
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',
@@ -106,7 +106,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'message' => 'Hotel type created successfully',
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
@@ -124,7 +124,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'data' => $parent
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',
@@ -159,7 +159,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'message' => 'Hotel type updated successfully',
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
@@ -191,7 +191,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'message' => 'Hotel type deleted successfully',
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
@@ -206,12 +206,12 @@ class HotelController extends Controller
     {
         try {
             $types = HotelCategory::query()
-                ->with(['parent'=>fn($a)=>$a->with(['translate'=>fn($b)=>$b->where('language_id',$this->lang==1?2:1)])])
+                ->with(['parent' => fn($a) => $a->with(['translate' => fn($b) => $b->where('language_id', $this->lang == 1 ? 2 : 1)])])
                 ->where('language_id', $this->lang)
                 ->get()
-                ->map(function ($type){
-                    $type['parent_id']=$type->hotel_category_parent_id;
-                    $type['name_en']=$type?->parent?->translate?->name;
+                ->map(function ($type) {
+                    $type['parent_id'] = $type->hotel_category_parent_id;
+                    $type['name_en'] = $type?->parent?->translate?->name;
                     unset($type['parent']);
                     return $type;
                 });
@@ -219,7 +219,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'data' => $types
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',
@@ -253,7 +253,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'message' => 'Hotel category created successfully',
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
@@ -281,7 +281,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'data' => $parent
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',
@@ -316,7 +316,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'message' => 'Hotel category updated successfully',
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
@@ -348,7 +348,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'message' => 'Hotel category deleted successfully',
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
@@ -470,7 +470,7 @@ class HotelController extends Controller
                 'hotel_category_parent_id' => $request->hotel_category_parent_id,
                 'website_link' => $request->website_link,
                 'map_link' => $request->map_link,
-                'image' => $request->hasFile('image') ? Fa::uploadImage($request->image,'hotel') : null,
+                'image' => $request->hasFile('image') ? Fa::uploadImage($request->image, 'hotel') : null,
             ]);
             foreach ($request->data as $data) {
                 $parent->hotels()->create([
@@ -486,7 +486,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'message' => 'Hotel created successfully',
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status_code' => 403,
@@ -514,7 +514,7 @@ class HotelController extends Controller
                 'status_code' => 200,
                 'data' => $parent
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',
@@ -624,17 +624,17 @@ class HotelController extends Controller
     {
         try {
             $types = HotelTypeParent::query()
-                ->withWhereHas('translate',fn($a)=>$a->where('language_id',$this->lang))
+                ->withWhereHas('translate', fn($a) => $a->where('language_id', $this->lang))
                 ->get()
-                ->map(fn($a)=>[
-                    'id'=>$a->id,
-                    'name'=>$a?->translate?->name,
+                ->map(fn($a) => [
+                    'id' => $a->id,
+                    'name' => $a?->translate?->name,
                 ]);
             return response()->json([
                 'status_code' => 200,
                 'data' => $types
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',
@@ -647,17 +647,39 @@ class HotelController extends Controller
     {
         try {
             $types = HotelCategoryParent::query()
-                ->withWhereHas('translate',fn($a)=>$a->where('language_id',$this->lang))
+                ->withWhereHas('translate', fn($a) => $a->where('language_id', $this->lang))
                 ->get()
-                ->map(fn($a)=>[
-                    'id'=>$a->id,
-                    'name'=>$a?->translate?->name,
+                ->map(fn($a) => [
+                    'id' => $a->id,
+                    'name' => $a?->translate?->name,
                 ]);
             return response()->json([
                 'status_code' => 200,
                 'data' => $types
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
+            return response()->json([
+                'status_code' => 403,
+                'message' => 'Something went wrong',
+                'errors' => $e->getMessage(),
+            ], 403);
+        }
+    }
+
+    // get dropdown for hotel
+    public function getDropdown(Request $request)
+    {
+        try {
+            $hotels = Hotel::query()
+                ->where('language_id', $this->lang)
+                ->select('id', 'name', 'hotel_parent_id')
+                ->get();
+
+            return response()->json([
+                'status_code' => 200,
+                'data' => $hotels,
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'status_code' => 403,
                 'message' => 'Something went wrong',

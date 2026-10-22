@@ -123,6 +123,10 @@ class PermissionTableSeeder extends Seeder
                         [
                             'name' => 'delete',
                             'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'show rating',
+                            'guard_name' => 'web',
                         ]
                     ],
                 ],
@@ -197,6 +201,10 @@ class PermissionTableSeeder extends Seeder
                         ],
                         [
                             'name' => 'delete',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'show rating',
                             'guard_name' => 'web',
                         ]
                     ],
@@ -955,6 +963,89 @@ class PermissionTableSeeder extends Seeder
                 ],
                 [
                     'name' => 'Spot Rating',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Tour Guide',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'show rating',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Tour Operator',
+                    'permissions' => [
+                        [
+                            'name' => 'show menu',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'create',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'update',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'guard_name' => 'web',
+                        ],
+                        [
+                            'name' => 'show rating',
+                            'guard_name' => 'web',
+                        ]
+                    ],
+                ],
+                [
+                    'name' => 'Association',
                     'permissions' => [
                         [
                             'name' => 'show menu',
